@@ -44,7 +44,7 @@ export const services = [
     featured: true,
     comingSoon: false,
     stackColor: "#4a4844",
-    stackImage: "/services/Accounting & Bookkeeping.webp",
+    stackImage: "/marketing/features/budget-setup.webp",
     stackImageLabel: "Student setting monthly budget categories on a laptop",
     details: {
       intro:
@@ -73,7 +73,7 @@ export const services = [
     featured: false,
     comingSoon: false,
     stackColor: "#3d4548",
-    stackImage: "/services/Virtual Receptionists.webp",
+    stackImage: "/marketing/features/expense-tracking.webp",
     stackImageLabel: "Student quickly logging a daily expense on phone",
     details: {
       intro:
@@ -102,7 +102,7 @@ export const services = [
     featured: false,
     comingSoon: false,
     stackColor: "#503a3a",
-    stackImage: "/services/Practice Media.webp",
+    stackImage: "/marketing/features/auto-categorize.webp",
     stackImageLabel: "Expense category suggestion with easy correction UI",
     details: {
       intro:
@@ -131,7 +131,7 @@ export const services = [
     featured: false,
     comingSoon: false,
     stackColor: "#424538",
-    stackImage: "/services/Sale & Purchase GP.webp",
+    stackImage: "/marketing/features/forecast-alerts.webp",
     stackImageLabel: "Month-end balance forecast chart with alert badge",
     details: {
       intro:
@@ -160,7 +160,7 @@ export const services = [
     featured: false,
     comingSoon: true,
     stackColor: "#3f3a48",
-    stackImage: "/services/Virtual Practice Management.webp",
+    stackImage: "/marketing/features/savings-goals.webp",
     stackImageLabel: "Savings goal progress ring for student emergency fund",
     details: {
       intro:
@@ -189,7 +189,7 @@ export const services = [
     featured: false,
     comingSoon: true,
     stackColor: "#3a4240",
-    stackImage: "/services/E-commerce Medical Consumables.webp",
+    stackImage: "/marketing/features/monthly-reports.webp",
     stackImageLabel: "Monthly spending summary with category breakdown",
     details: {
       intro:
@@ -217,7 +217,7 @@ export const whyChooseUs = [
     title: "Log in Seconds",
     description:
       "Manual entry, receipt text, or natural language — capture food, transport, subscriptions, and impulse buys before you forget.",
-    image: "/home/Smarter Operations.webp",
+    image: "/marketing/features/log-in-seconds.webp",
     imageLabel: "Student logging an expense on their phone between classes",
   },
   {
@@ -225,7 +225,7 @@ export const whyChooseUs = [
     title: "Stay on Track",
     description:
       "Category budgets, remaining balances, and threshold alerts keep you aware of limits before payday panic sets in.",
-    image: "/home/Strong Foundations.webp",
+    image: "/marketing/features/stay-on-track.webp",
     imageLabel: "Budget dashboard showing remaining category balances",
   },
   {
@@ -233,7 +233,7 @@ export const whyChooseUs = [
     title: "Plan Ahead",
     description:
       "Forecast your month-end balance from real spending data so you can adjust before running out — not after.",
-    image: "/home/Connected Care.webp",
+    image: "/marketing/features/plan-ahead.webp",
     imageLabel: "Forecast chart predicting end-of-month student balance",
   },
   {
@@ -260,7 +260,7 @@ export const testimonials = [
       "I used to guess how much I had left for food every week. Finance Buddy shows my remaining budget and warned me before I blew past takeout — saved me from calling home for money.",
     name: "Priya Sharma",
     role: "Second-year Engineering, Melbourne",
-    image: "/testimonials/dr-sarah-mitchell.png",
+    image: "/marketing/testimonials/priya-sharma.webp",
     imageAlt: "Illustrated portrait of Priya Sharma",
   },
   {
@@ -268,7 +268,7 @@ export const testimonials = [
       "The category suggestions are usually right, and when they're not I fix them in one tap. Logging '8.50 coffee' as natural language actually works — weirdly satisfying.",
     name: "Marcus Chen",
     role: "First-year Business, Sydney",
-    image: "/testimonials/michael-roberts.png",
+    image: "/marketing/testimonials/marcus-chen.webp",
     imageAlt: "Illustrated portrait of Marcus Chen",
   },
   {
@@ -276,20 +276,20 @@ export const testimonials = [
       "The month-end forecast caught my subscription creep before it ate my transport budget. The monthly report made me realise how much I was spending on delivery apps.",
     name: "Emma Okonkwo",
     role: "Third-year Nursing, Brisbane",
-    image: "/testimonials/james-walsh.png",
+    image: "/marketing/testimonials/emma-okonkwo.webp",
     imageAlt: "Illustrated portrait of Emma Okonkwo",
   },
 ] as const;
 
 export const clientLogos = [
-  { name: "Monash University", src: "/list/wallsend-healthcare.svg" },
-  { name: "UNSW Sydney", src: "/list/Paterson-medical.svg" },
-  { name: "University of Melbourne", src: "/list/Branxton-Healthcare.svg" },
-  { name: "UQ Brisbane", src: "/list/huntlee-healthcare.svg" },
-  { name: "UTS Sydney", src: "/list/clarence-town.svg" },
-  { name: "Student Union", src: "/list/Group 405.svg" },
-  { name: "Campus Life", src: "/list/Group 407.svg" },
-  { name: "Res Hall", src: "/list/Mask group.svg" },
+  { name: "Monash University", src: "/marketing/logos/monash-university.svg" },
+  { name: "UNSW Sydney", src: "/marketing/logos/unsw-sydney.svg" },
+  { name: "University of Melbourne", src: "/marketing/logos/university-of-melbourne.svg" },
+  { name: "UQ Brisbane", src: "/marketing/logos/uq-brisbane.svg" },
+  { name: "UTS Sydney", src: "/marketing/logos/uts-sydney.svg" },
+  { name: "Student Union", src: "/marketing/logos/student-union.svg" },
+  { name: "Campus Life", src: "/marketing/logos/campus-life.svg" },
+  { name: "Res Hall", src: "/marketing/logos/res-hall.svg" },
 ] as const;
 
 export const founder = {
@@ -297,7 +297,7 @@ export const founder = {
   role: "Founder & Product Lead",
   title: "Founder | TechGuy | Student",
   credentials: "Computer Science Undergrad",
-  image: "/doctor.png",
+  image: "/marketing/about/founder-jawad-asghar.webp",
   imageAlt: "Jawad Asghar, Founder of Finance Buddy",
   quote: "Students deserve tools that respect their privacy and their reality — small budgets, big pressure.",
   bio: "Jawad built Finance Buddy after watching friends struggle through uni on tight allowances — juggling food, transport, subscriptions, and emergency costs with spreadsheets and guesswork.",

@@ -68,7 +68,7 @@ export function ChairCTASection() {
           }
         >
           <Image
-            src="/home/chairarm.avif"
+            src="/marketing/cta/app-preview.avif"
             alt=""
             width={900}
             height={700}

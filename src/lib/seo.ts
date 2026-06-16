@@ -8,7 +8,7 @@ export const siteUrl = new URL(
 export const defaultDescription =
   "Finance Buddy helps students track spending, set category budgets, forecast month-end balance, and avoid overspending — with privacy-first design and optional AI assistance.";
 
-export const defaultOgImage = "/home/Strong Foundations.webp";
+export const defaultOgImage = "/marketing/features/stay-on-track.webp";
 
 export const seoKeywords = [
   "student budgeting app",
@@ -159,7 +159,7 @@ export function organizationJsonLd() {
     "@id": `${absoluteUrl("/")}#organization`,
     name: site.name,
     url: absoluteUrl("/"),
-    logo: absoluteUrl("/Logo.png"),
+    logo: absoluteUrl("/brand/logo.webp"),
     description: site.tagline,
     email: site.email,
     contactPoint: [

@@ -101,6 +101,14 @@ export type DetectedAlert = {
   message: string;
 };
 
+export type DailySpendPoint = {
+  day: number;
+  label: string;
+  spentCents: number;
+  cumulativeCents: number;
+  paceCents: number;
+};
+
 export type MonthlyReportSummary = {
   periodLabel: string;
   incomeCents: number;
@@ -112,6 +120,7 @@ export type MonthlyReportSummary = {
     allocatedCents: number;
     percentUsed: number;
   }>;
+  dailySpending: DailySpendPoint[];
   forecast: ForecastResult;
   insights: string[];
   disclaimer: string;
