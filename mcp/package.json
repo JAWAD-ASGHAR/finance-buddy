@@ -1,0 +1,11 @@
+{
+  "name": "finance-buddy-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "stdio": "tsx --tsconfig tsconfig.json src/index-stdio.ts",
+    "http": "tsx --tsconfig tsconfig.json src/index-http.ts",
+    "start": "npm run http"
+  }
+}

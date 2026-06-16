@@ -6,10 +6,14 @@ import {
   AppSidebarMobileTrigger,
 } from "@/components/app/AppSidebar";
 import { AppAccountMenu } from "@/components/app/AppAccountMenu";
+import { AiAssistantProvider, useAiAssistant } from "@/components/ai/AiAssistantProvider";
+import { AiDrawer } from "@/components/ai/AiDrawer";
+import { AiHeaderButton } from "@/components/ai/AiHeaderButton";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import type { AppSession } from "@/types/app-session";
+import { cn } from "@/lib/utils";
 
-export function AppShell({
+function AppShellInner({
   children,
   session,
 }: {
@@ -17,6 +21,7 @@ export function AppShell({
   session: AppSession;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const { open: aiOpen } = useAiAssistant();
 
   return (
     <div className="flex min-h-screen bg-muted/40">
@@ -25,13 +30,19 @@ export function AppShell({
         onMobileOpenChange={setMobileNavOpen}
       />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ease-out motion-reduce:transition-none",
+          aiOpen && "mr-[min(420px,100vw)]",
+        )}
+      >
         <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background px-4 sm:px-6">
           <AppSidebarMobileTrigger
             open={mobileNavOpen}
             onToggle={() => setMobileNavOpen((current) => !current)}
           />
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <AiHeaderButton />
             <ThemeToggle />
             <AppAccountMenu session={session} />
           </div>
@@ -39,6 +50,22 @@ export function AppShell({
 
         <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">{children}</main>
       </div>
+
+      <AiDrawer />
     </div>
+  );
+}
+
+export function AppShell({
+  children,
+  session,
+}: {
+  children: React.ReactNode;
+  session: AppSession;
+}) {
+  return (
+    <AiAssistantProvider>
+      <AppShellInner session={session}>{children}</AppShellInner>
+    </AiAssistantProvider>
   );
 }

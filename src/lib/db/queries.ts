@@ -17,18 +17,13 @@ import {
 import { getAuthUser } from "@/lib/supabase/server";
 import { getCurrentBudgetPeriod } from "@/types/finance";
 
-export async function getCurrentBudget() {
+export async function getCurrentBudgetForUser(userId: string) {
   const db = getDb();
-  const user = await getAuthUser();
-  if (!user) {
-    return { budget: null, categories: [], expenses: [] };
-  }
-
   const { year, month } = getCurrentBudgetPeriod();
 
   const budgetRow = await db.query.budgets.findFirst({
     where: and(
-      eq(budgets.userId, user.id),
+      eq(budgets.userId, userId),
       eq(budgets.year, year),
       eq(budgets.month, month),
     ),
@@ -56,6 +51,74 @@ export async function getCurrentBudget() {
   };
 }
 
+export async function getCurrentBudget() {
+  const user = await getAuthUser();
+  if (!user) {
+    return { budget: null, categories: [], expenses: [] };
+  }
+
+  return getCurrentBudgetForUser(user.id);
+}
+
+async function fetchCurrentBudgetRow(userId: string) {
+  const db = getDb();
+  const { year, month } = getCurrentBudgetPeriod();
+
+  return db.query.budgets.findFirst({
+    where: and(
+      eq(budgets.userId, userId),
+      eq(budgets.year, year),
+      eq(budgets.month, month),
+    ),
+  });
+}
+
+export async function getUnreadAlertsForUser(userId: string) {
+  const db = getDb();
+  const budgetRow = await fetchCurrentBudgetRow(userId);
+  if (!budgetRow) return [];
+
+  const rows = await db.query.alerts.findMany({
+    where: and(
+      eq(alerts.budgetId, budgetRow.id),
+      eq(alerts.userId, userId),
+      isNull(alerts.readAt),
+    ),
+    orderBy: desc(alerts.createdAt),
+  });
+
+  return rows.map(mapAlert);
+}
+
+export async function getLatestReportForUser(userId: string) {
+  const db = getDb();
+  const budgetRow = await fetchCurrentBudgetRow(userId);
+  if (!budgetRow) return null;
+
+  const row = await db.query.monthlyReports.findFirst({
+    where: and(
+      eq(monthlyReports.budgetId, budgetRow.id),
+      eq(monthlyReports.userId, userId),
+    ),
+    orderBy: desc(monthlyReports.generatedAt),
+  });
+
+  return row ? mapMonthlyReport(row) : null;
+}
+
+export async function getAllAlertsForUser(userId: string) {
+  const db = getDb();
+  const budgetRow = await fetchCurrentBudgetRow(userId);
+  if (!budgetRow) return [];
+
+  const rows = await db.query.alerts.findMany({
+    where: and(eq(alerts.budgetId, budgetRow.id), eq(alerts.userId, userId)),
+    orderBy: desc(alerts.createdAt),
+  });
+
+  return rows.map(mapAlert);
+}
+
 export async function requireAuthUser() {
   const user = await getAuthUser();
   if (!user) {
@@ -65,42 +128,15 @@ export async function requireAuthUser() {
 }
 
 export async function getUnreadAlerts() {
-  const db = getDb();
   const user = await getAuthUser();
   if (!user) return [];
-
-  const { budget } = await getCurrentBudget();
-  if (!budget) return [];
-
-  const rows = await db.query.alerts.findMany({
-    where: and(
-      eq(alerts.budgetId, budget.id),
-      eq(alerts.userId, user.id),
-      isNull(alerts.readAt),
-    ),
-    orderBy: desc(alerts.createdAt),
-  });
-
-  return rows.map(mapAlert);
+  return getUnreadAlertsForUser(user.id);
 }
 
 export async function getLatestReport() {
-  const db = getDb();
   const user = await getAuthUser();
   if (!user) return null;
-
-  const { budget } = await getCurrentBudget();
-  if (!budget) return null;
-
-  const row = await db.query.monthlyReports.findFirst({
-    where: and(
-      eq(monthlyReports.budgetId, budget.id),
-      eq(monthlyReports.userId, user.id),
-    ),
-    orderBy: desc(monthlyReports.generatedAt),
-  });
-
-  return row ? mapMonthlyReport(row) : null;
+  return getLatestReportForUser(user.id);
 }
 
 export async function getBudgetBundle(budgetId: string, userId: string) {

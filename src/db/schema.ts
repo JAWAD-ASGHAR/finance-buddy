@@ -232,6 +232,28 @@ export const settlements = pgTable(
   ],
 );
 
+export const mcpApiKeys = pgTable(
+  "mcp_api_keys",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    keyPrefix: text("key_prefix").notNull(),
+    keyHash: text("key_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("mcp_api_keys_user_id_idx").on(table.userId),
+    index("mcp_api_keys_key_hash_idx").on(table.keyHash),
+  ],
+);
+
 export const budgetsRelations = relations(budgets, ({ many }) => ({
   categories: many(categories),
   expenses: many(expenses),
@@ -284,3 +306,4 @@ export type FriendRequestRow = typeof friendRequests.$inferSelect;
 export type SharedExpenseRow = typeof sharedExpenses.$inferSelect;
 export type SharedExpenseSplitRow = typeof sharedExpenseSplits.$inferSelect;
 export type SettlementRow = typeof settlements.$inferSelect;
+export type McpApiKeyRow = typeof mcpApiKeys.$inferSelect;

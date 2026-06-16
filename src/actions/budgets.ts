@@ -1,188 +1,34 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
-import { z } from "zod";
-import { mapBudget } from "@/db/mappers";
-import { getDb } from "@/db/index";
-import { budgets, categories } from "@/db/schema";
 import { requireAuthUser } from "@/lib/db/queries";
 import {
-  DEFAULT_CATEGORIES,
-  getCurrentBudgetPeriod,
-  parseMoneyToCents,
-  type ActionResult,
-  type Budget,
-} from "@/types/finance";
-
-const categoryInputSchema = z.object({
-  name: z.string().min(1).max(50),
-  allocatedCents: z.number().int().min(0),
-});
-
-const createBudgetSchema = z.object({
-  incomeCents: z.number().int().min(0),
-  alertThresholdPct: z.number().int().min(1).max(100).default(80),
-  categories: z.array(categoryInputSchema).min(1),
-  year: z.number().int().optional(),
-  month: z.number().int().min(1).max(12).optional(),
-});
+  createMonthlyBudgetForUser,
+  updateBudgetIncomeForUser,
+} from "@/lib/services/budgets";
+import { revalidateBudgetPaths } from "@/lib/services/revalidate";
+import type { ActionResult, Budget } from "@/types/finance";
 
 export async function createMonthlyBudget(input: {
   income: string;
   alertThresholdPct?: number;
   categories?: Array<{ name: string; allocated: string }>;
 }): Promise<ActionResult<{ budgetId: string }>> {
-  const db = getDb();
   const user = await requireAuthUser();
-  const { year, month } = getCurrentBudgetPeriod();
-
-  const categoryInputs =
-    input.categories && input.categories.length > 0
-      ? input.categories
-          .map((c) => ({
-            name: c.name.trim(),
-            allocatedCents: parseMoneyToCents(c.allocated) ?? 0,
-          }))
-          .filter((c) => c.name.length > 0)
-      : DEFAULT_CATEGORIES.map((c) => ({
-          name: c.name,
-          allocatedCents: c.allocatedCents,
-        }));
-
-  const incomeCents = parseMoneyToCents(input.income);
-  if (incomeCents === null) {
-    return { success: false, error: "Enter a valid income amount" };
+  const result = await createMonthlyBudgetForUser(user.id, input);
+  if (result.success) {
+    revalidateBudgetPaths();
   }
-
-  const parsed = createBudgetSchema.safeParse({
-    incomeCents,
-    alertThresholdPct: input.alertThresholdPct ?? 80,
-    categories: categoryInputs,
-    year,
-    month,
-  });
-
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: parsed.error.issues[0]?.message ?? "Invalid input",
-    };
-  }
-
-  const existing = await db.query.budgets.findFirst({
-    where: and(
-      eq(budgets.userId, user.id),
-      eq(budgets.year, year),
-      eq(budgets.month, month),
-    ),
-    columns: { id: true },
-  });
-
-  if (existing) {
-    return updateExistingBudget(existing.id, user.id, parsed.data);
-  }
-
-  try {
-    const budgetId = await db.transaction(async (tx) => {
-      const [budget] = await tx
-        .insert(budgets)
-        .values({
-          userId: user.id,
-          year,
-          month,
-          incomeCents: parsed.data.incomeCents,
-          alertThresholdPct: parsed.data.alertThresholdPct,
-        })
-        .returning({ id: budgets.id });
-
-      await tx.insert(categories).values(
-        parsed.data.categories.map((category, index) => ({
-          budgetId: budget.id,
-          userId: user.id,
-          name: category.name,
-          allocatedCents: category.allocatedCents,
-          sortOrder: index,
-        })),
-      );
-
-      return budget.id;
-    });
-
-    revalidatePath("/dashboard");
-    revalidatePath("/budget/setup");
-    return { success: true, data: { budgetId } };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to create budget",
-    };
-  }
-}
-
-async function updateExistingBudget(
-  budgetId: string,
-  userId: string,
-  data: z.infer<typeof createBudgetSchema>,
-): Promise<ActionResult<{ budgetId: string }>> {
-  const db = getDb();
-  try {
-    await db.transaction(async (tx) => {
-      await tx
-        .update(budgets)
-        .set({
-          incomeCents: data.incomeCents,
-          alertThresholdPct: data.alertThresholdPct,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(budgets.id, budgetId), eq(budgets.userId, userId)));
-
-      await tx.delete(categories).where(eq(categories.budgetId, budgetId));
-
-      await tx.insert(categories).values(
-        data.categories.map((category, index) => ({
-          budgetId,
-          userId,
-          name: category.name,
-          allocatedCents: category.allocatedCents,
-          sortOrder: index,
-        })),
-      );
-    });
-
-    revalidatePath("/dashboard");
-    revalidatePath("/budget/setup");
-    return { success: true, data: { budgetId } };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Failed to update budget",
-    };
-  }
+  return result;
 }
 
 export async function updateBudgetIncome(input: {
   budgetId: string;
   income: string;
 }): Promise<ActionResult<Budget>> {
-  const db = getDb();
   const user = await requireAuthUser();
-  const incomeCents = parseMoneyToCents(input.income);
-
-  if (incomeCents === null) {
-    return { success: false, error: "Enter a valid income amount" };
+  const result = await updateBudgetIncomeForUser(user.id, input);
+  if (result.success) {
+    revalidateBudgetPaths();
   }
-
-  const [row] = await db
-    .update(budgets)
-    .set({ incomeCents, updatedAt: new Date() })
-    .where(and(eq(budgets.id, input.budgetId), eq(budgets.userId, user.id)))
-    .returning();
-
-  if (!row) {
-    return { success: false, error: "Failed to update budget" };
-  }
-
-  revalidatePath("/dashboard");
-  return { success: true, data: mapBudget(row) };
+  return result;
 }
