@@ -16,7 +16,7 @@ import _app_shared_expense_form from './app-shared-expense-form.bones.json'
 import _auth_form from './auth-form.bones.json'
 import _marketing_hero from './marketing-hero.bones.json'
 
-configureBoneyard({"color":"oklch(0.97 0 0)","darkColor":"oklch(0.269 0 0)","animate":"shimmer","shimmerColor":"oklch(0.985 0 0)","darkShimmerColor":"oklch(0.32 0 0)","speed":"2s","shimmerAngle":110})
+configureBoneyard({"color":"oklch(0.86 0 0)","darkColor":"oklch(0.28 0 0)","animate":"shimmer","shimmerColor":"oklch(0.93 0 0)","darkShimmerColor":"oklch(0.38 0 0)","speed":"2s","shimmerAngle":110})
 
 registerBones({
   "app-dashboard": _app_dashboard,

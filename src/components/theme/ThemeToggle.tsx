@@ -23,9 +23,7 @@ export function ThemeToggle({ light = false, className }: ThemeToggleProps) {
           : "border-border text-foreground hover:border-foreground/20 hover:bg-muted",
         className,
       )}
-      aria-label={
-        inverted ? "Restore default section colours" : "Invert section colours"
-      }
+      aria-label={inverted ? "Switch to light mode" : "Switch to dark mode"}
       aria-pressed={inverted}
     >
       {inverted ? <Moon size={18} strokeWidth={1.75} /> : <Sun size={18} strokeWidth={1.75} />}
