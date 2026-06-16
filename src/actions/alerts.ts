@@ -1,44 +1,31 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { and, eq } from "drizzle-orm";
-import { mapAlert } from "@/db/mappers";
-import { getDb } from "@/db/index";
-import { alerts } from "@/db/schema";
 import { requireAuthUser } from "@/lib/db/queries";
-import { syncAlertsForBudget } from "@/lib/finance/sync-alerts";
+import {
+  markAlertReadForUser,
+  refreshAlertsForBudget,
+} from "@/lib/services/alerts";
+import { revalidateBudgetPaths } from "@/lib/services/revalidate";
 import type { ActionResult, Alert } from "@/types/finance";
 
 export async function refreshAlerts(
   budgetId: string,
 ): Promise<ActionResult<void>> {
   const user = await requireAuthUser();
-  const result = await syncAlertsForBudget(budgetId, user.id);
-
-  if (!result.ok) {
-    return { success: false, error: result.error };
+  const result = await refreshAlertsForBudget(user.id, budgetId);
+  if (result.success) {
+    revalidateBudgetPaths();
   }
-
-  revalidatePath("/dashboard");
-  return { success: true, data: undefined };
+  return result;
 }
 
 export async function markAlertRead(
   alertId: string,
 ): Promise<ActionResult<Alert>> {
-  const db = getDb();
   const user = await requireAuthUser();
-
-  const [row] = await db
-    .update(alerts)
-    .set({ readAt: new Date() })
-    .where(and(eq(alerts.id, alertId), eq(alerts.userId, user.id)))
-    .returning();
-
-  if (!row) {
-    return { success: false, error: "Failed to mark alert read" };
+  const result = await markAlertReadForUser(user.id, alertId);
+  if (result.success) {
+    revalidateBudgetPaths();
   }
-
-  revalidatePath("/dashboard");
-  return { success: true, data: mapAlert(row) };
+  return result;
 }
