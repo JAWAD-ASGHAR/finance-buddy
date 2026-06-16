@@ -293,16 +293,16 @@ export const clientLogos = [
 ] as const;
 
 export const founder = {
-  name: "Jordan Lee",
+  name: "Jawad Asghar",
   role: "Founder & Product Lead",
-  title: "Founder | FinTech | Student Advocate",
-  credentials: "BComp, former student budget coach",
+  title: "Founder | TechGuy | Student",
+  credentials: "Computer Science Undergrad",
   image: "/doctor.png",
-  imageAlt: "Jordan Lee, Founder of Finance Buddy",
+  imageAlt: "Jawad Asghar, Founder of Finance Buddy",
   quote: "Students deserve tools that respect their privacy and their reality — small budgets, big pressure.",
-  bio: "Jordan built Finance Buddy after watching friends struggle through uni on tight allowances — juggling food, transport, subscriptions, and emergency costs with spreadsheets and guesswork.",
+  bio: "Jawad built Finance Buddy after watching friends struggle through uni on tight allowances — juggling food, transport, subscriptions, and emergency costs with spreadsheets and guesswork.",
   extendedBio:
-    "With a background in product design and personal finance education, Jordan focuses on privacy-first tools that help students log spending quickly, understand patterns, and make better day-to-day decisions — without exposing sensitive data or pretending to be a financial adviser.",
+    "With a background in product design and personal finance education, Jawad focuses on privacy-first tools that help students log spending quickly, understand patterns, and make better day-to-day decisions — without exposing sensitive data or pretending to be a financial adviser.",
 } as const;
 
 export const howItWorks = [
