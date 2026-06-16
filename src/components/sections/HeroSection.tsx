@@ -4,7 +4,6 @@ import { Header } from "@/components/layout/Header";
 import { SiteButton } from "@/components/ui/site-button";
 import { HeroVideo } from "@/components/motion/HeroVideo";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
-import { HeroLogoMarquee } from "@/components/sections/HeroLogoMarquee";
 import { hero } from "@/lib/content";
 
 export function HeroSection() {
@@ -41,8 +40,6 @@ export function HeroSection() {
           </div>
         </ScrollReveal>
       </div>
-
-      <HeroLogoMarquee />
     </section>
   );
 }
