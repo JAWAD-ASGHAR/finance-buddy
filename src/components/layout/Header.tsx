@@ -5,10 +5,11 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
-import { navLinks, site } from "@/lib/content";
+import { BrandLogo } from "@/components/ui/BrandLogo";
+import { Button } from "@/components/ui/Button";
+import { navLinks } from "@/lib/content";
 import { useInvertedTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/Button";
 
 type HeaderProps = {
   placement?: "site" | "hero";
@@ -23,30 +24,7 @@ type HeaderBarProps = {
 };
 
 function SiteLogo({ light = false }: { light?: boolean }) {
-  return (
-    <Link
-      href="/"
-      className={cn("site-logo shrink-0", light && "site-logo--light")}
-      aria-label={site.name}
-    >
-      <span
-        className={cn(
-          "site-logo-mark",
-          light ? "text-white" : "text-foreground",
-        )}
-      >
-        {site.logoMark}
-      </span>
-      <span
-        className={cn(
-          "site-logo-suffix",
-          light ? "text-white/85" : "text-foreground",
-        )}
-      >
-        {site.logoSuffix}
-      </span>
-    </Link>
-  );
+  return <BrandLogo href="/" light={light} />;
 }
 
 function HeaderBar({
@@ -90,6 +68,9 @@ function HeaderBar({
 
       <div className="hidden items-center justify-end gap-3 lg:flex lg:justify-self-end">
         <ThemeToggle light={light} />
+        <Button href="/login" variant={light ? "hero" : "outline"} cursorLabel="App">
+          Open App
+        </Button>
         <Button href="/contact" variant={light ? "hero" : "primary"} cursorLabel="Join">
           Get Early Access
         </Button>
@@ -169,6 +150,15 @@ function MobileMenu({ light = false, onClose, pathname }: MobileMenuProps) {
             {link.label}
           </Link>
         ))}
+        <Button
+          href="/login"
+          className="mt-4 w-full"
+          variant={light ? "hero" : "outline"}
+          onClick={onClose}
+          cursorLabel="App"
+        >
+          Open App
+        </Button>
         <Button
           href="/contact"
           className="mt-4 w-full"

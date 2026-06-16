@@ -1,0 +1,99 @@
+"use client";
+
+import { signIn, signUp } from "@/actions/auth";
+import Link from "next/link";
+import { useState } from "react";
+import {
+  AppButton,
+  AppCard,
+  AppError,
+  AppInput,
+} from "@/components/app/ui";
+
+export function AuthForm({
+  mode,
+}: {
+  mode: "login" | "signup";
+}) {
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  async function handleSubmit(formData: FormData) {
+    setPending(true);
+    setError(null);
+    try {
+      const result =
+        mode === "login"
+          ? await signIn(formData)
+          : await signUp(formData);
+      if (!result.success) {
+        setError(result.error);
+      }
+    } catch {
+      // redirect throws — expected on success
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <AppCard
+      title={mode === "login" ? "Welcome back" : "Create your account"}
+      description="Private budgeting for student life. Your data stays yours."
+    >
+      <form action={handleSubmit} className="space-y-4">
+        {mode === "signup" ? (
+          <AppInput
+            label="Display name"
+            name="displayName"
+            type="text"
+            autoComplete="name"
+            placeholder="Alex"
+          />
+        ) : null}
+        <AppInput
+          label="Email"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="you@university.ac.uk"
+        />
+        <AppInput
+          label="Password"
+          name="password"
+          type="password"
+          required
+          autoComplete={mode === "login" ? "current-password" : "new-password"}
+          minLength={6}
+          placeholder="At least 6 characters"
+        />
+        {error ? <AppError message={error} /> : null}
+        <AppButton type="submit" disabled={pending} className="w-full">
+          {pending
+            ? "Please wait..."
+            : mode === "login"
+              ? "Sign in"
+              : "Create account"}
+        </AppButton>
+      </form>
+      <p className="mt-4 text-center text-sm text-muted-foreground">
+        {mode === "login" ? (
+          <>
+            No account yet?{" "}
+            <Link href="/signup" className="font-medium text-accent-blue">
+              Sign up
+            </Link>
+          </>
+        ) : (
+          <>
+            Already have an account?{" "}
+            <Link href="/login" className="font-medium text-accent-blue">
+              Sign in
+            </Link>
+          </>
+        )}
+      </p>
+    </AppCard>
+  );
+}

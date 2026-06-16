@@ -1,9 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Source_Serif_4 } from "next/font/google";
-import { SiteShell } from "@/components/layout/SiteShell";
-import { CustomCursor } from "@/components/motion/CustomCursor";
-import { SiteLoader } from "@/components/motion/SiteLoader";
-import { SmoothScroll } from "@/components/motion/SmoothScroll";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   organizationJsonLd,
@@ -29,9 +25,12 @@ const sourceSerif = Source_Serif_4({
 export const metadata: Metadata = {
   ...rootMetadata,
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-48.png", sizes: "48x48", type: "image/png" },
+    ],
     shortcut: "/favicon.png",
-    apple: "/favicon.png",
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -57,16 +56,11 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body
-        className="min-h-full flex flex-col font-sans text-foreground"
+        className="min-h-full flex flex-col font-sans text-foreground bg-background"
         suppressHydrationWarning
       >
         <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
-        <CustomCursor />
-        <SiteLoader>
-          <SmoothScroll>
-            <SiteShell>{children}</SiteShell>
-          </SmoothScroll>
-        </SiteLoader>
+        {children}
       </body>
     </html>
   );
