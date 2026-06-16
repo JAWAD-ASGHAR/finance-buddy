@@ -68,7 +68,7 @@ function HeaderBar({
 
       <div className="hidden items-center justify-end gap-3 lg:flex lg:justify-self-end">
         <ThemeToggle light={light} />
-        <SiteButton href="/login" variant="primary" cursorLabel="App">
+        <SiteButton href="/dashboard" variant="primary" cursorLabel="App">
           Open App
         </SiteButton>
       </div>
@@ -148,7 +148,7 @@ function MobileMenu({ light = false, onClose, pathname }: MobileMenuProps) {
           </Link>
         ))}
         <SiteButton
-          href="/login"
+          href="/dashboard"
           className="mt-4 w-full"
           variant="primary"
           onClick={onClose}

@@ -25,7 +25,7 @@ export function ChairCTASection() {
               </p>
               <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:flex-wrap">
                 <Link
-                  href="/login"
+                  href="/dashboard"
                   className="inline-flex items-center justify-center gap-2.5 rounded-full bg-dark px-7 py-4 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-dark-muted"
                 >
                   {chairCta.primaryLabel}

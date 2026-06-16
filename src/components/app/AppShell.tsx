@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { signOut } from "@/actions/auth";
+import { AppAccountMenu } from "@/components/app/AppAccountMenu";
 import { BrandLogo } from "@/components/ui/BrandLogo";
+import type { AppSession } from "@/types/app-session";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -14,9 +15,11 @@ const navItems = [
 
 export function AppShell({
   children,
+  session,
   currentPath,
 }: {
   children: React.ReactNode;
+  session: AppSession;
   currentPath?: string;
 }) {
   return (
@@ -42,14 +45,7 @@ export function AppShell({
               </Link>
             ))}
           </nav>
-          <form action={signOut}>
-            <button
-              type="submit"
-              className="rounded-md border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Sign out
-            </button>
-          </form>
+          <AppAccountMenu session={session} />
         </div>
         <nav className="flex gap-1 overflow-x-auto border-t border-border px-4 py-2 md:hidden">
           {navItems.map((item) => (

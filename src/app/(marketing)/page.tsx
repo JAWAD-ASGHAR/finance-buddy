@@ -1,3 +1,4 @@
+import { redirectIfAuthenticated } from "@/lib/auth/redirects";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { DarkFeaturesSection } from "@/components/sections/DarkFeaturesSection";
@@ -12,7 +13,9 @@ import { ChairCTASection } from "@/components/sections/ChairCTASection";
 import { HomeChairReveal } from "@/components/sections/HomeChairReveal";
 import { faqPageJsonLd, homeFaqs } from "@/lib/seo";
 
-export default function HomePage() {
+export default async function HomePage() {
+  await redirectIfAuthenticated();
+
   return (
     <>
       <JsonLd data={faqPageJsonLd(homeFaqs)} />

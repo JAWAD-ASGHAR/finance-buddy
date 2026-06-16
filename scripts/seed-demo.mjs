@@ -1,5 +1,5 @@
 /**
- * Demo seed script — run after creating a Supabase user account.
+ * Demo seed script — run after creating a user account.
  *
  * Usage:
  *   SUPABASE_URL=... SUPABASE_SECRET_KEY=... DEMO_EMAIL=... DEMO_PASSWORD=... node scripts/seed-demo.mjs
@@ -12,7 +12,7 @@ import { createClient } from "@supabase/supabase-js";
 const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
 const secretKey =
   process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
-const email = process.env.DEMO_EMAIL;
+const email = process.env.DEMO_EMAIL?.trim().toLowerCase();
 const password = process.env.DEMO_PASSWORD ?? "demo123456";
 
 if (!url || !secretKey || !email) {
@@ -37,12 +37,20 @@ async function main() {
   let userId = signInData.user?.id;
 
   if (signInError) {
-    const { data: signUpData, error: signUpError } =
-      await supabase.auth.signUp({ email, password });
-    if (signUpError || !signUpData.user) {
-      throw signUpError ?? new Error("Failed to create demo user");
+    const displayName = email.split("@")[0] ?? email;
+    const { data: createData, error: createError } =
+      await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          display_name: displayName,
+        },
+      });
+    if (createError || !createData.user) {
+      throw createError ?? new Error("Failed to create demo user");
     }
-    userId = signUpData.user.id;
+    userId = createData.user.id;
   }
 
   if (!userId) throw new Error("No user id");

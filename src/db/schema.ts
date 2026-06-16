@@ -27,7 +27,6 @@ export const alertTypeEnum = pgEnum("alert_type", [
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
   displayName: text("display_name"),
-  isAdmin: boolean("is_admin").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

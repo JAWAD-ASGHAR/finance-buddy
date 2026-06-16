@@ -14,7 +14,7 @@ type FloatingCTABarProps = {
 export function FloatingCTABar({
   message = "Ready to take control?",
   buttonLabel = "Open App",
-  buttonHref = "/login",
+  buttonHref = "/dashboard",
 }: FloatingCTABarProps) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
