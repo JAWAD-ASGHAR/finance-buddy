@@ -46,7 +46,7 @@ export function ImpactSection() {
           <ScrollReveal direction="right" delay={0.1}>
             <div className="relative">
               <ParallaxImage
-                src="/home/Practice Growth.webp"
+                src="/marketing/features/impact-growth.webp"
                 alt="Student reviewing budget progress and spending analytics"
                 className="aspect-[4/5] min-h-[28rem]"
                 imageClassName="object-top"

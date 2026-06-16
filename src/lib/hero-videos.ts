@@ -4,9 +4,18 @@ export type HeroVideoAsset = {
 };
 
 export const HERO_VIDEOS: readonly HeroVideoAsset[] = [
-  { src: "/videos/vid1.webm", poster: "/videos/vid1poster.webp" },
-  { src: "/videos/vid2.webm", poster: "/videos/vid2poster.webp" },
-  { src: "/videos/vid3.webm", poster: "/videos/vid3poster.webp" },
+  {
+    src: "/marketing/hero/student-desk.webm",
+    poster: "/marketing/hero/student-desk-poster.webp",
+  },
+  {
+    src: "/marketing/hero/expense-logging.webm",
+    poster: "/marketing/hero/expense-logging-poster.webp",
+  },
+  {
+    src: "/marketing/hero/campus-evening.webm",
+    poster: "/marketing/hero/campus-evening-poster.webp",
+  },
 ] as const;
 
 const LOADER_MIN_MS = 600;

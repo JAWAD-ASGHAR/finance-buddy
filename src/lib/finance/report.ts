@@ -6,6 +6,7 @@ import type {
   MonthlyReportSummary,
 } from "@/types/finance";
 import { formatMoney } from "@/types/finance";
+import { buildDailySpendingSeries } from "@/lib/finance/chart-data";
 
 const DISCLAIMER =
   "This report is for informational purposes only and does not constitute financial advice.";
@@ -95,6 +96,7 @@ export function buildMonthlyReport(
     totalSpentCents,
     remainingCents,
     categoryBreakdown,
+    dailySpending: buildDailySpendingSeries(budget, expenses),
     forecast,
     insights,
     disclaimer: DISCLAIMER,

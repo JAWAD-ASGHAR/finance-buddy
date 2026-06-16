@@ -5,7 +5,13 @@ import { AlertBanner } from "@/components/app/AlertBanner";
 import { CategoryProgressBar } from "@/components/app/CategoryProgressBar";
 import { ForecastCard } from "@/components/app/ForecastCard";
 import { AppButton, AppCard, AppPageHeader } from "@/components/app/ui";
+import { CategorySpendChart } from "@/components/charts/CategorySpendChart";
+import { SpendingTrendChart } from "@/components/charts/SpendingTrendChart";
 import { computeCategorySummaries, computeMonthlyRemaining } from "@/lib/finance/compute";
+import {
+  buildCategoryChartData,
+  buildDailySpendingSeries,
+} from "@/lib/finance/chart-data";
 import { computeForecast } from "@/lib/finance/forecast";
 import { getCurrentBudget } from "@/lib/supabase/queries";
 import { formatMoney } from "@/types/finance";
@@ -45,6 +51,8 @@ export default async function DashboardPage() {
     budget.income_cents,
     expenses,
   );
+  const dailySpending = buildDailySpendingSeries(budget, expenses);
+  const categoryChartData = buildCategoryChartData(summaries);
 
   return (
     <>
@@ -87,6 +95,30 @@ export default async function DashboardPage() {
             <p className="mt-1 text-2xl font-semibold">
               {budget.alert_threshold_pct}%
             </p>
+          </AppCard>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-5">
+          <AppCard
+            className="lg:col-span-3"
+            title="Spending trend"
+            description="Your cumulative spend this month against an even budget pace."
+          >
+            <SpendingTrendChart data={dailySpending} />
+          </AppCard>
+
+          <AppCard
+            className="lg:col-span-2"
+            title="Category spend"
+            description="Quick view of where your budget is going."
+          >
+            {categoryChartData.length > 0 ? (
+              <CategorySpendChart data={categoryChartData} />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Add expenses to see category spending.
+              </p>
+            )}
           </AppCard>
         </div>
 

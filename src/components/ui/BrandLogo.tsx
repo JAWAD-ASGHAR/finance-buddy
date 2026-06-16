@@ -23,7 +23,7 @@ export function BrandLogo({
       aria-label={site.name}
     >
       <Image
-        src="/Logo.png"
+        src="/brand/logo.webp"
         alt=""
         width={163}
         height={138}

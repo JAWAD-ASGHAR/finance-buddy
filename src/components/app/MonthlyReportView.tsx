@@ -2,12 +2,26 @@ import type { MonthlyReportSummary } from "@/types/finance";
 import { formatMoney } from "@/types/finance";
 import { ForecastCard } from "@/components/app/ForecastCard";
 import { AppCard } from "@/components/app/ui";
+import { CategorySpendChart } from "@/components/charts/CategorySpendChart";
+import { SpendingTrendChart } from "@/components/charts/SpendingTrendChart";
+import { buildCategoryChartData } from "@/lib/finance/chart-data";
 
 export function MonthlyReportView({
   summary,
 }: {
   summary: MonthlyReportSummary;
 }) {
+  const categoryChartData = buildCategoryChartData(
+    summary.categoryBreakdown.map((category) => ({
+      categoryId: category.name,
+      name: category.name,
+      allocatedCents: category.allocatedCents,
+      spentCents: category.spentCents,
+      remainingCents: category.allocatedCents - category.spentCents,
+      percentUsed: category.percentUsed,
+    })),
+  );
+
   return (
     <div className="space-y-6">
       <AppCard title={`${summary.periodLabel} summary`}>
@@ -38,6 +52,36 @@ export function MonthlyReportView({
           </div>
         </div>
       </AppCard>
+
+      <div className="grid gap-6 lg:grid-cols-5">
+        <AppCard
+          className="lg:col-span-3"
+          title="Spending trend"
+          description="Cumulative spend through the month compared to an even budget pace."
+        >
+          {summary.dailySpending?.length ? (
+            <SpendingTrendChart data={summary.dailySpending} />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Regenerate the report to include the spending trend chart.
+            </p>
+          )}
+        </AppCard>
+
+        <AppCard
+          className="lg:col-span-2"
+          title="Category spend"
+          description="Spent vs allocated by category."
+        >
+          {categoryChartData.length > 0 ? (
+            <CategorySpendChart data={categoryChartData} />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              No category spending recorded yet.
+            </p>
+          )}
+        </AppCard>
+      </div>
 
       <AppCard title="Category breakdown">
         <ul className="space-y-3">
