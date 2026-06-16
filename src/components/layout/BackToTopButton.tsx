@@ -35,7 +35,7 @@ export function BackToTopButton() {
       aria-label="Back to top"
       onClick={scrollToTop}
       className={cn(
-        "fixed right-5 z-40 inline-flex size-11 min-h-11 min-w-11 touch-manipulation cursor-pointer items-center justify-center rounded-full border border-border/80 bg-white/95 text-foreground shadow-sm backdrop-blur-sm transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue hover:-translate-y-0.5 hover:bg-white hover:shadow-md",
+        "fixed right-5 z-40 inline-flex size-11 min-h-11 min-w-11 touch-manipulation cursor-pointer items-center justify-center rounded-full border border-border/80 bg-white/95 text-foreground shadow-sm backdrop-blur-sm transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-green hover:-translate-y-0.5 hover:bg-white hover:shadow-md",
         "bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))]",
         visible
           ? "pointer-events-auto translate-y-0 opacity-100"

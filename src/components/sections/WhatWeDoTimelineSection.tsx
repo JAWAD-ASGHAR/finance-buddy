@@ -33,7 +33,7 @@ function TimelineRow({
           {service.title}
         </h2>
         {service.comingSoon ? (
-          <span className="mt-3 inline-block rounded-full bg-accent-blue-light px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-accent-blue">
+          <span className="mt-3 inline-block rounded-full bg-accent-green-light px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-accent-green">
             Coming Soon
           </span>
         ) : null}
@@ -64,7 +64,7 @@ function TimelineRow({
                 key={step}
                 className="flex gap-3 text-sm leading-relaxed text-muted-foreground"
               >
-                <span className="text-xs font-semibold uppercase tracking-[0.1em] text-accent-blue">
+                <span className="text-xs font-semibold uppercase tracking-[0.1em] text-accent-green">
                   {String(stepIndex + 1).padStart(2, "0")}
                 </span>
                 {step}

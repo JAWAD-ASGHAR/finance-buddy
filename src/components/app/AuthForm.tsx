@@ -12,8 +12,10 @@ import {
 
 export function AuthForm({
   mode,
+  next,
 }: {
   mode: "login" | "signup";
+  next?: string;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -42,6 +44,7 @@ export function AuthForm({
       description="Private budgeting for student life. Your data stays yours."
     >
       <form action={handleSubmit} className="space-y-4">
+        {next ? <input type="hidden" name="next" value={next} /> : null}
         {mode === "signup" ? (
           <AppInput
             label="Display name"
@@ -81,14 +84,14 @@ export function AuthForm({
         {mode === "login" ? (
           <>
             No account yet?{" "}
-            <Link href="/signup" className="font-medium text-accent-blue">
+            <Link href="/signup" className="font-medium text-accent-green">
               Sign up
             </Link>
           </>
         ) : (
           <>
             Already have an account?{" "}
-            <Link href="/login" className="font-medium text-accent-blue">
+            <Link href="/login" className="font-medium text-accent-green">
               Sign in
             </Link>
           </>

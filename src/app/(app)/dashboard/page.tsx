@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { refreshAlerts } from "@/actions/alerts";
-import { getUnreadAlerts } from "@/lib/supabase/queries";
+import { getUnreadAlerts } from "@/lib/db/queries";
 import { AlertBanner } from "@/components/app/AlertBanner";
 import { CategoryProgressBar } from "@/components/app/CategoryProgressBar";
 import { ForecastCard } from "@/components/app/ForecastCard";

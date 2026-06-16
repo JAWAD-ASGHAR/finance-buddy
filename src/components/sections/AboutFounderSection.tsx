@@ -3,7 +3,7 @@
 import { ParallaxImage } from "@/components/motion/ParallaxImage";
 import { ParallaxLayer } from "@/components/motion/ParallaxLayer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
-import { Button } from "@/components/ui/Button";
+import { SiteButton } from "@/components/ui/site-button";
 import { founder } from "@/lib/content";
 
 export function AboutFounderSection() {
@@ -50,13 +50,13 @@ export function AboutFounderSection() {
                 <p className="heading-display text-lg font-semibold text-foreground">
                   {founder.name}
                 </p>
-                <p className="mt-1 text-sm font-medium text-accent-blue">
+                <p className="mt-1 text-sm font-medium text-accent-green">
                   {founder.credentials}
                 </p>
                 <p className="mt-0.5 text-sm text-muted-foreground">{founder.title}</p>
               </div>
               <div className="mt-8">
-                <Button href="/contact">Book a Free Consultation</Button>
+                <SiteButton href="/contact">Book a Free Consultation</SiteButton>
               </div>
             </ScrollReveal>
           </ParallaxLayer>

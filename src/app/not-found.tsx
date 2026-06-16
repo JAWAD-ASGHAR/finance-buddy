@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/Button";
+import { SiteButton } from "@/components/ui/site-button";
 import { createPageMetadata } from "@/lib/seo";
 
 export const metadata = createPageMetadata({
@@ -23,11 +23,11 @@ export default function NotFound() {
           the homepage to explore Finance Buddy features for student budgeting.
         </p>
         <div className="mt-8">
-          <Button href="/">Back to Home</Button>
+          <SiteButton href="/">Back to Home</SiteButton>
         </div>
         <p className="mt-6 text-sm text-muted-foreground">
           Need help?{" "}
-          <Link href="/contact" className="text-accent-blue hover:underline">
+          <Link href="/contact" className="text-accent-green hover:underline">
             Contact our team
           </Link>
           .

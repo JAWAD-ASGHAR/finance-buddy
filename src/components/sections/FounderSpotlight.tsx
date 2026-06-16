@@ -18,7 +18,7 @@ export function FounderSpotlight() {
         <h2 className="heading-display text-3xl font-semibold text-foreground sm:text-4xl">
           {founder.name}
         </h2>
-        <p className="mt-2 text-sm font-medium text-accent-blue">
+        <p className="mt-2 text-sm font-medium text-accent-green">
           {founder.credentials} · {founder.title}
         </p>
         <blockquote className="quote-serif mt-8 border-l-2 border-dark pl-6 text-2xl leading-snug text-foreground">

@@ -49,7 +49,7 @@ export function AboutServicesSection() {
                     {service.details.benefits.slice(0, 1).map((item) => (
                       <li
                         key={item}
-                        className="relative pl-3.5 text-sm leading-relaxed text-white/45 before:absolute before:left-0 before:top-[0.55em] before:size-1 before:rounded-full before:bg-accent-blue"
+                        className="relative pl-3.5 text-sm leading-relaxed text-white/45 before:absolute before:left-0 before:top-[0.55em] before:size-1 before:rounded-full before:bg-accent-green"
                       >
                         {item}
                       </li>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
-type ButtonProps = {
+type SiteButtonProps = {
   href?: string;
   children: React.ReactNode;
   variant?: "dark" | "outline" | "ghost" | "primary" | "hero";
@@ -17,10 +17,10 @@ const variants = {
   outline:
     "bg-white/95 text-foreground border border-white/80 hover:bg-white hover:-translate-y-0.5 backdrop-blur-sm",
   hero: "border border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white",
-  ghost: "text-foreground hover:text-accent-blue",
+  ghost: "text-foreground hover:text-accent-green",
 };
 
-export function Button({
+export function SiteButton({
   href,
   children,
   variant = "dark",
@@ -28,9 +28,9 @@ export function Button({
   type = "button",
   onClick,
   cursorLabel,
-}: ButtonProps) {
+}: SiteButtonProps) {
   const classes = cn(
-    "inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 text-xs font-semibold uppercase tracking-[0.08em] transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue",
+    "inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 text-xs font-semibold uppercase tracking-[0.08em] transition-all duration-300 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-green",
     variants[variant],
     className,
   );

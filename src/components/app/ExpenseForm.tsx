@@ -18,12 +18,11 @@ import {
   AppSelect,
   AppTextarea,
 } from "@/components/app/ui";
-
-type Tab = "manual" | "receipt" | "quick";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function ExpenseForm({ categories }: { categories: Category[] }) {
   const router = useRouter();
-  const [tab, setTab] = useState<Tab>("manual");
+  const [tab, setTab] = useState("manual");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [expenseDate, setExpenseDate] = useState(
@@ -102,32 +101,15 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
     router.refresh();
   }
 
-  const tabs: Array<{ id: Tab; label: string }> = [
-    { id: "manual", label: "Manual" },
-    { id: "receipt", label: "Paste receipt" },
-    { id: "quick", label: "Quick text" },
-  ];
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap gap-2">
-        {tabs.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => setTab(item.id)}
-            className={`rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] ${
-              tab === item.id
-                ? "bg-dark text-white"
-                : "border border-border bg-background text-muted-foreground"
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
+    <Tabs value={tab} onValueChange={setTab} className="space-y-6">
+      <TabsList>
+        <TabsTrigger value="manual">Manual</TabsTrigger>
+        <TabsTrigger value="receipt">Paste receipt</TabsTrigger>
+        <TabsTrigger value="quick">Quick text</TabsTrigger>
+      </TabsList>
 
-      {tab === "manual" ? (
+      <TabsContent value="manual">
         <AppCard title="Manual expense">
           <form onSubmit={handleManualSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -154,9 +136,7 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
               placeholder="Coffee before lecture"
               required
             />
-            {suggestion ? (
-              <CategorySuggestion suggestion={suggestion} />
-            ) : null}
+            {suggestion ? <CategorySuggestion suggestion={suggestion} /> : null}
             <AppSelect
               label="Category"
               value={categoryId}
@@ -174,52 +154,97 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
             </AppButton>
           </form>
         </AppCard>
-      ) : null}
+      </TabsContent>
 
-      {tab === "receipt" || tab === "quick" ? (
+      <TabsContent value="receipt">
         <AppCard
-          title={tab === "receipt" ? "Paste receipt text" : "Quick text entry"}
-          description={
-            tab === "quick"
-              ? 'Try "12 uber home Friday" or "9.99 netflix"'
-              : "Paste receipt lines — we'll extract the total and merchant."
-          }
+          title="Paste receipt text"
+          description="Paste receipt lines — we'll extract the total and merchant."
         >
-          <div className="space-y-4">
-            <AppTextarea
-              label="Text"
-              value={rawText}
-              onChange={(e) => setRawText(e.target.value)}
-              placeholder={
-                tab === "receipt"
-                  ? "COFFEE SHOP\nTotal: £4.50"
-                  : "12 uber home Friday"
-              }
-            />
-            <AppSelect
-              label="Override category (optional)"
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-            >
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </AppSelect>
-            {error ? <AppError message={error} /> : null}
-            <AppButton
-              type="button"
-              disabled={pending || !rawText.trim()}
-              onClick={() =>
-                handleTextSubmit(tab === "receipt" ? "receipt_text" : "nl_text")
-              }
-            >
-              {pending ? "Parsing..." : "Add from text"}
-            </AppButton>
-          </div>
+          <TextEntryForm
+            rawText={rawText}
+            setRawText={setRawText}
+            categoryId={categoryId}
+            setCategoryId={setCategoryId}
+            categories={categories}
+            error={error}
+            pending={pending}
+            placeholder={"COFFEE SHOP\nTotal: £4.50"}
+            onSubmit={() => handleTextSubmit("receipt_text")}
+          />
         </AppCard>
-      ) : null}
+      </TabsContent>
+
+      <TabsContent value="quick">
+        <AppCard
+          title="Quick text entry"
+          description={'Try "12 uber home Friday" or "9.99 netflix"'}
+        >
+          <TextEntryForm
+            rawText={rawText}
+            setRawText={setRawText}
+            categoryId={categoryId}
+            setCategoryId={setCategoryId}
+            categories={categories}
+            error={error}
+            pending={pending}
+            placeholder="12 uber home Friday"
+            onSubmit={() => handleTextSubmit("nl_text")}
+          />
+        </AppCard>
+      </TabsContent>
+    </Tabs>
+  );
+}
+
+function TextEntryForm({
+  rawText,
+  setRawText,
+  categoryId,
+  setCategoryId,
+  categories,
+  error,
+  pending,
+  placeholder,
+  onSubmit,
+}: {
+  rawText: string;
+  setRawText: (value: string) => void;
+  categoryId: string;
+  setCategoryId: (value: string) => void;
+  categories: Category[];
+  error: string | null;
+  pending: boolean;
+  placeholder: string;
+  onSubmit: () => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <AppTextarea
+        label="Text"
+        value={rawText}
+        onChange={(e) => setRawText(e.target.value)}
+        placeholder={placeholder}
+      />
+      <AppSelect
+        label="Override category (optional)"
+        value={categoryId}
+        onChange={(e) => setCategoryId(e.target.value)}
+      >
+        {categories.map((category) => (
+          <option key={category.id} value={category.id}>
+            {category.name}
+          </option>
+        ))}
+      </AppSelect>
+      {error ? <AppError message={error} /> : null}
+      <AppButton
+        type="button"
+        disabled={pending || !rawText.trim()}
+        onClick={onSubmit}
+      >
+        {pending ? "Parsing..." : "Add from text"}
+      </AppButton>
     </div>
   );
 }

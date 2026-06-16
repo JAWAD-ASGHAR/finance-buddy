@@ -47,7 +47,7 @@ export function TestimonialCarousel({
 
                   <div className="flex flex-col justify-center px-8 py-10 sm:px-14 sm:py-14">
                     <Quote
-                      className="mb-6 text-accent-blue/30"
+                      className="mb-6 text-accent-green/30"
                       size={36}
                       strokeWidth={1.5}
                     />
@@ -91,7 +91,7 @@ export function TestimonialCarousel({
           <button
             type="button"
             onClick={scrollPrev}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-foreground transition-all hover:border-accent-blue hover:text-accent-blue focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-foreground transition-all hover:border-accent-green hover:text-accent-green focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-green"
             aria-label="Previous testimonial"
           >
             <ChevronLeft size={18} />
@@ -99,7 +99,7 @@ export function TestimonialCarousel({
           <button
             type="button"
             onClick={scrollNext}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-foreground transition-all hover:border-accent-blue hover:text-accent-blue focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-white text-foreground transition-all hover:border-accent-green hover:text-accent-green focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-green"
             aria-label="Next testimonial"
           >
             <ChevronRight size={18} />

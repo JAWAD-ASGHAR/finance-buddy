@@ -31,7 +31,7 @@ export function ContactForm() {
   }
 
   const fieldClassName =
-    "w-full rounded-2xl border border-border/80 bg-white px-4 py-4 text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/15";
+    "w-full rounded-2xl border border-border/80 bg-white px-4 py-4 text-sm outline-none transition-colors placeholder:text-muted-foreground/60 focus:border-accent-green focus:ring-2 focus:ring-accent-green/15";
 
   return (
     <ScrollReveal>

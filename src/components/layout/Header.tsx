@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { BrandLogo } from "@/components/ui/BrandLogo";
-import { Button } from "@/components/ui/Button";
+import { SiteButton } from "@/components/ui/site-button";
 import { navLinks } from "@/lib/content";
 import { useInvertedTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -68,12 +68,9 @@ function HeaderBar({
 
       <div className="hidden items-center justify-end gap-3 lg:flex lg:justify-self-end">
         <ThemeToggle light={light} />
-        <Button href="/login" variant={light ? "hero" : "outline"} cursorLabel="App">
+        <SiteButton href="/login" variant="primary" cursorLabel="App">
           Open App
-        </Button>
-        <Button href="/contact" variant={light ? "hero" : "primary"} cursorLabel="Join">
-          Get Early Access
-        </Button>
+        </SiteButton>
       </div>
 
       <div className="flex shrink-0 items-center gap-1 lg:hidden">
@@ -150,24 +147,27 @@ function MobileMenu({ light = false, onClose, pathname }: MobileMenuProps) {
             {link.label}
           </Link>
         ))}
-        <Button
+        <SiteButton
           href="/login"
           className="mt-4 w-full"
-          variant={light ? "hero" : "outline"}
+          variant="primary"
           onClick={onClose}
           cursorLabel="App"
         >
           Open App
-        </Button>
-        <Button
+        </SiteButton>
+        <Link
           href="/contact"
-          className="mt-4 w-full"
-          variant={light ? "hero" : "primary"}
           onClick={onClose}
-          cursorLabel="Join"
+          className={cn(
+            "mt-3 block text-center text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
+            light
+              ? "text-white/75 hover:text-white"
+              : "text-muted-foreground hover:text-foreground",
+          )}
         >
-          Get Early Access
-        </Button>
+          Contact support
+        </Link>
       </nav>
     </div>
   );

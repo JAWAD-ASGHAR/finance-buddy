@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { CategorySummary } from "@/types/finance";
 import { formatMoney } from "@/types/finance";
+import { Progress } from "@/components/ui/progress";
 
 export function CategoryProgressBar({
   summary,
@@ -9,13 +10,12 @@ export function CategoryProgressBar({
   summary: CategorySummary;
   thresholdPct?: number;
 }) {
-  const width = Math.min(summary.percentUsed, 100);
   const tone =
     summary.percentUsed >= 100
-      ? "bg-red-500"
+      ? "[&_[data-slot=progress-indicator]]:bg-red-500"
       : summary.percentUsed >= thresholdPct
-        ? "bg-amber-500"
-        : "bg-accent-blue";
+        ? "[&_[data-slot=progress-indicator]]:bg-amber-500"
+        : "[&_[data-slot=progress-indicator]]:bg-primary";
 
   return (
     <div className="space-y-2">
@@ -25,12 +25,10 @@ export function CategoryProgressBar({
           {formatMoney(summary.spentCents)} / {formatMoney(summary.allocatedCents)}
         </span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-muted">
-        <div
-          className={cn("h-full rounded-full transition-all", tone)}
-          style={{ width: `${width}%` }}
-        />
-      </div>
+      <Progress
+        value={Math.min(summary.percentUsed, 100)}
+        className={cn("h-2", tone)}
+      />
       <p className="text-xs text-muted-foreground">
         {formatMoney(summary.remainingCents)} remaining · {summary.percentUsed}% used
       </p>

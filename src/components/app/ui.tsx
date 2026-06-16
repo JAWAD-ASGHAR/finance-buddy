@@ -1,3 +1,22 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 export function AppCard({
@@ -12,22 +31,19 @@ export function AppCard({
   description?: string;
 }) {
   return (
-    <section
-      className={cn(
-        "rounded-xl border border-border bg-background p-5 shadow-sm sm:p-6",
-        className,
-      )}
-    >
-      {title ? (
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+    <Card className={className}>
+      {title || description ? (
+        <CardHeader>
+          {title ? <CardTitle>{title}</CardTitle> : null}
           {description ? (
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            <CardDescription>{description}</CardDescription>
           ) : null}
-        </div>
+        </CardHeader>
       ) : null}
-      {children}
-    </section>
+      <CardContent className={title || description ? undefined : "pt-6"}>
+        {children}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -57,55 +73,83 @@ export function AppPageHeader({
 
 export function AppInput({
   label,
+  id,
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+  const inputId = id ?? label.toLowerCase().replace(/\s+/g, "-");
   return (
-    <label className="block space-y-1.5">
-      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-        {label}
-      </span>
-      <input
-        {...props}
-        className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none transition focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20"
-      />
-    </label>
+    <div className="space-y-2">
+      <Label htmlFor={inputId}>{label}</Label>
+      <Input id={inputId} {...props} />
+    </div>
   );
 }
 
 export function AppSelect({
   label,
   children,
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement> & { label: string }) {
+  value,
+  onChange,
+  id,
+}: {
+  label: string;
+  children: React.ReactNode;
+  value?: string;
+  onChange?: (event: React.ChangeEvent<HTMLSelectElement>) => void;
+  id?: string;
+}) {
+  const selectId = id ?? label.toLowerCase().replace(/\s+/g, "-");
+
+  if (onChange) {
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={selectId}>{label}</Label>
+        <select
+          id={selectId}
+          value={value}
+          onChange={onChange}
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        >
+          {children}
+        </select>
+      </div>
+    );
+  }
+
   return (
-    <label className="block space-y-1.5">
-      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-        {label}
-      </span>
-      <select
-        {...props}
-        className="w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none transition focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20"
-      >
-        {children}
-      </select>
-    </label>
+    <div className="space-y-2">
+      <Label htmlFor={selectId}>{label}</Label>
+      <Select value={value}>
+        <SelectTrigger id={selectId}>
+          <SelectValue placeholder="Select..." />
+        </SelectTrigger>
+        <SelectContent>{children}</SelectContent>
+      </Select>
+    </div>
   );
+}
+
+export function AppSelectItem({
+  value,
+  children,
+}: {
+  value: string;
+  children: React.ReactNode;
+}) {
+  return <SelectItem value={value}>{children}</SelectItem>;
 }
 
 export function AppTextarea({
   label,
+  id,
   ...props
 }: React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
+  const textareaId = id ?? label.toLowerCase().replace(/\s+/g, "-");
   return (
-    <label className="block space-y-1.5">
-      <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-        {label}
-      </span>
-      <textarea
-        {...props}
-        className="min-h-28 w-full rounded-md border border-border bg-background px-3 py-2.5 text-sm outline-none transition focus:border-accent-blue focus:ring-2 focus:ring-accent-blue/20"
-      />
-    </label>
+    <div className="space-y-2">
+      <Label htmlFor={textareaId}>{label}</Label>
+      <Textarea id={textareaId} {...props} />
+    </div>
   );
 }
 
@@ -117,27 +161,28 @@ export function AppButton({
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "danger";
 }) {
+  const mappedVariant =
+    variant === "danger"
+      ? "destructive"
+      : variant === "secondary"
+        ? "outline"
+        : "default";
+
   return (
-    <button
+    <Button
+      variant={mappedVariant}
+      className={cn("uppercase tracking-[0.08em]", className)}
       {...props}
-      className={cn(
-        "inline-flex items-center justify-center rounded-md px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.08em] transition disabled:opacity-50",
-        variant === "primary" && "bg-dark text-white hover:bg-dark-muted",
-        variant === "secondary" &&
-          "border border-border bg-background text-foreground hover:bg-muted",
-        variant === "danger" && "bg-red-600 text-white hover:bg-red-700",
-        className,
-      )}
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
 export function AppError({ message }: { message: string }) {
   return (
-    <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-      {message}
-    </p>
+    <Alert variant="destructive">
+      <AlertDescription>{message}</AlertDescription>
+    </Alert>
   );
 }

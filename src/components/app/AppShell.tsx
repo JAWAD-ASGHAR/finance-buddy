@@ -34,7 +34,7 @@ export function AppShell({
                   currentPath === item.href ||
                     (item.href !== "/dashboard" &&
                       currentPath?.startsWith(item.href))
-                    ? "bg-accent-blue-light text-accent-blue"
+                    ? "bg-accent-green-light text-accent-green"
                     : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -59,7 +59,7 @@ export function AppShell({
               className={cn(
                 "shrink-0 rounded-md px-3 py-1.5 text-xs font-medium uppercase tracking-[0.08em]",
                 currentPath === item.href
-                  ? "bg-accent-blue-light text-accent-blue"
+                  ? "bg-accent-green-light text-accent-green"
                   : "text-muted-foreground",
               )}
             >

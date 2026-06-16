@@ -2,26 +2,27 @@
  * Demo seed script — run after creating a Supabase user account.
  *
  * Usage:
- *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... DEMO_EMAIL=... DEMO_PASSWORD=... node scripts/seed-demo.mjs
+ *   SUPABASE_URL=... SUPABASE_SECRET_KEY=... DEMO_EMAIL=... DEMO_PASSWORD=... node scripts/seed-demo.mjs
  *
- * Creates a sample budget and expenses matching the recommended demo story.
+ * Legacy SUPABASE_SERVICE_ROLE_KEY is still accepted during migration.
  */
 
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const secretKey =
+  process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 const email = process.env.DEMO_EMAIL;
 const password = process.env.DEMO_PASSWORD ?? "demo123456";
 
-if (!url || !serviceKey || !email) {
+if (!url || !secretKey || !email) {
   console.error(
-    "Required env: SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL), SUPABASE_SERVICE_ROLE_KEY, DEMO_EMAIL",
+    "Required env: SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL), SUPABASE_SECRET_KEY (or legacy SUPABASE_SERVICE_ROLE_KEY), DEMO_EMAIL",
   );
   process.exit(1);
 }
 
-const supabase = createClient(url, serviceKey, {
+const supabase = createClient(url, secretKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 

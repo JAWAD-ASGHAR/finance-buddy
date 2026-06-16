@@ -1,9 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
-import { requireAuthUser } from "@/lib/supabase/queries";
-import { createClient } from "@/lib/supabase/server";
+import { mapBudget } from "@/db/mappers";
+import { getDb } from "@/db/index";
+import { budgets, categories } from "@/db/schema";
+import { requireAuthUser } from "@/lib/db/queries";
 import {
   DEFAULT_CATEGORIES,
   getCurrentBudgetPeriod,
@@ -30,10 +33,11 @@ export async function createMonthlyBudget(input: {
   alertThresholdPct?: number;
   categories?: Array<{ name: string; allocated: string }>;
 }): Promise<ActionResult<{ budgetId: string }>> {
+  const db = getDb();
   const user = await requireAuthUser();
   const { year, month } = getCurrentBudgetPeriod();
 
-  const categories =
+  const categoryInputs =
     input.categories && input.categories.length > 0
       ? input.categories
           .map((c) => ({
@@ -54,64 +58,66 @@ export async function createMonthlyBudget(input: {
   const parsed = createBudgetSchema.safeParse({
     incomeCents,
     alertThresholdPct: input.alertThresholdPct ?? 80,
-    categories,
+    categories: categoryInputs,
     year,
     month,
   });
 
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
   }
 
-  const supabase = await createClient();
-
-  const { data: existing } = await supabase
-    .from("budgets")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("year", year)
-    .eq("month", month)
-    .maybeSingle();
+  const existing = await db.query.budgets.findFirst({
+    where: and(
+      eq(budgets.userId, user.id),
+      eq(budgets.year, year),
+      eq(budgets.month, month),
+    ),
+    columns: { id: true },
+  });
 
   if (existing) {
     return updateExistingBudget(existing.id, user.id, parsed.data);
   }
 
-  const { data: budget, error: budgetError } = await supabase
-    .from("budgets")
-    .insert({
-      user_id: user.id,
-      year,
-      month,
-      income_cents: parsed.data.incomeCents,
-      alert_threshold_pct: parsed.data.alertThresholdPct,
-    })
-    .select("*")
-    .single();
+  try {
+    const budgetId = await db.transaction(async (tx) => {
+      const [budget] = await tx
+        .insert(budgets)
+        .values({
+          userId: user.id,
+          year,
+          month,
+          incomeCents: parsed.data.incomeCents,
+          alertThresholdPct: parsed.data.alertThresholdPct,
+        })
+        .returning({ id: budgets.id });
 
-  if (budgetError || !budget) {
-    return { success: false, error: budgetError?.message ?? "Failed to create budget" };
+      await tx.insert(categories).values(
+        parsed.data.categories.map((category, index) => ({
+          budgetId: budget.id,
+          userId: user.id,
+          name: category.name,
+          allocatedCents: category.allocatedCents,
+          sortOrder: index,
+        })),
+      );
+
+      return budget.id;
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath("/budget/setup");
+    return { success: true, data: { budgetId } };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to create budget",
+    };
   }
-
-  const categoryRows = parsed.data.categories.map((category, index) => ({
-    budget_id: budget.id,
-    user_id: user.id,
-    name: category.name,
-    allocated_cents: category.allocatedCents,
-    sort_order: index,
-  }));
-
-  const { error: categoryError } = await supabase
-    .from("categories")
-    .insert(categoryRows);
-
-  if (categoryError) {
-    return { success: false, error: categoryError.message };
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/budget/setup");
-  return { success: true, data: { budgetId: budget.id } };
 }
 
 async function updateExistingBudget(
@@ -119,48 +125,47 @@ async function updateExistingBudget(
   userId: string,
   data: z.infer<typeof createBudgetSchema>,
 ): Promise<ActionResult<{ budgetId: string }>> {
-  const supabase = await createClient();
+  const db = getDb();
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(budgets)
+        .set({
+          incomeCents: data.incomeCents,
+          alertThresholdPct: data.alertThresholdPct,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(budgets.id, budgetId), eq(budgets.userId, userId)));
 
-  const { error: updateError } = await supabase
-    .from("budgets")
-    .update({
-      income_cents: data.incomeCents,
-      alert_threshold_pct: data.alertThresholdPct,
-    })
-    .eq("id", budgetId)
-    .eq("user_id", userId);
+      await tx.delete(categories).where(eq(categories.budgetId, budgetId));
 
-  if (updateError) {
-    return { success: false, error: updateError.message };
+      await tx.insert(categories).values(
+        data.categories.map((category, index) => ({
+          budgetId,
+          userId,
+          name: category.name,
+          allocatedCents: category.allocatedCents,
+          sortOrder: index,
+        })),
+      );
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath("/budget/setup");
+    return { success: true, data: { budgetId } };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update budget",
+    };
   }
-
-  await supabase.from("categories").delete().eq("budget_id", budgetId);
-
-  const categoryRows = data.categories.map((category, index) => ({
-    budget_id: budgetId,
-    user_id: userId,
-    name: category.name,
-    allocated_cents: category.allocatedCents,
-    sort_order: index,
-  }));
-
-  const { error: categoryError } = await supabase
-    .from("categories")
-    .insert(categoryRows);
-
-  if (categoryError) {
-    return { success: false, error: categoryError.message };
-  }
-
-  revalidatePath("/dashboard");
-  revalidatePath("/budget/setup");
-  return { success: true, data: { budgetId } };
 }
 
 export async function updateBudgetIncome(input: {
   budgetId: string;
   income: string;
 }): Promise<ActionResult<Budget>> {
+  const db = getDb();
   const user = await requireAuthUser();
   const incomeCents = parseMoneyToCents(input.income);
 
@@ -168,19 +173,16 @@ export async function updateBudgetIncome(input: {
     return { success: false, error: "Enter a valid income amount" };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("budgets")
-    .update({ income_cents: incomeCents })
-    .eq("id", input.budgetId)
-    .eq("user_id", user.id)
-    .select("*")
-    .single();
+  const [row] = await db
+    .update(budgets)
+    .set({ incomeCents, updatedAt: new Date() })
+    .where(and(eq(budgets.id, input.budgetId), eq(budgets.userId, user.id)))
+    .returning();
 
-  if (error || !data) {
-    return { success: false, error: error?.message ?? "Failed to update budget" };
+  if (!row) {
+    return { success: false, error: "Failed to update budget" };
   }
 
   revalidatePath("/dashboard");
-  return { success: true, data: data as Budget };
+  return { success: true, data: mapBudget(row) };
 }

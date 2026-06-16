@@ -1,7 +1,7 @@
 "use client";
 
 import { Header } from "@/components/layout/Header";
-import { Button } from "@/components/ui/Button";
+import { SiteButton } from "@/components/ui/site-button";
 import { HeroVideo } from "@/components/motion/HeroVideo";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 import { HeroLogoMarquee } from "@/components/sections/HeroLogoMarquee";
@@ -35,9 +35,9 @@ export function HeroSection() {
             {hero.description}
           </p>
           <div className="mt-8">
-            <Button href="#services" variant="hero" cursorLabel="View">
+            <SiteButton href="#services" variant="hero" cursorLabel="View">
               Explore Features
-            </Button>
+            </SiteButton>
           </div>
         </ScrollReveal>
       </div>

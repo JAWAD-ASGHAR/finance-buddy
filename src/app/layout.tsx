@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Source_Serif_4 } from "next/font/google";
+import { Inter, Source_Serif_4, Geist } from "next/font/google";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   organizationJsonLd,
@@ -8,6 +8,9 @@ import {
 } from "@/lib/seo";
 import { themeInitScript } from "@/lib/theme-config";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,7 +52,7 @@ export default function RootLayout({
   return (
     <html
       lang="en-AU"
-      className={`${inter.variable} ${sourceSerif.variable} h-full scroll-smooth antialiased`}
+      className={cn("h-full", "scroll-smooth", "antialiased", inter.variable, sourceSerif.variable, "font-sans", geist.variable)}
       suppressHydrationWarning
     >
       <head>

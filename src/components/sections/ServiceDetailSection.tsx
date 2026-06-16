@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/Button";
+import { SiteButton } from "@/components/ui/site-button";
 import { ParallaxImage } from "@/components/motion/ParallaxImage";
 import { ParallaxLayer } from "@/components/motion/ParallaxLayer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
@@ -53,7 +53,7 @@ export function ServiceDetailSection({
                   {service.details.intro}
                 </p>
                 <div className="mt-8">
-                  <Button href="/contact">Book a Free Consultation</Button>
+                  <SiteButton href="/contact">Book a Free Consultation</SiteButton>
                 </div>
               </div>
             </ScrollReveal>
@@ -83,7 +83,7 @@ export function ServiceDetailSection({
                     className="flex gap-3 text-sm leading-relaxed text-muted-foreground"
                   >
                     <span
-                      className="mt-2 h-1 w-1 shrink-0 rounded-full bg-accent-blue"
+                      className="mt-2 h-1 w-1 shrink-0 rounded-full bg-accent-green"
                       aria-hidden
                     />
                     {benefit}
@@ -115,7 +115,7 @@ export function ServiceDetailSection({
                     key={step}
                     className="flex gap-3 text-sm leading-relaxed text-muted-foreground"
                   >
-                    <span className="text-xs font-semibold uppercase tracking-[0.1em] text-accent-blue">
+                    <span className="text-xs font-semibold uppercase tracking-[0.1em] text-accent-green">
                       {String(stepIndex + 1).padStart(2, "0")}
                     </span>
                     {step}

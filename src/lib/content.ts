@@ -22,8 +22,8 @@ export const hero = {
 export const chairCta = {
   title: "Ready to take control?",
   description:
-    "Join the waitlist for early access to Finance Buddy — set your allowance, log food and transport spending, fix categories with one tap, and see your month-end balance before it arrives.",
-  primaryLabel: "Get Early Access",
+    "Open Finance Buddy — set your allowance, log food and transport spending, fix categories with one tap, and see your month-end balance before it arrives.",
+  primaryLabel: "Open App",
   secondaryLabel: "See Features",
 } as const;
 
@@ -453,13 +453,13 @@ export const contactPage = {
   title: "Let's talk about",
   titleAccent: "your budget goals.",
   description:
-    "Join the waitlist, ask a question, or request early access. No pressure — just a clear conversation about what Finance Buddy can do for you.",
+    "Questions, support, or feedback — reach out anytime. We're here to help with Finance Buddy.",
   highlights: [
-    { label: "Early access", value: "Open" },
+    { label: "App access", value: "Open" },
     { label: "Response time", value: "1–2 days" },
-    { label: "Cost to join", value: "Free" },
+    { label: "Support", value: "Free" },
   ],
-  formTitle: "Request early access",
+  formTitle: "Send a message",
   formDescription:
     "Tell us a little about yourself and we'll notify you when Finance Buddy is ready to try.",
   processTitle: "What happens next",
