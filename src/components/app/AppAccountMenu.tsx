@@ -4,10 +4,7 @@ import { signOut } from "@/actions/auth";
 import type { AppSession } from "@/types/app-session";
 import { getAccountInitials } from "@/lib/auth/email";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-
-const menuItems = [{ href: "/settings", label: "Settings" }] as const;
 
 export function AppAccountMenu({ session }: { session: AppSession }) {
   const [open, setOpen] = useState(false);
@@ -78,20 +75,6 @@ export function AppAccountMenu({ session }: { session: AppSession }) {
           </div>
 
           <div className="p-1">
-            {menuItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                role="menuitem"
-                onClick={() => setOpen(false)}
-                className="block rounded-md px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="border-t border-border p-1">
             <form action={signOut}>
               <button
                 type="submit"
