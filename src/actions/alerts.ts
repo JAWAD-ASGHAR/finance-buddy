@@ -1,68 +1,50 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { and, eq } from "drizzle-orm";
+import { mapAlert } from "@/db/mappers";
+import { getDb } from "@/db/index";
+import { alerts } from "@/db/schema";
 import { detectAlerts } from "@/lib/finance/alerts";
 import { computeCategorySummaries } from "@/lib/finance/compute";
 import { computeForecast } from "@/lib/finance/forecast";
-import { requireAuthUser } from "@/lib/supabase/queries";
-import { createClient } from "@/lib/supabase/server";
+import { getBudgetBundle, requireAuthUser } from "@/lib/db/queries";
 import type { ActionResult, Alert } from "@/types/finance";
 
 export async function refreshAlerts(
   budgetId: string,
 ): Promise<ActionResult<void>> {
+  const db = getDb();
   const user = await requireAuthUser();
-  const supabase = await createClient();
+  const bundle = await getBudgetBundle(budgetId, user.id);
 
-  const [{ data: budget }, { data: categories }, { data: expenses }] =
-    await Promise.all([
-      supabase
-        .from("budgets")
-        .select("*")
-        .eq("id", budgetId)
-        .eq("user_id", user.id)
-        .single(),
-      supabase
-        .from("categories")
-        .select("*")
-        .eq("budget_id", budgetId)
-        .order("sort_order"),
-      supabase.from("expenses").select("*").eq("budget_id", budgetId),
-    ]);
-
-  if (!budget || !categories) {
+  if (!bundle) {
     return { success: false, error: "Budget not found" };
   }
 
   const summaries = computeCategorySummaries(
-    categories,
-    expenses ?? [],
+    bundle.categories,
+    bundle.expenses,
   );
-  const forecast = computeForecast(budget, expenses ?? []);
+  const forecast = computeForecast(bundle.budget, bundle.expenses);
   const detected = detectAlerts(
     summaries,
     forecast,
-    budget.alert_threshold_pct,
+    bundle.budget.alert_threshold_pct,
   );
 
-  await supabase.from("alerts").delete().eq("budget_id", budgetId);
+  await db.delete(alerts).where(eq(alerts.budgetId, budgetId));
 
-  if (detected.length === 0) {
-    revalidatePath("/dashboard");
-    return { success: true, data: undefined };
-  }
-
-  const rows = detected.map((alert) => ({
-    user_id: user.id,
-    budget_id: budgetId,
-    category_id: alert.categoryId,
-    type: alert.type,
-    message: alert.message,
-  }));
-
-  const { error } = await supabase.from("alerts").insert(rows);
-  if (error) {
-    return { success: false, error: error.message };
+  if (detected.length > 0) {
+    await db.insert(alerts).values(
+      detected.map((alert) => ({
+        userId: user.id,
+        budgetId,
+        categoryId: alert.categoryId,
+        type: alert.type,
+        message: alert.message,
+      })),
+    );
   }
 
   revalidatePath("/dashboard");
@@ -72,21 +54,19 @@ export async function refreshAlerts(
 export async function markAlertRead(
   alertId: string,
 ): Promise<ActionResult<Alert>> {
+  const db = getDb();
   const user = await requireAuthUser();
-  const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("alerts")
-    .update({ read_at: new Date().toISOString() })
-    .eq("id", alertId)
-    .eq("user_id", user.id)
-    .select("*")
-    .single();
+  const [row] = await db
+    .update(alerts)
+    .set({ readAt: new Date() })
+    .where(and(eq(alerts.id, alertId), eq(alerts.userId, user.id)))
+    .returning();
 
-  if (error || !data) {
-    return { success: false, error: error?.message ?? "Failed to mark alert read" };
+  if (!row) {
+    return { success: false, error: "Failed to mark alert read" };
   }
 
   revalidatePath("/dashboard");
-  return { success: true, data: data as Alert };
+  return { success: true, data: mapAlert(row) };
 }

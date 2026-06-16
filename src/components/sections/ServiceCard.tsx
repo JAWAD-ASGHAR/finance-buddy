@@ -42,7 +42,7 @@ export function ServiceCard({
         <Icon
           size={22}
           strokeWidth={1.5}
-          className="text-accent-blue"
+          className="text-accent-green"
           aria-hidden
         />
         <h3 className="heading-display mt-6 text-lg font-semibold">{title}</h3>
@@ -51,7 +51,7 @@ export function ServiceCard({
         </p>
         <Link
           href={`/what-we-do#${id}`}
-          className="mt-8 inline-flex items-center gap-2 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-foreground transition-colors group-hover:text-accent-blue"
+          className="mt-8 inline-flex items-center gap-2 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-foreground transition-colors group-hover:text-accent-green"
         >
           Learn More
           <ArrowRight size={12} />

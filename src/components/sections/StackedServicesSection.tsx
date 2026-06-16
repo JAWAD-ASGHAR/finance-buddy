@@ -145,7 +145,7 @@ function StackSectionHeader({
           </div>
           <Link
             href="/what-we-do"
-            className="inline-flex shrink-0 items-center gap-2 self-start text-xs font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:text-accent-blue sm:self-auto"
+            className="inline-flex shrink-0 items-center gap-2 self-start text-xs font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:text-accent-green sm:self-auto"
           >
             View All Features
             <ArrowRight size={14} />
@@ -166,7 +166,7 @@ function StackSectionHeader({
       <ScrollReveal delay={0.08}>
         <Link
           href="/what-we-do"
-          className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:text-accent-blue"
+          className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-foreground transition-colors hover:text-accent-green"
         >
           View All Features
           <ArrowRight size={14} />

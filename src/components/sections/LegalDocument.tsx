@@ -82,7 +82,7 @@ export function LegalDocument({
                       <a
                         href={`#${section.id}`}
                         onClick={(event) => scrollToLegalSection(event, section.id)}
-                        className="text-sm text-muted-foreground transition-colors hover:text-accent-blue"
+                        className="text-sm text-muted-foreground transition-colors hover:text-accent-green"
                       >
                         {section.title}
                       </a>
@@ -114,7 +114,7 @@ export function LegalDocument({
                             key={item}
                             className="flex items-start gap-3 text-sm leading-relaxed text-muted-foreground sm:text-base"
                           >
-                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent-blue" />
+                            <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-accent-green" />
                             {item}
                           </li>
                         ))}
@@ -138,7 +138,7 @@ export function LegalDocument({
               Contact {site.name} at{" "}
               <a
                 href={`mailto:${site.email}`}
-                className="text-accent-blue hover:underline"
+                className="text-accent-green hover:underline"
               >
                 {site.email}
               </a>

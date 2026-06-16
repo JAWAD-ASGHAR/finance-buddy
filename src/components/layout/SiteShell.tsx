@@ -29,11 +29,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <Footer />
-      <FloatingCTABar
-        message="Want early access?"
-        buttonLabel="Join the waitlist"
-        buttonHref="/contact"
-      />
+      <FloatingCTABar />
       <BackToTopButton />
     </>
   );

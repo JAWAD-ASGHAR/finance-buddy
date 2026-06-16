@@ -23,7 +23,7 @@ export function FAQAccordion({ faqs }: { faqs: readonly FAQ[] }) {
               <button
                 type="button"
                 id={`faq-question-${index}`}
-                className="flex w-full items-center justify-between gap-6 py-6 text-left transition-colors hover:text-accent-blue"
+                className="flex w-full items-center justify-between gap-6 py-6 text-left transition-colors hover:text-accent-green"
                 aria-expanded={isOpen}
                 aria-controls={`faq-answer-${index}`}
                 onClick={() => setOpenIndex(isOpen ? null : index)}

@@ -42,7 +42,15 @@ export async function signUp(
     return { success: false, error: error.message };
   }
 
-  redirect("/dashboard");
+  const nextPath = formData.get("next");
+  const safeNext =
+    typeof nextPath === "string" &&
+    nextPath.startsWith("/") &&
+    !nextPath.startsWith("//")
+      ? nextPath
+      : "/dashboard";
+
+  redirect(safeNext);
 }
 
 export async function signIn(
@@ -67,7 +75,15 @@ export async function signIn(
     return { success: false, error: error.message };
   }
 
-  redirect("/dashboard");
+  const nextPath = formData.get("next");
+  const safeNext =
+    typeof nextPath === "string" &&
+    nextPath.startsWith("/") &&
+    !nextPath.startsWith("//")
+      ? nextPath
+      : "/dashboard";
+
+  redirect(safeNext);
 }
 
 export async function signOut() {

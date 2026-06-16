@@ -6,6 +6,14 @@ import { formatMoney } from "@/types/finance";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AppButton, AppCard } from "@/components/app/ui";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export function ExpenseList({
   expenses,
@@ -43,58 +51,56 @@ export function ExpenseList({
 
   return (
     <AppCard title="All expenses">
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="border-b border-border text-left text-xs uppercase tracking-[0.08em] text-muted-foreground">
-              <th className="px-2 py-3">Date</th>
-              <th className="px-2 py-3">Description</th>
-              <th className="px-2 py-3">Amount</th>
-              <th className="px-2 py-3">Category</th>
-              <th className="px-2 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {expenses.map((expense) => (
-              <tr key={expense.id} className="border-b border-border/70">
-                <td className="px-2 py-3 whitespace-nowrap">
-                  {expense.expense_date}
-                </td>
-                <td className="px-2 py-3">{expense.description}</td>
-                <td className="px-2 py-3 whitespace-nowrap font-medium">
-                  {formatMoney(expense.amount_cents)}
-                </td>
-                <td className="px-2 py-3">
-                  <select
-                    value={expense.category_id}
-                    disabled={pendingId === expense.id}
-                    onChange={(e) =>
-                      handleCategoryChange(expense.id, e.target.value)
-                    }
-                    className="rounded-md border border-border bg-background px-2 py-1.5 text-sm"
-                  >
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-2 py-3">
-                  <AppButton
-                    type="button"
-                    variant="secondary"
-                    disabled={pendingId === expense.id}
-                    onClick={() => handleDelete(expense.id)}
-                  >
-                    Delete
-                  </AppButton>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Description</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {expenses.map((expense) => (
+            <TableRow key={expense.id}>
+              <TableCell className="whitespace-nowrap">
+                {expense.expense_date}
+              </TableCell>
+              <TableCell>{expense.description}</TableCell>
+              <TableCell className="font-medium">
+                {formatMoney(expense.amount_cents)}
+              </TableCell>
+              <TableCell>
+                <select
+                  value={expense.category_id}
+                  disabled={pendingId === expense.id}
+                  onChange={(e) =>
+                    handleCategoryChange(expense.id, e.target.value)
+                  }
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none"
+                >
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </TableCell>
+              <TableCell className="text-right">
+                <AppButton
+                  type="button"
+                  variant="secondary"
+                  disabled={pendingId === expense.id}
+                  onClick={() => handleDelete(expense.id)}
+                >
+                  Delete
+                </AppButton>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </AppCard>
   );
 }

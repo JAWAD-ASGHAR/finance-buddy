@@ -1,15 +1,24 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { refreshAlerts } from "@/actions/alerts";
+import { mapExpense } from "@/db/mappers";
+import { getDb } from "@/db/index";
+import {
+  alerts,
+  budgets,
+  categories,
+  expenses,
+  monthlyReports,
+} from "@/db/schema";
 import { suggestCategory } from "@/lib/finance/categorize";
 import {
   parseExpenseText,
   parseReceiptText,
 } from "@/lib/finance/parse-text";
-import { getCurrentBudget, requireAuthUser } from "@/lib/supabase/queries";
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentBudget, requireAuthUser } from "@/lib/db/queries";
 import type { ActionResult, Expense, ExpenseSource } from "@/types/finance";
 import { parseMoneyToCents } from "@/types/finance";
 
@@ -32,6 +41,7 @@ export async function addExpense(input: {
   userCorrected?: boolean;
   source?: ExpenseSource;
 }): Promise<ActionResult<Expense>> {
+  const db = getDb();
   const user = await requireAuthUser();
   const { budget } = await getCurrentBudget();
 
@@ -55,36 +65,40 @@ export async function addExpense(input: {
   });
 
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
   }
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("expenses")
-    .insert({
-      user_id: user.id,
-      budget_id: budget.id,
-      category_id: parsed.data.categoryId,
-      suggested_category_id: parsed.data.suggestedCategoryId,
-      amount_cents: parsed.data.amountCents,
-      description: parsed.data.description,
-      expense_date: parsed.data.expenseDate,
-      source: parsed.data.source,
-      user_corrected: parsed.data.userCorrected,
-    })
-    .select("*")
-    .single();
+  try {
+    const [row] = await db
+      .insert(expenses)
+      .values({
+        userId: user.id,
+        budgetId: budget.id,
+        categoryId: parsed.data.categoryId,
+        suggestedCategoryId: parsed.data.suggestedCategoryId,
+        amountCents: parsed.data.amountCents,
+        description: parsed.data.description,
+        expenseDate: parsed.data.expenseDate,
+        source: parsed.data.source,
+        userCorrected: parsed.data.userCorrected,
+      })
+      .returning();
 
-  if (error || !data) {
-    return { success: false, error: error?.message ?? "Failed to add expense" };
+    await refreshAlerts(budget.id);
+    revalidatePath("/dashboard");
+    revalidatePath("/expenses");
+    revalidatePath("/reports");
+
+    return { success: true, data: mapExpense(row) };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to add expense",
+    };
   }
-
-  await refreshAlerts(budget.id);
-  revalidatePath("/dashboard");
-  revalidatePath("/expenses");
-  revalidatePath("/reports");
-
-  return { success: true, data: data as Expense };
 }
 
 export async function addExpenseFromText(input: {
@@ -94,7 +108,8 @@ export async function addExpenseFromText(input: {
   expenseDate?: string;
 }): Promise<ActionResult<Expense>> {
   await requireAuthUser();
-  const { budget, categories, expenses } = await getCurrentBudget();
+  const { budget, categories, expenses: existingExpenses } =
+    await getCurrentBudget();
 
   if (!budget) {
     return { success: false, error: "Create a monthly budget first" };
@@ -108,14 +123,15 @@ export async function addExpenseFromText(input: {
   if (!parsedText.amountCents || parsedText.amountCents <= 0) {
     return {
       success: false,
-      error: "Could not find a valid amount in the text. Try including a number like 12.50",
+      error:
+        "Could not find a valid amount in the text. Try including a number like 12.50",
     };
   }
 
   const suggestion = suggestCategory(
     parsedText.description,
     categories,
-    expenses,
+    existingExpenses,
   );
 
   const categoryId = input.categoryId ?? suggestion.categoryId;
@@ -141,13 +157,17 @@ export async function suggestCategoryForDescription(
   description: string,
 ): Promise<ActionResult<ReturnType<typeof suggestCategory>>> {
   await requireAuthUser();
-  const { categories, expenses } = await getCurrentBudget();
+  const { categories, expenses: existingExpenses } = await getCurrentBudget();
 
   if (categories.length === 0) {
     return { success: false, error: "Create categories first" };
   }
 
-  const suggestion = suggestCategory(description, categories, expenses);
+  const suggestion = suggestCategory(
+    description,
+    categories,
+    existingExpenses,
+  );
   return { success: true, data: suggestion };
 }
 
@@ -155,73 +175,60 @@ export async function updateExpenseCategory(input: {
   expenseId: string;
   categoryId: string;
 }): Promise<ActionResult<Expense>> {
+  const db = getDb();
   const user = await requireAuthUser();
-  const supabase = await createClient();
 
-  const { data: existing } = await supabase
-    .from("expenses")
-    .select("*")
-    .eq("id", input.expenseId)
-    .eq("user_id", user.id)
-    .single();
+  const existing = await db.query.expenses.findFirst({
+    where: and(eq(expenses.id, input.expenseId), eq(expenses.userId, user.id)),
+  });
 
   if (!existing) {
     return { success: false, error: "Expense not found" };
   }
 
-  const userCorrected = existing.category_id !== input.categoryId;
+  const userCorrected = existing.categoryId !== input.categoryId;
 
-  const { data, error } = await supabase
-    .from("expenses")
-    .update({
-      category_id: input.categoryId,
-      user_corrected: userCorrected || existing.user_corrected,
+  const [row] = await db
+    .update(expenses)
+    .set({
+      categoryId: input.categoryId,
+      userCorrected: userCorrected || existing.userCorrected,
     })
-    .eq("id", input.expenseId)
-    .eq("user_id", user.id)
-    .select("*")
-    .single();
+    .where(and(eq(expenses.id, input.expenseId), eq(expenses.userId, user.id)))
+    .returning();
 
-  if (error || !data) {
-    return { success: false, error: error?.message ?? "Failed to update expense" };
+  if (!row) {
+    return { success: false, error: "Failed to update expense" };
   }
 
-  await refreshAlerts(existing.budget_id);
+  await refreshAlerts(existing.budgetId);
   revalidatePath("/dashboard");
   revalidatePath("/expenses");
   revalidatePath("/reports");
 
-  return { success: true, data: data as Expense };
+  return { success: true, data: mapExpense(row) };
 }
 
 export async function deleteExpense(
   expenseId: string,
 ): Promise<ActionResult<void>> {
+  const db = getDb();
   const user = await requireAuthUser();
-  const supabase = await createClient();
 
-  const { data: existing } = await supabase
-    .from("expenses")
-    .select("budget_id")
-    .eq("id", expenseId)
-    .eq("user_id", user.id)
-    .single();
+  const existing = await db.query.expenses.findFirst({
+    where: and(eq(expenses.id, expenseId), eq(expenses.userId, user.id)),
+    columns: { budgetId: true },
+  });
 
   if (!existing) {
     return { success: false, error: "Expense not found" };
   }
 
-  const { error } = await supabase
-    .from("expenses")
-    .delete()
-    .eq("id", expenseId)
-    .eq("user_id", user.id);
+  await db
+    .delete(expenses)
+    .where(and(eq(expenses.id, expenseId), eq(expenses.userId, user.id)));
 
-  if (error) {
-    return { success: false, error: error.message };
-  }
-
-  await refreshAlerts(existing.budget_id);
+  await refreshAlerts(existing.budgetId);
   revalidatePath("/dashboard");
   revalidatePath("/expenses");
   revalidatePath("/reports");
@@ -230,22 +237,22 @@ export async function deleteExpense(
 }
 
 export async function deleteAllUserData(): Promise<ActionResult<void>> {
+  const db = getDb();
   const user = await requireAuthUser();
-  const supabase = await createClient();
 
-  const tables = [
-    "monthly_reports",
-    "alerts",
-    "expenses",
-    "categories",
-    "budgets",
-  ] as const;
-
-  for (const table of tables) {
-    const { error } = await supabase.from(table).delete().eq("user_id", user.id);
-    if (error) {
-      return { success: false, error: error.message };
-    }
+  try {
+    await db.transaction(async (tx) => {
+      await tx.delete(monthlyReports).where(eq(monthlyReports.userId, user.id));
+      await tx.delete(alerts).where(eq(alerts.userId, user.id));
+      await tx.delete(expenses).where(eq(expenses.userId, user.id));
+      await tx.delete(categories).where(eq(categories.userId, user.id));
+      await tx.delete(budgets).where(eq(budgets.userId, user.id));
+    });
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to delete data",
+    };
   }
 
   revalidatePath("/dashboard");

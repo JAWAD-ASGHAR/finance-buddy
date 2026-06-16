@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { Calendar, X } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { LayoutGrid, X } from "lucide-react";
+import { SiteButton } from "@/components/ui/site-button";
 import { cn } from "@/lib/utils";
 
 type FloatingCTABarProps = {
@@ -12,9 +12,9 @@ type FloatingCTABarProps = {
 };
 
 export function FloatingCTABar({
-  message = "Want early access?",
-  buttonLabel = "Join the waitlist",
-  buttonHref = "/contact",
+  message = "Ready to take control?",
+  buttonLabel = "Open App",
+  buttonHref = "/login",
 }: FloatingCTABarProps) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -65,35 +65,33 @@ export function FloatingCTABar({
             type="button"
             aria-label="Close"
             onClick={() => setOpen(false)}
-            className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
+            className="inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-green"
           >
             <X size={14} strokeWidth={2.25} aria-hidden />
           </button>
         </div>
-        <Button
+        <SiteButton
           href={buttonHref}
           className="mt-4 w-full rounded-full px-5 py-2.5"
           onClick={() => setOpen(false)}
-          cursorLabel="Book"
+          cursorLabel="App"
         >
           {buttonLabel}
-        </Button>
+        </SiteButton>
       </div>
 
       <button
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
-        aria-label={
-          open ? "Close waitlist prompt" : "Open waitlist prompt"
-        }
+        aria-label={open ? "Close app prompt" : "Open app prompt"}
         onClick={() => setOpen((current) => !current)}
-        className="consultation-prompt__trigger inline-flex size-11 min-h-11 min-w-11 touch-manipulation cursor-pointer items-center justify-center rounded-full border border-border/80 bg-white/95 text-foreground shadow-sm backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-white hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-blue"
+        className="consultation-prompt__trigger inline-flex size-11 min-h-11 min-w-11 touch-manipulation cursor-pointer items-center justify-center rounded-full border border-border/80 bg-white/95 text-foreground shadow-sm backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-white hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-green"
       >
         {open ? (
           <X size={18} strokeWidth={2.25} aria-hidden />
         ) : (
-          <Calendar size={18} strokeWidth={2.25} aria-hidden />
+          <LayoutGrid size={18} strokeWidth={2.25} aria-hidden />
         )}
       </button>
     </div>

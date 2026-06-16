@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/Button";
+import { SiteButton } from "@/components/ui/site-button";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
 
 type CTASectionProps = {
@@ -19,7 +19,7 @@ export function CTASection({ title, description }: CTASectionProps) {
               {description}
             </p>
             <div className="mt-8">
-              <Button href="/contact">Book a Free Consultation</Button>
+              <SiteButton href="/contact">Book a Free Consultation</SiteButton>
             </div>
           </div>
         </ScrollReveal>

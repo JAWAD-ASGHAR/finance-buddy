@@ -7,7 +7,7 @@ import { FAQAccordion } from "@/components/sections/FAQAccordion";
 import { breadcrumbJsonLd, createPageMetadata, faqPageJsonLd, homeFaqs } from "@/lib/seo";
 
 const contactDescription =
-  "Request early access to Finance Buddy. Join the waitlist for student micro-budgeting with expense tracking, forecasts, and privacy-first design.";
+  "Contact Finance Buddy for support, questions, or feedback about student micro-budgeting.";
 
 export const metadata = createPageMetadata({
   title: "Contact",

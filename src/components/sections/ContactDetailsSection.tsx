@@ -67,11 +67,11 @@ export function ContactDetailsSection() {
               </div>
               <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
                 By submitting the form you agree to our{" "}
-                <Link href="/privacy" className="text-accent-blue hover:underline">
+                <Link href="/privacy" className="text-accent-green hover:underline">
                   Privacy Policy
                 </Link>{" "}
                 and{" "}
-                <Link href="/terms" className="text-accent-blue hover:underline">
+                <Link href="/terms" className="text-accent-green hover:underline">
                   Terms of Service
                 </Link>
                 .
