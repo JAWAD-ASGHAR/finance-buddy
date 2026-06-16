@@ -1,0 +1,51 @@
+import Image from "next/image";
+import Link from "next/link";
+import { site } from "@/lib/content";
+import { cn } from "@/lib/utils";
+
+type BrandLogoProps = {
+  href?: string;
+  light?: boolean;
+  className?: string;
+  imageClassName?: string;
+};
+
+export function BrandLogo({
+  href = "/",
+  light = false,
+  className,
+  imageClassName,
+}: BrandLogoProps) {
+  return (
+    <Link
+      href={href}
+      className={cn("site-logo shrink-0", light && "site-logo--light", className)}
+      aria-label={site.name}
+    >
+      <Image
+        src="/Logo.png"
+        alt=""
+        width={163}
+        height={138}
+        className={cn("site-logo-image", imageClassName)}
+        priority
+      />
+      <span
+        className={cn(
+          "site-logo-mark",
+          light ? "text-white" : "text-foreground",
+        )}
+      >
+        {site.logoMark}
+      </span>
+      <span
+        className={cn(
+          "site-logo-suffix",
+          light ? "text-white/85" : "text-foreground",
+        )}
+      >
+        {site.logoSuffix}
+      </span>
+    </Link>
+  );
+}

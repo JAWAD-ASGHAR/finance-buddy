@@ -159,7 +159,7 @@ export function organizationJsonLd() {
     "@id": `${absoluteUrl("/")}#organization`,
     name: site.name,
     url: absoluteUrl("/"),
-    logo: absoluteUrl("/favicon.png"),
+    logo: absoluteUrl("/Logo.png"),
     description: site.tagline,
     email: site.email,
     contactPoint: [

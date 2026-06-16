@@ -160,13 +160,25 @@ body {
 
 .site-logo {
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.35em;
+  align-items: center;
+  gap: 0.5rem;
   max-width: 100%;
   font-size: clamp(0.8125rem, 3.5vw, 1.5rem);
   white-space: nowrap;
   text-decoration: none;
   transition: opacity 0.25s ease;
+}
+
+.site-logo-image {
+  width: auto;
+  height: 1.75rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 380px) {
+  .site-logo-image {
+    height: 1.5rem;
+  }
 }
 
 .site-logo:hover {
