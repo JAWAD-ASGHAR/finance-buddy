@@ -45,22 +45,13 @@ export function AuthForm({
     >
       <form action={handleSubmit} className="space-y-4">
         {next ? <input type="hidden" name="next" value={next} /> : null}
-        {mode === "signup" ? (
-          <AppInput
-            label="Display name"
-            name="displayName"
-            type="text"
-            autoComplete="name"
-            placeholder="Alex"
-          />
-        ) : null}
         <AppInput
           label="Email"
           name="email"
           type="email"
           required
           autoComplete="email"
-          placeholder="you@university.ac.uk"
+          placeholder="you@example.com"
         />
         <AppInput
           label="Password"

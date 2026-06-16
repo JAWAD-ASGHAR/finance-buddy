@@ -5,46 +5,18 @@ import { and, eq } from "drizzle-orm";
 import { mapAlert } from "@/db/mappers";
 import { getDb } from "@/db/index";
 import { alerts } from "@/db/schema";
-import { detectAlerts } from "@/lib/finance/alerts";
-import { computeCategorySummaries } from "@/lib/finance/compute";
-import { computeForecast } from "@/lib/finance/forecast";
-import { getBudgetBundle, requireAuthUser } from "@/lib/db/queries";
+import { requireAuthUser } from "@/lib/db/queries";
+import { syncAlertsForBudget } from "@/lib/finance/sync-alerts";
 import type { ActionResult, Alert } from "@/types/finance";
 
 export async function refreshAlerts(
   budgetId: string,
 ): Promise<ActionResult<void>> {
-  const db = getDb();
   const user = await requireAuthUser();
-  const bundle = await getBudgetBundle(budgetId, user.id);
+  const result = await syncAlertsForBudget(budgetId, user.id);
 
-  if (!bundle) {
-    return { success: false, error: "Budget not found" };
-  }
-
-  const summaries = computeCategorySummaries(
-    bundle.categories,
-    bundle.expenses,
-  );
-  const forecast = computeForecast(bundle.budget, bundle.expenses);
-  const detected = detectAlerts(
-    summaries,
-    forecast,
-    bundle.budget.alert_threshold_pct,
-  );
-
-  await db.delete(alerts).where(eq(alerts.budgetId, budgetId));
-
-  if (detected.length > 0) {
-    await db.insert(alerts).values(
-      detected.map((alert) => ({
-        userId: user.id,
-        budgetId,
-        categoryId: alert.categoryId,
-        type: alert.type,
-        message: alert.message,
-      })),
-    );
+  if (!result.ok) {
+    return { success: false, error: result.error };
   }
 
   revalidatePath("/dashboard");

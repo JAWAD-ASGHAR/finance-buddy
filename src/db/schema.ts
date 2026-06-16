@@ -24,10 +24,15 @@ export const alertTypeEnum = pgEnum("alert_type", [
   "monthly_pace",
 ]);
 
+export const friendRequestStatusEnum = pgEnum("friend_request_status", [
+  "pending",
+  "accepted",
+  "declined",
+]);
+
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
   displayName: text("display_name"),
-  isAdmin: boolean("is_admin").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -141,6 +146,92 @@ export const monthlyReports = pgTable("monthly_reports", {
     .defaultNow(),
 });
 
+export const friendRequests = pgTable(
+  "friend_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    requesterId: uuid("requester_id").notNull(),
+    recipientId: uuid("recipient_id").notNull(),
+    status: friendRequestStatusEnum("status").notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    unique("friend_requests_requester_recipient_unique").on(
+      table.requesterId,
+      table.recipientId,
+    ),
+    index("friend_requests_requester_id_idx").on(table.requesterId),
+    index("friend_requests_recipient_id_idx").on(table.recipientId),
+  ],
+);
+
+export const sharedExpenses = pgTable(
+  "shared_expenses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    description: text("description").notNull().default(""),
+    totalCents: integer("total_cents").notNull(),
+    expenseDate: date("expense_date").notNull().default(sql`CURRENT_DATE`),
+    createdByUserId: uuid("created_by_user_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("shared_expenses_created_by_user_id_idx").on(table.createdByUserId),
+  ],
+);
+
+export const sharedExpenseSplits = pgTable(
+  "shared_expense_splits",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sharedExpenseId: uuid("shared_expense_id")
+      .notNull()
+      .references(() => sharedExpenses.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull(),
+    shareCents: integer("share_cents").notNull(),
+    paidCents: integer("paid_cents").notNull(),
+    personalExpenseId: uuid("personal_expense_id").references(() => expenses.id, {
+      onDelete: "set null",
+    }),
+  },
+  (table) => [
+    unique("shared_expense_splits_expense_user_unique").on(
+      table.sharedExpenseId,
+      table.userId,
+    ),
+    index("shared_expense_splits_shared_expense_id_idx").on(
+      table.sharedExpenseId,
+    ),
+    index("shared_expense_splits_user_id_idx").on(table.userId),
+  ],
+);
+
+export const settlements = pgTable(
+  "settlements",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fromUserId: uuid("from_user_id").notNull(),
+    toUserId: uuid("to_user_id").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    note: text("note").notNull().default(""),
+    createdByUserId: uuid("created_by_user_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("settlements_from_user_id_idx").on(table.fromUserId),
+    index("settlements_to_user_id_idx").on(table.toUserId),
+  ],
+);
+
 export const budgetsRelations = relations(budgets, ({ many }) => ({
   categories: many(categories),
   expenses: many(expenses),
@@ -167,8 +258,29 @@ export const expensesRelations = relations(expenses, ({ one }) => ({
   }),
 }));
 
+export const sharedExpensesRelations = relations(
+  sharedExpenses,
+  ({ many }) => ({
+    splits: many(sharedExpenseSplits),
+  }),
+);
+
+export const sharedExpenseSplitsRelations = relations(
+  sharedExpenseSplits,
+  ({ one }) => ({
+    sharedExpense: one(sharedExpenses, {
+      fields: [sharedExpenseSplits.sharedExpenseId],
+      references: [sharedExpenses.id],
+    }),
+  }),
+);
+
 export type BudgetRow = typeof budgets.$inferSelect;
 export type CategoryRow = typeof categories.$inferSelect;
 export type ExpenseRow = typeof expenses.$inferSelect;
 export type AlertRow = typeof alerts.$inferSelect;
 export type MonthlyReportRow = typeof monthlyReports.$inferSelect;
+export type FriendRequestRow = typeof friendRequests.$inferSelect;
+export type SharedExpenseRow = typeof sharedExpenses.$inferSelect;
+export type SharedExpenseSplitRow = typeof sharedExpenseSplits.$inferSelect;
+export type SettlementRow = typeof settlements.$inferSelect;

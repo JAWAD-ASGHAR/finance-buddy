@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { refreshAlerts } from "@/actions/alerts";
-import { getUnreadAlerts } from "@/lib/db/queries";
+import { getUnreadAlerts, requireAuthUser } from "@/lib/db/queries";
+import { syncAlertsForBudget } from "@/lib/finance/sync-alerts";
 import { AlertBanner } from "@/components/app/AlertBanner";
 import { CategoryProgressBar } from "@/components/app/CategoryProgressBar";
 import { ForecastCard } from "@/components/app/ForecastCard";
@@ -14,7 +14,8 @@ export default async function DashboardPage() {
   const { budget, categories, expenses } = await getCurrentBudget();
 
   if (budget) {
-    await refreshAlerts(budget.id);
+    const user = await requireAuthUser();
+    await syncAlertsForBudget(budget.id, user.id);
   }
 
   const alerts = await getUnreadAlerts();

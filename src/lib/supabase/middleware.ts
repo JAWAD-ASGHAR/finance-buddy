@@ -5,6 +5,24 @@ import {
   getSupabaseUrl,
 } from "@/lib/supabase/env";
 
+function redirectWithSession(
+  request: NextRequest,
+  supabaseResponse: NextResponse,
+  destination: string,
+) {
+  const url = request.nextUrl.clone();
+  const [pathname, search = ""] = destination.split("?");
+  url.pathname = pathname;
+  url.search = search ? `?${search}` : "";
+
+  const redirectResponse = NextResponse.redirect(url);
+  supabaseResponse.cookies.getAll().forEach(({ name, value }) => {
+    redirectResponse.cookies.set(name, value);
+  });
+
+  return redirectResponse;
+}
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -34,27 +52,31 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const isAdminRoute = pathname.startsWith("/admin");
   const isAppRoute =
-    pathname.startsWith("/dashboard") ||
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
     pathname.startsWith("/budget") ||
     pathname.startsWith("/expenses") ||
+    pathname.startsWith("/shared") ||
     pathname.startsWith("/reports") ||
     pathname.startsWith("/settings");
   const isAuthRoute =
-    pathname.startsWith("/login") || pathname.startsWith("/signup");
+    pathname === "/login" || pathname === "/signup";
+  const isGuestOnlyRoute = pathname === "/" || isAuthRoute;
 
-  if ((isAppRoute || isAdminRoute) && !user) {
+  if (isGuestOnlyRoute && user) {
+    return redirectWithSession(request, supabaseResponse, "/dashboard");
+  }
+
+  if (isAppRoute && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
-  }
-
-  if (isAuthRoute && user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
-    return NextResponse.redirect(url);
+    return redirectWithSession(
+      request,
+      supabaseResponse,
+      `${url.pathname}?${url.searchParams.toString()}`,
+    );
   }
 
   return supabaseResponse;

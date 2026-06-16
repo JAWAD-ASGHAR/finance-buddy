@@ -907,6 +907,27 @@ html[data-theme="inverted"] {
   --surface-muted: #141417;
   --surface-card: #1e1e24;
   --surface-overlay: rgb(30 30 36 / 0.95);
+  --card: var(--surface-card);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface-elevated);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.62 0.14 155);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: var(--muted);
+  --secondary-foreground: var(--foreground);
+  --accent: var(--muted);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(0.704 0.191 22.216);
+  --input: var(--border);
+  --ring: oklch(0.62 0.12 155);
+  --sidebar: var(--surface-muted);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--foreground);
+  --sidebar-primary-foreground: var(--surface-muted);
+  --sidebar-accent: var(--muted);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--border);
 }
 
 /* Section surfaces */
