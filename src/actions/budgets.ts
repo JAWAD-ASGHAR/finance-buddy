@@ -4,6 +4,7 @@ import { requireAuthUser } from "@/lib/db/queries";
 import {
   createMonthlyBudgetForUser,
   updateBudgetIncomeForUser,
+  updateMonthlyBudgetForUser,
 } from "@/lib/services/budgets";
 import { revalidateBudgetPaths } from "@/lib/services/revalidate";
 import type { ActionResult, Budget } from "@/types/finance";
@@ -15,6 +16,20 @@ export async function createMonthlyBudget(input: {
 }): Promise<ActionResult<{ budgetId: string }>> {
   const user = await requireAuthUser();
   const result = await createMonthlyBudgetForUser(user.id, input);
+  if (result.success) {
+    revalidateBudgetPaths();
+  }
+  return result;
+}
+
+export async function updateMonthlyBudget(input: {
+  budgetId: string;
+  income: string;
+  alertThresholdPct?: number;
+  categories: Array<{ id?: string; name: string; allocated: string }>;
+}): Promise<ActionResult<{ budgetId: string }>> {
+  const user = await requireAuthUser();
+  const result = await updateMonthlyBudgetForUser(user.id, input);
   if (result.success) {
     revalidateBudgetPaths();
   }

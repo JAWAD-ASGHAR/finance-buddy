@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 
 export function revalidateBudgetPaths() {
   revalidatePath("/dashboard");
-  revalidatePath("/budget/setup");
+  revalidatePath("/dashboard/budget/edit");
 }
 
 export function revalidateExpensePaths() {

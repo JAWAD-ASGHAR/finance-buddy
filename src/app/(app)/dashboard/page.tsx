@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BudgetSetupForm } from "@/components/app/BudgetSetupForm";
 import { getUnreadAlerts, requireAuthUser } from "@/lib/db/queries";
 import { syncAlertsForBudget } from "@/lib/finance/sync-alerts";
 import { AlertBanner } from "@/components/app/AlertBanner";
@@ -35,14 +36,7 @@ export default async function DashboardPage() {
           title="Dashboard"
           description="Set up your monthly budget to start tracking spending."
         />
-        <AppCard title="No budget yet">
-          <p className="mb-4 text-sm text-muted-foreground">
-            Create your allowance and category limits for this month.
-          </p>
-          <Link href="/budget/setup">
-            <AppButton>Set up budget</AppButton>
-          </Link>
-        </AppCard>
+        <BudgetSetupForm mode="create" />
       </>
     );
   }
@@ -62,9 +56,14 @@ export default async function DashboardPage() {
         title="Dashboard"
         description="Your remaining budget, forecast, and alerts for this month."
         action={
-          <Link href="/expenses/new">
-            <AppButton>Add expense</AppButton>
-          </Link>
+          <>
+            <Link href="/dashboard/budget/edit">
+              <AppButton variant="secondary">Edit budget</AppButton>
+            </Link>
+            <Link href="/expenses/new">
+              <AppButton>Add expense</AppButton>
+            </Link>
+          </>
         }
       />
 

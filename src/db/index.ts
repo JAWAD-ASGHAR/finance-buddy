@@ -10,13 +10,23 @@ declare global {
 }
 
 export function getDb(): Db {
-  if (!globalThis.__financeBuddyDb) {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) {
-      throw new Error("DATABASE_URL is not set");
-    }
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is not set");
+  }
 
+  if (!globalThis.__financeBuddySql) {
     globalThis.__financeBuddySql = postgres(connectionString, { prepare: false });
+  }
+
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.__financeBuddyDb = drizzle(globalThis.__financeBuddySql, {
+      schema,
+    });
+    return globalThis.__financeBuddyDb;
+  }
+
+  if (!globalThis.__financeBuddyDb) {
     globalThis.__financeBuddyDb = drizzle(globalThis.__financeBuddySql, {
       schema,
     });
