@@ -333,16 +333,17 @@ body {
   --footer-display-size: clamp(5rem, 19vw, 15rem);
   /* ~em-width of "FinanceBuddy" at weight 700 / letter-spacing -0.045em */
   --footer-display-em-width: 7.2;
+  --footer-display-clip-ratio: 0.55;
   --footer-display-fit: min(
     var(--footer-display-size),
     calc(100cqw / var(--footer-display-em-width))
   );
   container-type: inline-size;
-  height: calc(var(--footer-display-fit) * 0.68);
-  overflow: hidden;
-  position: relative;
   width: 100%;
   max-width: 100%;
+  height: calc(var(--footer-display-fit) * var(--footer-display-clip-ratio));
+  overflow: hidden;
+  position: relative;
   pointer-events: none;
 }
 
@@ -408,14 +409,15 @@ body {
 }
 
 .home-footer-fixed > .container-main {
-  flex-shrink: 0;
-  width: 100%;
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: flex-end;
 }
 
 .home-footer-fixed .footer-display-clip {
-  height: calc(
-    var(--footer-display-fit) * 0.68 + env(safe-area-inset-bottom, 0px)
-  );
+  height: calc(var(--footer-display-fit) * var(--footer-display-clip-ratio));
   background: var(--background);
 }
 
@@ -1129,6 +1131,18 @@ html[data-theme="inverted"] .border-white\/25,
 html[data-theme="inverted"] .border-white\/50,
 html[data-theme="inverted"] .border-white\/80 {
   border-color: rgb(226 226 232 / 0.14);
+}
+
+html[data-theme="inverted"] .bg-background\/70 {
+  background-color: rgb(24 24 30 / 0.85);
+}
+
+html[data-theme="inverted"] .bg-background\/80 {
+  background-color: rgb(24 24 30 / 0.92);
+}
+
+html[data-theme="inverted"] .docs-code-block pre {
+  color: var(--foreground);
 }
 
 html[data-theme="inverted"] .placeholder-skeleton {

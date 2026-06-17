@@ -11,7 +11,7 @@ function FooterUtility({ compact }: { compact?: boolean }) {
   return (
     <div
       className={cn(
-        "footer-utility container-main border-t border-border/60",
+        "footer-utility border-t border-border/60",
         compact ? "pt-8 pb-5" : "pt-12 pb-10",
       )}
     >
@@ -24,7 +24,7 @@ function FooterUtility({ compact }: { compact?: boolean }) {
         </div>
 
         <nav
-          className="flex flex-wrap gap-x-8 gap-y-3"
+          className="flex flex-wrap gap-x-8 gap-y-3 sm:justify-end"
           aria-label="Footer"
         >
           {navLinks.map((link) => (
@@ -43,7 +43,7 @@ function FooterUtility({ compact }: { compact?: boolean }) {
         <p>
           © {new Date().getFullYear()} {site.name}. All rights reserved.
         </p>
-        <div className="flex flex-wrap gap-x-6 gap-y-2">
+        <div className="flex flex-wrap gap-x-6 gap-y-2 sm:justify-end">
           {legalFooterLinks.map((link) => (
             <Link key={link.href} href={link.href} className="transition-colors hover:text-accent-green">
               {link.label}
@@ -64,16 +64,14 @@ function FooterDisplay({ parallax }: { parallax?: boolean }) {
   );
 
   return (
-    <div className="container-main">
-      <div className="footer-display-clip">
-        {parallax ? (
-          <ParallaxLayer className="h-full" speed={0.1}>
-            {display}
-          </ParallaxLayer>
-        ) : (
-          display
-        )}
-      </div>
+    <div className="footer-display-clip">
+      {parallax ? (
+        <ParallaxLayer className="h-full" speed={0.1}>
+          {display}
+        </ParallaxLayer>
+      ) : (
+        display
+      )}
     </div>
   );
 }
@@ -83,19 +81,24 @@ export function Footer() {
   const reducedMotion = useReducedMotion();
   const useReveal = isHome && !reducedMotion;
 
+  const footerInner = (
+    <div className="container-main">
+      <FooterUtility compact={useReveal} />
+      <FooterDisplay />
+    </div>
+  );
+
   if (useReveal) {
     return (
-      <footer className="home-footer-fixed overflow-hidden bg-white text-foreground">
-        <FooterUtility compact />
-        <FooterDisplay />
+      <footer className="home-footer-fixed overflow-hidden bg-background text-foreground">
+        {footerInner}
       </footer>
     );
   }
 
   return (
-    <footer className="overflow-hidden bg-white text-foreground">
-      <FooterUtility />
-      <FooterDisplay parallax />
+    <footer className="overflow-hidden bg-background text-foreground">
+      {footerInner}
     </footer>
   );
 }
