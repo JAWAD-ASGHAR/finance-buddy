@@ -1,18 +1,12 @@
 import { NextResponse } from "next/server";
+import { parseEmailOtpType } from "@/lib/auth/otp-type";
+import { safeNextPath } from "@/lib/auth/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
-import type { EmailOtpType } from "@supabase/supabase-js";
-
-function safeNextPath(raw: string | null): string {
-  if (raw && raw.startsWith("/") && !raw.startsWith("//")) {
-    return raw;
-  }
-  return "/dashboard";
-}
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const tokenHash = requestUrl.searchParams.get("token_hash");
-  const type = requestUrl.searchParams.get("type") as EmailOtpType | null;
+  const type = parseEmailOtpType(requestUrl.searchParams.get("type"));
   const next = safeNextPath(requestUrl.searchParams.get("next"));
 
   if (tokenHash && type) {

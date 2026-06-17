@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { authCallbackUrl } from "@/lib/email/templates";
+import { buildEmailConfirmUrl } from "@/lib/email/confirm-url";
 import { sendConfirmationLinkEmail } from "@/lib/email/send-confirmation-link";
 import { isEmailConfigured } from "@/lib/email/env";
 
@@ -30,7 +31,7 @@ export async function sendVerificationEmail({
     return { ok: false, error: error.message };
   }
 
-  const confirmUrl = data.properties?.action_link;
+  const confirmUrl = buildEmailConfirmUrl(data.properties, nextPath);
   if (!confirmUrl) {
     return { ok: false, error: "Could not create a confirmation link" };
   }
@@ -62,7 +63,7 @@ export async function sendVerificationReminderEmail({
     return { ok: false, error: error.message };
   }
 
-  const confirmUrl = data.properties?.action_link;
+  const confirmUrl = buildEmailConfirmUrl(data.properties, nextPath);
   if (!confirmUrl) {
     return { ok: false, error: "Could not create a confirmation link" };
   }

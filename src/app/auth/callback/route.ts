@@ -1,21 +1,28 @@
 import { NextResponse } from "next/server";
+import { parseEmailOtpType } from "@/lib/auth/otp-type";
+import { safeNextPath } from "@/lib/auth/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
-
-function safeNextPath(raw: string | null): string {
-  if (raw && raw.startsWith("/") && !raw.startsWith("//")) {
-    return raw;
-  }
-  return "/dashboard";
-}
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get("code");
   const next = safeNextPath(requestUrl.searchParams.get("next"));
+  const supabase = await createClient();
 
+  const code = requestUrl.searchParams.get("code");
   if (code) {
-    const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      return NextResponse.redirect(new URL(next, requestUrl.origin));
+    }
+  }
+
+  const tokenHash = requestUrl.searchParams.get("token_hash");
+  const type = parseEmailOtpType(requestUrl.searchParams.get("type"));
+  if (tokenHash && type) {
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type,
+    });
 
     if (!error) {
       return NextResponse.redirect(new URL(next, requestUrl.origin));

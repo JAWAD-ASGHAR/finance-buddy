@@ -17,27 +17,27 @@ export default function AuthCodeErrorPage() {
         >
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Sign in and request a fresh confirmation email from the verify email
-              page.
+              Request a new confirmation email after signing up, or sign in if you
+              already verified your address.
             </p>
             <div className="flex flex-col gap-3 sm:flex-row">
               <Link
-                href="/login"
+                href="/signup"
                 className={cn(
                   buttonVariants(),
                   "h-10 w-full uppercase tracking-[0.08em] sm:w-auto",
                 )}
               >
-                Sign in
+                Get new link
               </Link>
               <Link
-                href="/verify-email"
+                href="/login"
                 className={cn(
                   buttonVariants({ variant: "outline" }),
                   "h-10 w-full uppercase tracking-[0.08em] sm:w-auto",
                 )}
               >
-                Verify email
+                Sign in
               </Link>
             </div>
           </div>
