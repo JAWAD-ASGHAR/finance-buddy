@@ -6,14 +6,12 @@ import {
   addExpenseFromTextForUser,
   deleteAllUserDataForUser,
   deleteExpenseForUser,
-  suggestCategoryForDescriptionForUser,
   updateExpenseCategoryForUser,
 } from "@/lib/services/expenses";
 import {
   revalidateBudgetPaths,
   revalidateExpensePaths,
 } from "@/lib/services/revalidate";
-import { suggestCategory } from "@/lib/finance/categorize";
 import type { ActionResult, Expense, ExpenseSource } from "@/types/finance";
 
 export async function addExpense(input: {
@@ -45,13 +43,6 @@ export async function addExpenseFromText(input: {
     revalidateExpensePaths();
   }
   return result;
-}
-
-export async function suggestCategoryForDescription(
-  description: string,
-): Promise<ActionResult<ReturnType<typeof suggestCategory>>> {
-  const user = await requireAuthUser();
-  return suggestCategoryForDescriptionForUser(user.id, description);
 }
 
 export async function updateExpenseCategory(input: {

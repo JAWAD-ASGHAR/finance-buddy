@@ -41,9 +41,7 @@ export function AppCard({
           ) : null}
         </CardHeader>
       ) : null}
-      <CardContent className={title || description ? undefined : "pt-6"}>
-        {children}
-      </CardContent>
+      <CardContent>{children}</CardContent>
     </Card>
   );
 }

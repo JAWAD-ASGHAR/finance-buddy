@@ -23,8 +23,14 @@ export function mapFriend(
   id: string,
   displayName: string | null,
   username: string | null = null,
+  avatarPath: string | null = null,
 ): Friend {
-  return { id, display_name: displayName, username };
+  return {
+    id,
+    display_name: displayName,
+    username,
+    avatar_path: avatarPath,
+  };
 }
 
 export function mapFriendRequest(

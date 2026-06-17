@@ -8,6 +8,7 @@ import {
 import { buildSystemPrompt } from "@/lib/ai/system-prompt";
 import { getGeminiApiKey, getGeminiModel } from "@/lib/ai/env";
 import { createAiToolsForUser } from "@/lib/ai/tools/executor";
+import { getUserCurrency, getUserPreferences } from "@/lib/auth/user-preferences";
 import { getAuthUser } from "@/lib/supabase/server";
 
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -64,11 +65,20 @@ export async function POST(req: Request) {
     user.email?.split("@")[0] ??
     null;
 
+  const [prefs, currency] = await Promise.all([
+    getUserPreferences(user.id),
+    getUserCurrency(user.id),
+  ]);
+
   process.env.GOOGLE_GENERATIVE_AI_API_KEY = getGeminiApiKey();
 
   const result = streamText({
     model: google(getGeminiModel()),
-    system: buildSystemPrompt(displayName, conversationContext),
+    system: buildSystemPrompt(
+      prefs?.displayName ?? displayName,
+      currency,
+      conversationContext,
+    ),
     messages: await convertToModelMessages(messages),
     tools: createAiToolsForUser(user.id),
     stopWhen: stepCountIs(8),

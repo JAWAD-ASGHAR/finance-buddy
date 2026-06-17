@@ -54,7 +54,7 @@ export async function getProfile(userId: string): Promise<Friend | null> {
   });
 
   if (!row) return null;
-  return mapFriend(row.id, row.displayName, row.username);
+  return mapFriend(row.id, row.displayName, row.username, row.avatarPath);
 }
 
 export async function findUserIdByUsername(
@@ -97,12 +97,15 @@ export async function searchUsersByUsernamePrefix(
       id: true,
       displayName: true,
       username: true,
+      avatarPath: true,
     },
     limit,
     orderBy: profiles.username,
   });
 
-  return rows.map((row) => mapFriend(row.id, row.displayName, row.username));
+  return rows.map((row) =>
+    mapFriend(row.id, row.displayName, row.username, row.avatarPath),
+  );
 }
 
 export async function getAcceptedFriendIds(userId: string): Promise<string[]> {
@@ -143,7 +146,9 @@ export async function getAcceptedFriends(userId: string): Promise<Friend[]> {
   return friendIds
     .map((id) => {
       const row = byId.get(id);
-      return row ? mapFriend(row.id, row.displayName, row.username) : mapFriend(id, null);
+      return row
+        ? mapFriend(row.id, row.displayName, row.username, row.avatarPath)
+        : mapFriend(id, null);
     })
     .sort((a, b) =>
       (a.display_name ?? a.id).localeCompare(b.display_name ?? b.id),
@@ -179,7 +184,10 @@ export async function getPendingFriendRequests(
         })
       : [];
   const profilesById = new Map(
-    profileRows.map((row) => [row.id, mapFriend(row.id, row.displayName, row.username)]),
+    profileRows.map((row) => [
+      row.id,
+      mapFriend(row.id, row.displayName, row.username, row.avatarPath),
+    ]),
   );
 
   const incoming: FriendRequest[] = [];

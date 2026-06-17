@@ -115,13 +115,6 @@ export type ForecastResult = {
   onTrack: boolean;
 };
 
-export type CategorySuggestion = {
-  categoryId: string;
-  categoryName: string;
-  confidence: "high" | "medium" | "low";
-  reason: string;
-};
-
 export type ParsedExpenseText = {
   amountCents: number | null;
   description: string;
@@ -132,6 +125,33 @@ export type DetectedAlert = {
   type: AlertType;
   categoryId: string | null;
   message: string;
+};
+
+export type SavingGoal = {
+  id: string;
+  user_id: string;
+  name: string;
+  target_cents: number;
+  target_date: string | null;
+  created_at: string;
+  completed_at: string | null;
+};
+
+export type SavingContribution = {
+  id: string;
+  saving_goal_id: string;
+  user_id: string;
+  amount_cents: number;
+  contributed_at: string;
+  note: string;
+  created_at: string;
+};
+
+export type SavingGoalSummary = SavingGoal & {
+  saved_cents: number;
+  remaining_cents: number;
+  percent_complete: number;
+  is_complete: boolean;
 };
 
 export type DailySpendPoint = {

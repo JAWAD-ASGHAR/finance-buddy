@@ -8,6 +8,7 @@ export type Friend = {
   id: string;
   username: string | null;
   display_name: string | null;
+  avatar_path?: string | null;
 };
 
 export type FriendRequest = {

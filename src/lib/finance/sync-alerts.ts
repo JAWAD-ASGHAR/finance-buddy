@@ -5,6 +5,7 @@ import { getBudgetBundle } from "@/lib/db/queries";
 import { detectAlerts } from "@/lib/finance/alerts";
 import { computeCategorySummaries } from "@/lib/finance/compute";
 import { computeForecast } from "@/lib/finance/forecast";
+import { notifyBudgetAlert } from "@/lib/notifications/dispatch";
 import type { AlertType } from "@/types/finance";
 
 function alertKey(type: AlertType, categoryId: string | null): string {
@@ -44,6 +45,12 @@ export async function syncAlertsForBudget(
     detected.map((alert) => alertKey(alert.type, alert.categoryId)),
   );
 
+  const newlyInserted: Array<{
+    id: string;
+    type: AlertType;
+    message: string;
+  }> = [];
+
   try {
     await db.transaction(async (tx) => {
       for (const alert of detected) {
@@ -60,13 +67,24 @@ export async function syncAlertsForBudget(
           continue;
         }
 
-        await tx.insert(alerts).values({
-          userId,
-          budgetId,
-          categoryId: alert.categoryId,
-          type: alert.type,
-          message: alert.message,
-        });
+        const [inserted] = await tx
+          .insert(alerts)
+          .values({
+            userId,
+            budgetId,
+            categoryId: alert.categoryId,
+            type: alert.type,
+            message: alert.message,
+          })
+          .returning();
+
+        if (inserted) {
+          newlyInserted.push({
+            id: inserted.id,
+            type: alert.type,
+            message: alert.message,
+          });
+        }
       }
 
       const staleAlertIds = existingRows
@@ -84,6 +102,19 @@ export async function syncAlertsForBudget(
       ok: false,
       error: error instanceof Error ? error.message : "Failed to sync alerts",
     };
+  }
+
+  if (newlyInserted.length > 0) {
+    await Promise.all(
+      newlyInserted.map((alert) =>
+        notifyBudgetAlert({
+          userId,
+          alertId: alert.id,
+          alertType: alert.type,
+          message: alert.message,
+        }),
+      ),
+    );
   }
 
   return { ok: true };

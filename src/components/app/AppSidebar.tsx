@@ -13,6 +13,7 @@ const navItems = [
   { href: "/friends", label: "Friends", match: "prefix" as const },
   { href: "/shared", label: "Shared", match: "prefix" as const },
   { href: "/reports", label: "Reports", match: "prefix" as const },
+  { href: "/savings", label: "Savings", match: "prefix" as const },
   { href: "/profile", label: "Profile", match: "prefix" as const },
 ];
 

@@ -13,6 +13,7 @@ import {
   AppCard,
   AppInput,
 } from "@/components/app/ui";
+import { UserAvatar } from "@/components/app/UserAvatar";
 import { normalizeUsername } from "@/lib/auth/username";
 import type { Friend, FriendRequest } from "@/types/shared";
 
@@ -69,37 +70,40 @@ export function FriendSearchForm() {
   }
 
   return (
-    <AppCard
-      title="Find people"
-      description="Search by username to send a friend request and split costs together."
-    >
-      <div className="space-y-4">
-        <AppInput
-          label="Search username"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="alex_chen"
-          autoComplete="off"
-        />
+    <div className="max-w-md">
+      <AppInput
+        label="Find people"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search by username…"
+        autoComplete="off"
+      />
 
-        {searching ? (
-          <p className="text-sm text-muted-foreground">Searching…</p>
-        ) : null}
+      {searching ? (
+        <p className="mt-3 text-sm text-muted-foreground">Searching…</p>
+      ) : null}
 
-        {!searching && normalizeUsername(query).length >= 2 && results.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            No people found matching that username.
-          </p>
-        ) : null}
+      {!searching && normalizeUsername(query).length >= 2 && results.length === 0 ? (
+        <p className="mt-3 text-sm text-muted-foreground">
+          No people found matching that username.
+        </p>
+      ) : null}
 
-        {results.length > 0 ? (
-          <ul className="divide-y divide-border rounded-lg border border-border">
-            {results.map((friend) => (
-              <li
-                key={friend.id}
-                className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
+      {results.length > 0 ? (
+        <ul className="mt-3 divide-y divide-border rounded-lg border border-border">
+          {results.map((friend) => (
+            <li
+              key={friend.id}
+              className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <UserAvatar
+                  displayName={friend.display_name}
+                  username={friend.username}
+                  avatarPath={friend.avatar_path}
+                  className="size-10"
+                />
+                <div className="min-w-0">
                   <p className="text-sm font-medium">
                     {friend.display_name ?? "User"}
                   </p>
@@ -109,20 +113,20 @@ export function FriendSearchForm() {
                     </p>
                   ) : null}
                 </div>
-                <AppButton
-                  type="button"
-                  loading={pendingId === friend.id}
-                  disabled={pendingId !== null && pendingId !== friend.id}
-                  onClick={() => handleSendRequest(friend)}
-                >
-                  Add friend
-                </AppButton>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </div>
-    </AppCard>
+              </div>
+              <AppButton
+                type="button"
+                loading={pendingId === friend.id}
+                disabled={pendingId !== null && pendingId !== friend.id}
+                onClick={() => handleSendRequest(friend)}
+              >
+                Add friend
+              </AppButton>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   );
 }
 
@@ -156,11 +160,15 @@ export function PendingRequestsPanel({
   }
 
   if (incoming.length === 0 && outgoing.length === 0) {
-    return null;
+    return (
+      <AppCard title="Requests">
+        <p className="text-sm text-muted-foreground">No pending requests.</p>
+      </AppCard>
+    );
   }
 
   return (
-    <AppCard title="Pending requests">
+    <AppCard title="Requests">
       {incoming.length > 0 ? (
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">

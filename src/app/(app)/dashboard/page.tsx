@@ -6,27 +6,29 @@ import { syncAlertsForBudget } from "@/lib/finance/sync-alerts";
 import { AlertBanner } from "@/components/app/AlertBanner";
 import { CategoryProgressBar } from "@/components/app/CategoryProgressBar";
 import { ForecastCard } from "@/components/app/ForecastCard";
+import { SavingsSummaryCard } from "@/components/app/SavingsSummaryCard";
 import { AppButton, AppCard, AppPageHeader } from "@/components/app/ui";
-import { CategorySpendChart } from "@/components/charts/CategorySpendChart";
-import { SpendingTrendChart } from "@/components/charts/SpendingTrendChart";
+import { FriendBalanceList } from "@/components/shared/FriendBalanceList";
 import { computeCategorySummaries, computeMonthlyRemaining } from "@/lib/finance/compute";
-import {
-  buildCategoryChartData,
-  buildDailySpendingSeries,
-} from "@/lib/finance/chart-data";
 import { computeForecast } from "@/lib/finance/forecast";
 import { computeFriendBalanceTotals } from "@/lib/finance/friend-balances";
 import { getUserCurrency } from "@/lib/auth/user-preferences";
-import { getFriendBalancesForUser } from "@/lib/services/settlements";
 import { getCurrentBudget } from "@/lib/supabase/queries";
+import { getActiveSavingGoals } from "@/actions/saving-goals";
+import { getFriendBalancesForCurrentUser } from "@/actions/settlements";
 import { formatMoney } from "@/types/finance";
 
 export default async function DashboardPage() {
   const user = await requireAuthUser();
   const currency = await getUserCurrency(user.id);
-  const [{ budget, categories, expenses }, friendBalances] = await Promise.all([
+  const [
+    { budget, categories, expenses },
+    activeSavingsGoals,
+    friendBalances,
+  ] = await Promise.all([
     getCurrentBudget(),
-    getFriendBalancesForUser(user.id),
+    getActiveSavingGoals(2),
+    getFriendBalancesForCurrentUser(),
   ]);
   const friendBalanceTotals = computeFriendBalanceTotals(friendBalances);
 
@@ -54,8 +56,6 @@ export default async function DashboardPage() {
     budget.income_cents,
     expenses,
   );
-  const dailySpending = buildDailySpendingSeries(budget, expenses);
-  const categoryChartData = buildCategoryChartData(summaries);
 
   return (
     <>
@@ -112,31 +112,15 @@ export default async function DashboardPage() {
           </AppCard>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-5">
-          <AppCard
-            className="lg:col-span-3"
-            title="Spending trend"
-            description="Your cumulative spend this month against an even budget pace."
-          >
-            <SpendingTrendChart data={dailySpending} />
-          </AppCard>
-
-          <AppCard
-            className="lg:col-span-2"
-            title="Category spend"
-            description="Quick view of where your budget is going."
-          >
-            {categoryChartData.length > 0 ? (
-              <CategorySpendChart data={categoryChartData} />
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Add expenses to see category spending.
-              </p>
-            )}
-          </AppCard>
-        </div>
+        {friendBalances.some((balance) => balance.net_cents !== 0) ? (
+          <FriendBalanceList
+            balances={friendBalances.filter((balance) => balance.net_cents !== 0)}
+          />
+        ) : null}
 
         <ForecastCard forecast={forecast} />
+
+        <SavingsSummaryCard goals={activeSavingsGoals} />
 
         <AppCard title="Category budgets">
           <div className="space-y-5">

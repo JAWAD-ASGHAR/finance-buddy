@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Check, UserPlus, Users, Wallet } from "lucide-react";
+import { Bell, Check, TriangleAlert, UserPlus, Users, Wallet } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { respondToFriendRequest } from "@/actions/friends";
@@ -28,6 +28,8 @@ function notificationIcon(type: NotificationType) {
       return Users;
     case "settlement":
       return Wallet;
+    case "budget_alert":
+      return TriangleAlert;
     default:
       return Bell;
   }
