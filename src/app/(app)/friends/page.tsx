@@ -2,16 +2,15 @@ import {
   FriendSearchForm,
   PendingRequestsPanel,
 } from "@/components/shared/FriendSearchForm";
-import { FriendBalanceList } from "@/components/shared/FriendBalanceList";
+import { FriendList } from "@/components/shared/FriendList";
 import { AppPageHeader } from "@/components/app/ui";
-import { getFriendBalancesForCurrentUser } from "@/actions/settlements";
-import { getPendingFriendRequests } from "@/lib/db/shared-queries";
+import { getAcceptedFriends, getPendingFriendRequests } from "@/lib/db/shared-queries";
 import { requireAuthUser } from "@/lib/db/queries";
 
 export default async function FriendsPage() {
   const user = await requireAuthUser();
-  const [balances, pending] = await Promise.all([
-    getFriendBalancesForCurrentUser(),
+  const [friends, pending] = await Promise.all([
+    getAcceptedFriends(user.id),
     getPendingFriendRequests(user.id),
   ]);
 
@@ -24,13 +23,14 @@ export default async function FriendsPage() {
       <div className="space-y-6">
         <FriendSearchForm />
 
-        <div id="requests" className="grid gap-6 lg:grid-cols-2">
+        <div id="requests">
           <PendingRequestsPanel
             incoming={pending.incoming}
             outgoing={pending.outgoing}
           />
-          <FriendBalanceList balances={balances} />
         </div>
+
+        <FriendList friends={friends} />
       </div>
     </>
   );

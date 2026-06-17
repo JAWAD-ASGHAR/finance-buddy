@@ -15,6 +15,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+
+const stickyActionsClass =
+  "sticky right-0 z-10 bg-card group-hover:bg-muted/50 shadow-[-8px_0_12px_-8px_rgba(0,0,0,0.12)]";
 
 function ExpenseCategorySelect({
   expense,
@@ -92,12 +96,13 @@ export function ExpenseList({
                 <p className="mt-1 text-xs text-muted-foreground">
                   {expense.expense_date}
                 </p>
-                <ExpenseAttachmentGallery attachments={expense.attachments} />
               </div>
               <p className="shrink-0 text-sm font-semibold">
                 {formatMoney(expense.amount_cents)}
               </p>
             </div>
+
+            <ExpenseAttachmentGallery attachments={expense.attachments} />
 
             <ExpenseCategorySelect
               expense={expense}
@@ -122,55 +127,65 @@ export function ExpenseList({
       </div>
 
       <div className="hidden md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {expenses.map((expense) => (
-              <TableRow key={expense.id}>
-                <TableCell className="whitespace-nowrap">
-                  {expense.expense_date}
-                </TableCell>
-                <TableCell className="max-w-[16rem] break-words whitespace-normal">
-                  <div className="space-y-2">
-                    <p>{expense.description}</p>
-                    <ExpenseAttachmentGallery attachments={expense.attachments} />
-                  </div>
-                </TableCell>
-                <TableCell className="font-medium">
-                  {formatMoney(expense.amount_cents)}
-                </TableCell>
-                <TableCell className="min-w-[10rem]">
-                  <ExpenseCategorySelect
-                    expense={expense}
-                    categories={categories}
-                    disabled={pendingId === expense.id}
-                    onChange={(categoryId) =>
-                      handleCategoryChange(expense.id, categoryId)
-                    }
-                  />
-                </TableCell>
-                <TableCell className="text-right">
-                  <AppButton
-                    type="button"
-                    variant="secondary"
-                    loading={pendingId === expense.id}
-                    onClick={() => handleDelete(expense.id)}
-                  >
-                    Delete
-                  </AppButton>
-                </TableCell>
+        <Table className="min-w-[48rem]">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="min-w-[7rem]">Date</TableHead>
+                <TableHead className="min-w-[14rem]">Description</TableHead>
+                <TableHead className="min-w-[6rem]">Amount</TableHead>
+                <TableHead className="min-w-[10rem]">Category</TableHead>
+                <TableHead className="min-w-[12rem]">Images</TableHead>
+                <TableHead
+                  className={cn(
+                    "min-w-[6.5rem] bg-card text-right",
+                    stickyActionsClass,
+                  )}
+                >
+                  Actions
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {expenses.map((expense) => (
+                <TableRow key={expense.id} className="group">
+                  <TableCell className="whitespace-nowrap">
+                    {expense.expense_date}
+                  </TableCell>
+                  <TableCell className="max-w-[24rem] min-w-[14rem] break-words whitespace-normal">
+                    {expense.description}
+                  </TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">
+                    {formatMoney(expense.amount_cents)}
+                  </TableCell>
+                  <TableCell className="min-w-[10rem]">
+                    <ExpenseCategorySelect
+                      expense={expense}
+                      categories={categories}
+                      disabled={pendingId === expense.id}
+                      onChange={(categoryId) =>
+                        handleCategoryChange(expense.id, categoryId)
+                      }
+                    />
+                  </TableCell>
+                  <TableCell className="min-w-[12rem] whitespace-normal">
+                    <ExpenseAttachmentGallery attachments={expense.attachments} />
+                  </TableCell>
+                  <TableCell
+                    className={cn("text-right whitespace-nowrap", stickyActionsClass)}
+                  >
+                    <AppButton
+                      type="button"
+                      variant="secondary"
+                      loading={pendingId === expense.id}
+                      onClick={() => handleDelete(expense.id)}
+                    >
+                      Delete
+                    </AppButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
       </div>
     </AppCard>
   );
