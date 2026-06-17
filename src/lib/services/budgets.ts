@@ -94,6 +94,18 @@ export async function createMonthlyBudgetForUser(
     return { success: false, error: "Enter a valid income amount" };
   }
 
+  const totalAllocatedCents = categoryInputs.reduce(
+    (sum, category) => sum + category.allocatedCents,
+    0,
+  );
+
+  if (totalAllocatedCents !== incomeCents) {
+    return {
+      success: false,
+      error: "Category limits must add up to your monthly income",
+    };
+  }
+
   const parsed = createBudgetSchema.safeParse({
     incomeCents,
     alertThresholdPct: input.alertThresholdPct ?? 80,

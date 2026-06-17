@@ -17,11 +17,12 @@ import {
   updateExpenseCategoryForUser,
 } from "@/lib/services/expenses";
 import { markAlertReadForUser } from "@/lib/services/alerts";
-import { generateMonthlyReportForUser } from "@/lib/services/reports";
+import { getSpendingReportForUser } from "@/lib/services/reports";
+import { getDefaultReportDateRange } from "@/lib/finance/report-date-range";
 import {
   listFriendsForUser,
   respondToFriendRequestForUser,
-  sendFriendRequestByEmailForUser,
+  sendFriendRequestByUsernameForUser,
 } from "@/lib/services/friends";
 import {
   createSharedExpenseForUser,
@@ -44,7 +45,6 @@ import {
 import {
   revalidateBudgetPaths,
   revalidateExpensePaths,
-  revalidateReportPaths,
   revalidateSharedPaths,
 } from "@/lib/services/revalidate";
 
@@ -82,7 +82,6 @@ const WRITE_REVALIDATE: Partial<
     revalidateExpensePaths();
   },
   mark_alert_read: () => revalidateBudgetPaths(),
-  generate_monthly_report: () => revalidateReportPaths(),
   send_friend_request: () => revalidateSharedPaths(),
   respond_to_friend_request: () => revalidateSharedPaths(),
   create_shared_expense: () => {
@@ -173,9 +172,15 @@ export async function executeAiTool(
     case "list_shared_expenses":
       result = wrapServiceResult(await listSharedExpensesForUser(userId));
       break;
-    case "get_latest_report":
-      result = await getLatestReportSnapshotForUser(userId);
+    case "get_latest_report": {
+      const defaults = getDefaultReportDateRange();
+      result = await getLatestReportSnapshotForUser(
+        userId,
+        (toolInput.startDate as string | undefined) ?? defaults.startDate,
+        (toolInput.endDate as string | undefined) ?? defaults.endDate,
+      );
       break;
+    }
     case "create_monthly_budget":
       result = wrapServiceResult(
         await createMonthlyBudgetForUser(userId, toolInput as never),
@@ -206,14 +211,22 @@ export async function executeAiTool(
         await markAlertReadForUser(userId, toolInput.alertId as string),
       );
       break;
-    case "generate_monthly_report":
-      result = wrapServiceResult(await generateMonthlyReportForUser(userId));
+    case "generate_monthly_report": {
+      const defaults = getDefaultReportDateRange();
+      result = wrapServiceResult(
+        await getSpendingReportForUser(
+          userId,
+          (toolInput.startDate as string | undefined) ?? defaults.startDate,
+          (toolInput.endDate as string | undefined) ?? defaults.endDate,
+        ),
+      );
       break;
+    }
     case "send_friend_request":
       result = wrapServiceResult(
-        await sendFriendRequestByEmailForUser(
+        await sendFriendRequestByUsernameForUser(
           userId,
-          toolInput.email as string,
+          toolInput.username as string,
         ),
       );
       break;

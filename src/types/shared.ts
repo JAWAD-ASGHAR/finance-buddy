@@ -4,6 +4,7 @@ export type SplitMode = "equal" | "single_payer";
 
 export type Friend = {
   id: string;
+  username: string | null;
   display_name: string | null;
 };
 

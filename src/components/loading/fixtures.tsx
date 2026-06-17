@@ -174,10 +174,18 @@ export function BudgetFormFixture() {
     <>
       <AppPageHeader
         title="Monthly budget"
-        description="Set your allowance and split it across categories like food, transport, and subscriptions."
+        description="Set your allowance, pick your categories, and we'll split it evenly across them."
       />
+      <div className="mb-8 flex gap-4">
+        {[1, 2, 3].map((step) => (
+          <div key={step} className="flex items-center gap-2">
+            <div className="size-8 rounded-full bg-muted" />
+            <div className="h-3 w-16 rounded bg-muted" />
+          </div>
+        ))}
+      </div>
       <AppCard title="Budget setup">
-        <FormFieldsFixture rows={6} />
+        <FormFieldsFixture rows={4} />
       </AppCard>
     </>
   );
@@ -187,9 +195,15 @@ export function ReportsFixture() {
   return (
     <>
       <AppPageHeader
-        title="Monthly report"
-        description="Summarize spending patterns and forecast from your actual expense data."
+        title="Spending report"
+        description="Review spending patterns and forecasts for any date range in your current budget."
       />
+      <AppCard title="Date range">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="h-10 animate-pulse rounded-md bg-muted" />
+          <div className="h-10 animate-pulse rounded-md bg-muted" />
+        </div>
+      </AppCard>
       <AppCard title="Spending summary">
         <div className="space-y-4 text-sm">
           <div className="flex justify-between">
@@ -210,14 +224,21 @@ export function ReportsFixture() {
   );
 }
 
-export function SettingsFixture() {
+export function ProfileFixture() {
   return (
     <>
       <AppPageHeader
-        title="Settings"
-        description="Manage your privacy and data. Your budget stays private to your account."
+        title="Profile"
+        description="Manage your account, find friends, and control privacy and data."
       />
       <div className="space-y-6">
+        <AppCard title="Friends & sharing">
+          <div className="flex flex-wrap gap-2">
+            <AppButton variant="secondary">Friends</AppButton>
+            <AppButton variant="secondary">Requests</AppButton>
+            <AppButton variant="secondary">Shared expenses</AppButton>
+          </div>
+        </AppCard>
         <AppCard title="Privacy">
           <p className="text-sm text-muted-foreground">
             Finance Buddy never exposes one user&apos;s budget to another.
@@ -232,6 +253,11 @@ export function SettingsFixture() {
       </div>
     </>
   );
+}
+
+/** @deprecated Use ProfileFixture */
+export function SettingsFixture() {
+  return <ProfileFixture />;
 }
 
 export function SharedFixture() {
@@ -417,8 +443,8 @@ export const SKELETON_FIXTURES: Record<
   [SKELETON_NAMES.reports]: {
     fixture: <ReportsFixture />,
   },
-  [SKELETON_NAMES.settings]: {
-    fixture: <SettingsFixture />,
+  [SKELETON_NAMES.profile]: {
+    fixture: <ProfileFixture />,
   },
   [SKELETON_NAMES.shared]: {
     fixture: <SharedFixture />,

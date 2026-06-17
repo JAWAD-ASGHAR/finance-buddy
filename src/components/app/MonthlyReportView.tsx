@@ -66,7 +66,7 @@ export function MonthlyReportView({
             <SpendingTrendChart data={summary.dailySpending} />
           ) : (
             <p className="text-sm text-muted-foreground">
-              Regenerate the report to include the spending trend chart.
+              No spending recorded for this period yet.
             </p>
           )}
         </AppCard>

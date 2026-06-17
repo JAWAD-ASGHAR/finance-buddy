@@ -34,7 +34,7 @@ function AppShellInner({
 
       <div
         className={cn(
-          "flex min-w-0 flex-1 flex-col pt-[env(safe-area-inset-top,0px)] transition-[margin] duration-300 ease-out motion-reduce:transition-none",
+          "flex min-w-0 flex-1 flex-col pt-[env(safe-area-inset-top,0px)] transition-[margin] duration-300 ease-out motion-reduce:transition-none lg:ml-60",
           aiOpen && "max-sm:overflow-hidden sm:mr-[min(420px,100vw)]",
         )}
       >
@@ -52,7 +52,7 @@ function AppShellInner({
         </header>
 
         <main className="flex-1 px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-8 lg:px-8">
-          {children}
+          <div className="container-app">{children}</div>
         </main>
       </div>
 

@@ -22,6 +22,7 @@ export default async function OnboardingPage() {
         <UserPreferencesForm
           mode="onboarding"
           initial={{
+            username: prefs?.username ?? null,
             displayName: prefs?.displayName ?? session.displayName,
             currencyCode: prefs?.currencyCode ?? DEFAULT_CURRENCY,
             countryCode: prefs?.countryCode ?? null,

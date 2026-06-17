@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, notInArray, or, sql } from "drizzle-orm";
 import {
   mapFriend,
   mapFriendRequest,
@@ -15,11 +15,12 @@ import {
   sharedExpenseSplits,
   sharedExpenses,
 } from "@/db/schema";
-import { getUserCurrency } from "@/lib/auth/user-preferences";
+import { normalizeUsername, parseUsername } from "@/lib/auth/username";
 import {
   convertSettlementsForViewer,
   convertSharedExpenseDetailsForViewer,
 } from "@/lib/finance/shared-currency";
+import { getUserCurrency } from "@/lib/auth/user-preferences";
 import type {
   Friend,
   FriendRequest,
@@ -53,7 +54,55 @@ export async function getProfile(userId: string): Promise<Friend | null> {
   });
 
   if (!row) return null;
-  return mapFriend(row.id, row.displayName);
+  return mapFriend(row.id, row.displayName, row.username);
+}
+
+export async function findUserIdByUsername(
+  rawUsername: string,
+): Promise<string | null> {
+  const parsed = parseUsername(rawUsername);
+  if (!parsed.ok) {
+    return null;
+  }
+
+  const db = getDb();
+  const row = await db.query.profiles.findFirst({
+    where: eq(profiles.username, parsed.username),
+    columns: { id: true },
+  });
+
+  return row?.id ?? null;
+}
+
+export async function searchUsersByUsernamePrefix(
+  userId: string,
+  rawQuery: string,
+  limit = 10,
+): Promise<Friend[]> {
+  const query = normalizeUsername(rawQuery);
+  if (query.length < 2) {
+    return [];
+  }
+
+  const db = getDb();
+  const friendIds = await getAcceptedFriendIds(userId);
+  const excludedIds = [userId, ...friendIds];
+
+  const rows = await db.query.profiles.findMany({
+    where: and(
+      ilike(profiles.username, `${query}%`),
+      notInArray(profiles.id, excludedIds),
+    ),
+    columns: {
+      id: true,
+      displayName: true,
+      username: true,
+    },
+    limit,
+    orderBy: profiles.username,
+  });
+
+  return rows.map((row) => mapFriend(row.id, row.displayName, row.username));
 }
 
 export async function getAcceptedFriendIds(userId: string): Promise<string[]> {
@@ -94,7 +143,7 @@ export async function getAcceptedFriends(userId: string): Promise<Friend[]> {
   return friendIds
     .map((id) => {
       const row = byId.get(id);
-      return row ? mapFriend(row.id, row.displayName) : mapFriend(id, null);
+      return row ? mapFriend(row.id, row.displayName, row.username) : mapFriend(id, null);
     })
     .sort((a, b) =>
       (a.display_name ?? a.id).localeCompare(b.display_name ?? b.id),
@@ -130,7 +179,7 @@ export async function getPendingFriendRequests(
         })
       : [];
   const profilesById = new Map(
-    profileRows.map((row) => [row.id, mapFriend(row.id, row.displayName)]),
+    profileRows.map((row) => [row.id, mapFriend(row.id, row.displayName, row.username)]),
   );
 
   const incoming: FriendRequest[] = [];

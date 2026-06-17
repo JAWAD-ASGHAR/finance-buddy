@@ -9,7 +9,7 @@ export default async function BudgetSetupPage() {
     <>
       <AppPageHeader
         title="Monthly budget"
-        description="Set your allowance and split it across categories like food, transport, and subscriptions."
+        description="Set your allowance, pick your categories, and we'll split it evenly across them."
       />
       <BudgetSetupForm
         initialIncome={

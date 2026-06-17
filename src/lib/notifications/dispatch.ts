@@ -26,7 +26,7 @@ export async function notifyFriendRequestReceived({
     type: "friend_request",
     title: "New friend request",
     body: `${requesterName} wants to connect with you on Finance Buddy.`,
-    href: "/shared/friends",
+    href: "/friends",
     metadata: { requestId, requesterName },
     email: {
       subject: `${requesterName} sent you a friend request on Finance Buddy`,
@@ -134,7 +134,7 @@ export async function notifySettlementRecorded({
     type: "settlement",
     title: "Settlement recorded",
     body: `${payerName} recorded a payment of ${amount}${note ? `: ${note}` : "."}`,
-    href: `/shared/friends/${friendId}`,
+    href: `/friends/${friendId}`,
     metadata: { settlementId, payerName, amountCents, friendId },
     email: {
       subject: `${payerName} recorded a settlement on Finance Buddy`,

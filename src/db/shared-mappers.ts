@@ -19,8 +19,12 @@ function toCurrencyCode(value: string): CurrencyCode {
   return isCurrencyCode(value) ? value : "GBP";
 }
 
-export function mapFriend(id: string, displayName: string | null): Friend {
-  return { id, display_name: displayName };
+export function mapFriend(
+  id: string,
+  displayName: string | null,
+  username: string | null = null,
+): Friend {
+  return { id, display_name: displayName, username };
 }
 
 export function mapFriendRequest(

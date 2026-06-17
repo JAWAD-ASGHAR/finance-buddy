@@ -43,7 +43,9 @@ export function SharedExpenseForm({
     { id: currentUserId, label: "You" },
     ...friends.map((f) => ({
       id: f.id,
-      label: f.display_name ?? "Friend",
+      label: f.username
+        ? `${f.display_name ?? "Friend"} (@${f.username})`
+        : (f.display_name ?? "Friend"),
     })),
   ];
 

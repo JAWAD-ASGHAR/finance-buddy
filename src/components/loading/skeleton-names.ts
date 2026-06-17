@@ -4,7 +4,7 @@ export const SKELETON_NAMES = {
   expenseForm: "app-expense-form",
   budgetForm: "app-budget-form",
   reports: "app-reports",
-  settings: "app-settings",
+  profile: "app-settings",
   shared: "app-shared",
   friends: "app-friends",
   friendDetail: "app-friend-detail",

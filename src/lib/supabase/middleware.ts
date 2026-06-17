@@ -36,9 +36,10 @@ function isAppPath(pathname: string): boolean {
     pathname.startsWith("/dashboard/") ||
     pathname.startsWith("/budget") ||
     pathname.startsWith("/expenses") ||
+    pathname.startsWith("/friends") ||
     pathname.startsWith("/shared") ||
     pathname.startsWith("/reports") ||
-    pathname.startsWith("/settings")
+    pathname.startsWith("/profile")
   );
 }
 
@@ -96,7 +97,7 @@ export async function updateSession(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("onboarding_completed_at")
+    .select("onboarding_completed_at, username")
     .eq("id", user.id)
     .maybeSingle();
 

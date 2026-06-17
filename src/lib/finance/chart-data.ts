@@ -1,4 +1,4 @@
-import { format, getDaysInMonth, startOfMonth } from "date-fns";
+import { addDays, format, getDaysInMonth, parseISO, startOfMonth } from "date-fns";
 import type {
   Budget,
   CategorySummary,
@@ -49,6 +49,48 @@ export function buildDailySpendingSeries(
       paceCents: Math.round(dailyPaceCents * day),
     };
   });
+}
+
+export function buildDailySpendingSeriesForRange(
+  budget: Budget,
+  expenses: Expense[],
+  startDate: string,
+  endDate: string,
+): DailySpendPoint[] {
+  const start = parseISO(startDate);
+  const end = parseISO(endDate);
+  const daysInMonth = getDaysInMonth(start);
+  const dailyPaceCents = budget.income_cents / daysInMonth;
+
+  const dailyTotals = new Map<string, number>();
+  for (const expense of expenses) {
+    dailyTotals.set(
+      expense.expense_date,
+      (dailyTotals.get(expense.expense_date) ?? 0) + expense.amount_cents,
+    );
+  }
+
+  let cumulativeCents = 0;
+  const points: DailySpendPoint[] = [];
+  let current = start;
+
+  while (current <= end) {
+    const dateKey = format(current, "yyyy-MM-dd");
+    const spentCents = dailyTotals.get(dateKey) ?? 0;
+    cumulativeCents += spentCents;
+
+    points.push({
+      day: points.length + 1,
+      label: format(current, "d MMM"),
+      spentCents,
+      cumulativeCents,
+      paceCents: Math.round(dailyPaceCents * current.getDate()),
+    });
+
+    current = addDays(current, 1);
+  }
+
+  return points;
 }
 
 export function buildCategoryChartData(
