@@ -48,6 +48,7 @@ export const profiles = pgTable(
   onboardingCompletedAt: timestamp("onboarding_completed_at", {
     withTimezone: true,
   }),
+  avatarPath: text("avatar_path"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -127,6 +128,33 @@ export const expenses = pgTable(
     index("expenses_budget_id_idx").on(table.budgetId),
     index("expenses_user_id_idx").on(table.userId),
     index("expenses_expense_date_idx").on(table.expenseDate),
+  ],
+);
+
+export const expenseAttachments = pgTable(
+  "expense_attachments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    expenseId: uuid("expense_id")
+      .notNull()
+      .references(() => expenses.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull(),
+    storagePath: text("storage_path").notNull(),
+    fileName: text("file_name").notNull(),
+    contentType: text("content_type").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    unique("expense_attachments_expense_path_unique").on(
+      table.expenseId,
+      table.storagePath,
+    ),
+    index("expense_attachments_expense_id_idx").on(table.expenseId),
+    index("expense_attachments_user_id_idx").on(table.userId),
   ],
 );
 
@@ -311,7 +339,7 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
   expenses: many(expenses),
 }));
 
-export const expensesRelations = relations(expenses, ({ one }) => ({
+export const expensesRelations = relations(expenses, ({ one, many }) => ({
   budget: one(budgets, {
     fields: [expenses.budgetId],
     references: [budgets.id],
@@ -320,7 +348,18 @@ export const expensesRelations = relations(expenses, ({ one }) => ({
     fields: [expenses.categoryId],
     references: [categories.id],
   }),
+  attachments: many(expenseAttachments),
 }));
+
+export const expenseAttachmentsRelations = relations(
+  expenseAttachments,
+  ({ one }) => ({
+    expense: one(expenses, {
+      fields: [expenseAttachments.expenseId],
+      references: [expenses.id],
+    }),
+  }),
+);
 
 export const sharedExpensesRelations = relations(
   sharedExpenses,
@@ -342,6 +381,7 @@ export const sharedExpenseSplitsRelations = relations(
 export type BudgetRow = typeof budgets.$inferSelect;
 export type CategoryRow = typeof categories.$inferSelect;
 export type ExpenseRow = typeof expenses.$inferSelect;
+export type ExpenseAttachmentRow = typeof expenseAttachments.$inferSelect;
 export type AlertRow = typeof alerts.$inferSelect;
 export type MonthlyReportRow = typeof monthlyReports.$inferSelect;
 export type FriendRequestRow = typeof friendRequests.$inferSelect;

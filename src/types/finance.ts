@@ -25,6 +25,19 @@ export type UserPreferences = {
   currencyCode: CurrencyCode;
   countryCode: string | null;
   onboardingCompleted: boolean;
+  avatarPath: string | null;
+};
+
+export type ExpenseAttachment = {
+  id: string;
+  expense_id: string;
+  user_id: string;
+  storage_path: string;
+  file_name: string;
+  content_type: string;
+  size_bytes: number;
+  sort_order: number;
+  created_at: string;
 };
 
 export type Budget = {
@@ -60,6 +73,7 @@ export type Expense = {
   source: ExpenseSource;
   user_corrected: boolean;
   created_at: string;
+  attachments?: ExpenseAttachment[];
 };
 
 export type Alert = {
