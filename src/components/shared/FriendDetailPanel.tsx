@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { recordSettlement } from "@/actions/settlements";
 import { useCurrency } from "@/components/app/CurrencyProvider";
 import {
   AppButton,
   AppCard,
-  AppError,
   AppInput,
 } from "@/components/app/ui";
 import type { FriendActivityItem, FriendBalance } from "@/types/shared";
@@ -37,14 +37,12 @@ export function FriendDetailPanel({
     netCents < 0 ? (Math.abs(netCents) / 100).toFixed(2) : "",
   );
   const [note, setNote] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [showSettle, setShowSettle] = useState(netCents < 0);
 
   async function handleSettle(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
-    setError(null);
 
     const result = await recordSettlement({
       friendId: friend.id,
@@ -53,10 +51,12 @@ export function FriendDetailPanel({
     });
 
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPending(false);
       return;
     }
+
+    toast.success("Payment recorded");
 
     setAmount("");
     setNote("");
@@ -95,7 +95,6 @@ export function FriendDetailPanel({
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Cash, bank transfer..."
                 />
-                {error ? <AppError message={error} /> : null}
                 <div className="flex gap-2">
                   <AppButton type="submit" loading={pending}>
                     Record payment

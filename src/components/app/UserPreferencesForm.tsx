@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   completeOnboarding,
   saveUserPreferences,
@@ -10,7 +11,6 @@ import {
 import {
   AppButton,
   AppCard,
-  AppError,
   AppInput,
   AppSelect,
 } from "@/components/app/ui";
@@ -36,7 +36,6 @@ export function UserPreferencesForm({
   const [currencyCode, setCurrencyCode] = useState<CurrencyCode>(
     initial.currencyCode,
   );
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
@@ -57,7 +56,6 @@ export function UserPreferencesForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
-    setError(null);
 
     const payload = { displayName, countryCode, currencyCode };
     const result =
@@ -66,14 +64,18 @@ export function UserPreferencesForm({
         : await saveUserPreferences(payload);
 
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPending(false);
       return;
     }
 
     if (mode === "onboarding") {
       router.push("/dashboard");
+      return;
     }
+
+    toast.success("Preferences saved");
+
     router.refresh();
     setPending(false);
   }
@@ -124,8 +126,6 @@ export function UserPreferencesForm({
           approximate exchange rates.
         </p>
       )}
-
-      {error ? <AppError message={error} /> : null}
 
       <AppButton type="submit" loading={pending}>
         {mode === "onboarding" ? "Continue to dashboard" : "Save preferences"}

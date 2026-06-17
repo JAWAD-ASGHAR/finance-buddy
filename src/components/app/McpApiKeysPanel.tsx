@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   createMcpApiKey,
   listMcpApiKeys,
@@ -26,7 +27,6 @@ export function McpApiKeysPanel({
   const [keys, setKeys] = useState(initialKeys);
   const [name, setName] = useState("");
   const [newSecret, setNewSecret] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
@@ -39,33 +39,34 @@ export function McpApiKeysPanel({
 
   async function handleCreate(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
     setNewSecret(null);
     setCreating(true);
 
     const result = await createMcpApiKey({ name });
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setCreating(false);
       return;
     }
 
     setNewSecret(result.data.secret);
     setName("");
+    toast.success("API key created");
     await refreshKeys();
     setCreating(false);
   }
 
   async function handleRevoke(keyId: string) {
-    setError(null);
     setRevokingId(keyId);
 
     const result = await revokeMcpApiKey(keyId);
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setRevokingId(null);
       return;
     }
+
+    toast.success("API key revoked");
 
     setRevokingId(null);
     await refreshKeys();
@@ -109,8 +110,6 @@ export function McpApiKeysPanel({
           </code>
         </div>
       ) : null}
-
-      {error ? <p className="mt-3 text-sm text-red-600">{error}</p> : null}
 
       <ul className="mt-6 space-y-3">
         {keys.length === 0 ? (

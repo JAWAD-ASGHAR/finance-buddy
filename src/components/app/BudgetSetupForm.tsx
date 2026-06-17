@@ -4,10 +4,10 @@ import { createMonthlyBudget } from "@/actions/budgets";
 import { DEFAULT_CATEGORIES } from "@/types/finance";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   AppButton,
   AppCard,
-  AppError,
   AppInput,
 } from "@/components/app/ui";
 import { useCurrency } from "@/components/app/CurrencyProvider";
@@ -34,7 +34,6 @@ export function BudgetSetupForm({
         allocated: String(c.allocatedCents / 100),
       })),
   );
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   function updateCategory(index: number, field: keyof CategoryRow, value: string) {
@@ -46,7 +45,6 @@ export function BudgetSetupForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
-    setError(null);
 
     const result = await createMonthlyBudget({
       income,
@@ -55,7 +53,7 @@ export function BudgetSetupForm({
     });
 
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPending(false);
       return;
     }
@@ -113,8 +111,6 @@ export function BudgetSetupForm({
           ))}
         </div>
       </AppCard>
-
-      {error ? <AppError message={error} /> : null}
 
       <AppButton type="submit" loading={pending}>
         Save monthly budget

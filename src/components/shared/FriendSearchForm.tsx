@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   respondToFriendRequest,
   sendFriendRequestByEmail,
@@ -9,7 +10,6 @@ import {
 import {
   AppButton,
   AppCard,
-  AppError,
   AppInput,
 } from "@/components/app/ui";
 import type { FriendRequest } from "@/types/shared";
@@ -17,24 +17,22 @@ import type { FriendRequest } from "@/types/shared";
 export function FriendSearchForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [success, setSuccess] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
-    setError(null);
-    setSuccess(null);
 
     const result = await sendFriendRequestByEmail(email);
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPending(false);
       return;
     }
 
-    setSuccess(`Request sent to ${result.data.recipient?.display_name ?? "your friend"}`);
+    toast.success(
+      `Request sent to ${result.data.recipient?.display_name ?? "your friend"}`,
+    );
     setEmail("");
     setPending(false);
     router.refresh();
@@ -51,10 +49,6 @@ export function FriendSearchForm() {
           placeholder="friend@university.ac.uk"
           required
         />
-        {error ? <AppError message={error} /> : null}
-        {success ? (
-          <p className="text-sm text-accent-green">{success}</p>
-        ) : null}
         <AppButton type="submit" loading={pending}>
           Send request
         </AppButton>
@@ -71,23 +65,22 @@ export function PendingRequestsPanel({
   outgoing: FriendRequest[];
 }) {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [pendingAccept, setPendingAccept] = useState<boolean | null>(null);
 
   async function handleRespond(requestId: string, accept: boolean) {
     setPendingId(requestId);
     setPendingAccept(accept);
-    setError(null);
 
     const result = await respondToFriendRequest(requestId, accept);
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPendingId(null);
       setPendingAccept(null);
       return;
     }
 
+    toast.success(accept ? "Friend request accepted" : "Friend request declined");
     setPendingId(null);
     setPendingAccept(null);
     router.refresh();
@@ -99,7 +92,6 @@ export function PendingRequestsPanel({
 
   return (
     <AppCard title="Pending requests">
-      {error ? <AppError message={error} /> : null}
       {incoming.length > 0 ? (
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">

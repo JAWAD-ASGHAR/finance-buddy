@@ -4,8 +4,9 @@ import { generateMonthlyReport } from "@/actions/reports";
 import type { MonthlyReportSummary } from "@/types/finance";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { MonthlyReportView } from "@/components/app/MonthlyReportView";
-import { AppButton, AppError } from "@/components/app/ui";
+import { AppButton } from "@/components/app/ui";
 
 export function ReportPanel({
   initialReport,
@@ -14,19 +15,18 @@ export function ReportPanel({
 }) {
   const router = useRouter();
   const [report, setReport] = useState(initialReport);
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function handleGenerate() {
     setPending(true);
-    setError(null);
     const result = await generateMonthlyReport();
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPending(false);
       return;
     }
     setReport(result.data);
+    toast.success("Monthly report generated");
     router.refresh();
     setPending(false);
   }
@@ -38,7 +38,6 @@ export function ReportPanel({
           Generate monthly report
         </AppButton>
       </div>
-      {error ? <AppError message={error} /> : null}
       {report ? <MonthlyReportView summary={report} /> : null}
     </div>
   );

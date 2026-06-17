@@ -3,15 +3,11 @@
 import { deleteAllUserData } from "@/actions/expenses";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import {
-  AppButton,
-  AppCard,
-  AppError,
-} from "@/components/app/ui";
+import { toast } from "sonner";
+import { AppButton, AppCard } from "@/components/app/ui";
 
 export function DeleteDataPanel() {
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function handleDelete() {
@@ -24,10 +20,9 @@ export function DeleteDataPanel() {
     }
 
     setPending(true);
-    setError(null);
     const result = await deleteAllUserData();
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPending(false);
       return;
     }
@@ -40,7 +35,6 @@ export function DeleteDataPanel() {
       title="Delete all data"
       description="Remove every budget, expense, alert, and report from your account."
     >
-      {error ? <AppError message={error} /> : null}
       <AppButton
         type="button"
         variant="danger"

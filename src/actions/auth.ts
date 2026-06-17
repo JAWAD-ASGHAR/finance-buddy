@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth/email";
 import { isEmailVerificationRequired } from "@/lib/email/env";
 import { sendVerificationEmail } from "@/lib/email/send-verification";
+import { isEmailNotConfirmedError } from "@/lib/auth/verification";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/types/finance";
@@ -75,6 +76,22 @@ export async function signUp(
         error: sent.error,
       };
     }
+
+    const supabase = await createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (!signInError) {
+      redirect("/verify-email");
+    }
+
+    if (isEmailNotConfirmedError(signInError.message)) {
+      redirect(`/check-email?email=${encodeURIComponent(email)}`);
+    }
+
+    return { success: false, error: signInError.message };
   }
 
   const supabase = await createClient();
@@ -85,10 +102,6 @@ export async function signUp(
 
   if (signInError) {
     return { success: false, error: signInError.message };
-  }
-
-  if (requireVerification) {
-    redirect("/verify-email");
   }
 
   redirect(nextPath);
@@ -117,6 +130,11 @@ export async function signIn(
   });
 
   if (error) {
+    if (isEmailNotConfirmedError(error.message)) {
+      redirect(
+        `/check-email?email=${encodeURIComponent(emailResult.email)}`,
+      );
+    }
     return { success: false, error: "Invalid email or password" };
   }
 

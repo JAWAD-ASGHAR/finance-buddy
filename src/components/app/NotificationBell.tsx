@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, Check, UserPlus, Users, Wallet } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 import { respondToFriendRequest } from "@/actions/friends";
 import {
   getUnreadCount,
@@ -63,7 +64,6 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
   const [pendingAccept, setPendingAccept] = useState<boolean | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   const refreshUnreadCount = useCallback(async () => {
     const result = await getUnreadCount();
@@ -74,13 +74,12 @@ export function NotificationBell() {
 
   const loadNotifications = useCallback(async () => {
     setLoading(true);
-    setError(null);
 
     const result = await listNotifications();
     if (result.success) {
       setNotifications(result.data);
     } else {
-      setError(result.error);
+      toast.error(result.error);
     }
 
     setLoading(false);
@@ -152,15 +151,16 @@ export function NotificationBell() {
 
     setPendingRequestId(requestId);
     setPendingAccept(accept);
-    setError(null);
 
     const result = await respondToFriendRequest(requestId, accept);
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPendingRequestId(null);
       setPendingAccept(null);
       return;
     }
+
+    toast.success(accept ? "Friend request accepted" : "Friend request declined");
 
     await markNotificationRead(notification.id);
     setPendingRequestId(null);
@@ -209,10 +209,6 @@ export function NotificationBell() {
           </div>
 
           <div className="max-h-[min(24rem,60vh)] overflow-y-auto">
-            {error ? (
-              <p className="px-4 py-3 text-sm text-destructive">{error}</p>
-            ) : null}
-
             {loading && notifications.length === 0 ? (
               <NotificationListSkeleton />
             ) : null}

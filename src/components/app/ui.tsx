@@ -175,13 +175,17 @@ export function AppButton({
   return (
     <Button
       variant={mappedVariant}
-      className={cn("uppercase tracking-[0.08em]", className)}
+      className={cn(
+        "uppercase tracking-[0.08em]",
+        loading && "gap-2",
+        className,
+      )}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...props}
     >
       {loading ? (
-        <Loader2 className="size-4 animate-spin" aria-hidden />
+        <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
       ) : null}
       {children}
     </Button>

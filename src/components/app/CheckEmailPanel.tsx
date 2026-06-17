@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { resendVerificationEmail } from "@/actions/email";
+import { resendVerificationEmailForAddress } from "@/actions/email";
 import { AppButton, AppCard } from "@/components/app/ui";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,22 +11,16 @@ import { cn } from "@/lib/utils";
 const steps = [
   "Open the email from Finance Buddy in your inbox.",
   "Click the confirmation link in that message.",
-  "Come back here — we'll take you to onboarding once you're verified.",
+  "Return here and sign in to finish setting up your account.",
 ];
 
-export function VerifyEmailPanel({
-  email,
-  verified,
-}: {
-  email: string;
-  verified: boolean;
-}) {
+export function CheckEmailPanel({ email }: { email: string }) {
   const [pending, setPending] = useState(false);
 
   async function handleResend() {
     setPending(true);
 
-    const result = await resendVerificationEmail();
+    const result = await resendVerificationEmailForAddress(email);
     if (!result.success) {
       toast.error(result.error);
     } else {
@@ -36,28 +30,11 @@ export function VerifyEmailPanel({
     setPending(false);
   }
 
-  if (verified) {
-    return (
-      <AppCard
-        className="shadow-sm [--card-spacing:--spacing(6)]"
-        title="Email confirmed"
-        description="Your email address is verified. You're all set."
-      >
-        <Link
-          href="/dashboard"
-          className={cn(buttonVariants(), "h-11 w-full uppercase tracking-[0.08em]")}
-        >
-          Go to dashboard
-        </Link>
-      </AppCard>
-    );
-  }
-
   return (
     <AppCard
       className="shadow-sm [--card-spacing:--spacing(6)]"
-      title="Confirm your email"
-      description="We sent a confirmation link to finish setting up your account."
+      title="Check your email"
+      description="We sent a confirmation link to finish creating your account."
     >
       <div className="space-y-6">
         <div className="rounded-lg border border-accent-green/25 bg-accent-green-light/40 px-4 py-3 text-sm text-foreground">
@@ -80,14 +57,25 @@ export function VerifyEmailPanel({
           Didn&apos;t get it? Check spam, or resend the confirmation email below.
         </p>
 
-        <AppButton
-          type="button"
-          onClick={handleResend}
-          loading={pending}
-          className="mt-2 h-11 w-full"
-        >
-          Resend confirmation email
-        </AppButton>
+        <div className="flex flex-col gap-3 pt-2">
+          <AppButton
+            type="button"
+            onClick={handleResend}
+            loading={pending}
+            className="h-11 w-full"
+          >
+            Resend confirmation email
+          </AppButton>
+          <Link
+            href="/login"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "h-11 w-full uppercase tracking-[0.08em]",
+            )}
+          >
+            Back to sign in
+          </Link>
+        </div>
       </div>
     </AppCard>
   );

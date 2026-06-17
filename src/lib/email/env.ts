@@ -43,7 +43,7 @@ export function getContactInboxEmail(): string {
   );
 }
 
-/** When true, new signups must verify email before using the app. Off by default. */
+/** New signups must verify email before using the app. */
 export function isEmailVerificationRequired(): boolean {
-  return process.env.EMAIL_VERIFICATION_REQUIRED === "true";
+  return true;
 }

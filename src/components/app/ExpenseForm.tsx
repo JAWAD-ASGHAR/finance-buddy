@@ -9,12 +9,12 @@ import type { Category } from "@/types/finance";
 import { suggestCategory } from "@/lib/finance/categorize";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 import { CategorySuggestion } from "@/components/app/CategorySuggestion";
 import { useCurrency } from "@/components/app/CurrencyProvider";
 import {
   AppButton,
   AppCard,
-  AppError,
   AppInput,
   AppSelect,
   AppTextarea,
@@ -35,7 +35,6 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
   const [suggestion, setSuggestion] = useState<ReturnType<
     typeof suggestCategory
   > | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   async function refreshSuggestion(nextDescription: string) {
@@ -58,7 +57,6 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
   async function handleManualSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
-    setError(null);
 
     const suggestedId = suggestion?.categoryId ?? categoryId;
     const userCorrected = suggestedId !== categoryId;
@@ -74,7 +72,7 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
     });
 
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPending(false);
       return;
     }
@@ -85,7 +83,6 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
 
   async function handleTextSubmit(source: "receipt_text" | "nl_text") {
     setPending(true);
-    setError(null);
 
     const result = await addExpenseFromText({
       rawText,
@@ -94,7 +91,7 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
     });
 
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPending(false);
       return;
     }
@@ -150,7 +147,6 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
                 </option>
               ))}
             </AppSelect>
-            {error ? <AppError message={error} /> : null}
             <AppButton type="submit" loading={pending}>
               Add expense
             </AppButton>
@@ -169,7 +165,6 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
             categoryId={categoryId}
             setCategoryId={setCategoryId}
             categories={categories}
-            error={error}
             pending={pending}
             placeholder={"COFFEE SHOP\nTotal: £4.50"}
             onSubmit={() => handleTextSubmit("receipt_text")}
@@ -188,7 +183,6 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
             categoryId={categoryId}
             setCategoryId={setCategoryId}
             categories={categories}
-            error={error}
             pending={pending}
             placeholder="12 uber home Friday"
             onSubmit={() => handleTextSubmit("nl_text")}
@@ -205,7 +199,6 @@ function TextEntryForm({
   categoryId,
   setCategoryId,
   categories,
-  error,
   pending,
   placeholder,
   onSubmit,
@@ -215,7 +208,6 @@ function TextEntryForm({
   categoryId: string;
   setCategoryId: (value: string) => void;
   categories: Category[];
-  error: string | null;
   pending: boolean;
   placeholder: string;
   onSubmit: () => void;
@@ -239,7 +231,6 @@ function TextEntryForm({
           </option>
         ))}
       </AppSelect>
-      {error ? <AppError message={error} /> : null}
       <AppButton
         type="button"
         loading={pending}

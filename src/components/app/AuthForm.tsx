@@ -2,13 +2,27 @@
 
 import { signIn, signUp } from "@/actions/auth";
 import Link from "next/link";
-import { useState } from "react";
-import {
-  AppButton,
-  AppCard,
-  AppError,
-  AppInput,
-} from "@/components/app/ui";
+import { useActionState } from "react";
+import { toast } from "sonner";
+import { FormSubmitButton } from "@/components/app/FormSubmitButton";
+import { PendingFieldset } from "@/components/app/PendingFieldset";
+import { AppCard, AppInput } from "@/components/app/ui";
+
+async function loginAction(_prev: null, formData: FormData): Promise<null> {
+  const result = await signIn(formData);
+  if (!result.success) {
+    toast.error(result.error);
+  }
+  return null;
+}
+
+async function signupAction(_prev: null, formData: FormData): Promise<null> {
+  const result = await signUp(formData);
+  if (!result.success) {
+    toast.error(result.error);
+  }
+  return null;
+}
 
 export function AuthForm({
   mode,
@@ -17,57 +31,47 @@ export function AuthForm({
   mode: "login" | "signup";
   next?: string;
 }) {
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-
-  async function handleSubmit(formData: FormData) {
-    setPending(true);
-    setError(null);
-    try {
-      const result =
-        mode === "login"
-          ? await signIn(formData)
-          : await signUp(formData);
-      if (!result.success) {
-        setError(result.error);
-      }
-    } catch {
-      // redirect throws — expected on success
-    } finally {
-      setPending(false);
-    }
-  }
+  const [, formAction] = useActionState(
+    mode === "login" ? loginAction : signupAction,
+    null,
+  );
 
   return (
     <AppCard
+      className="shadow-sm [--card-spacing:--spacing(6)]"
       title={mode === "login" ? "Welcome back" : "Create your account"}
       description="Private budgeting for student life. Your data stays yours."
     >
-      <form action={handleSubmit} className="space-y-4">
+      <form action={formAction} className="flex flex-col">
         {next ? <input type="hidden" name="next" value={next} /> : null}
-        <AppInput
-          label="Email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          placeholder="you@example.com"
-        />
-        <AppInput
-          label="Password"
-          name="password"
-          type="password"
-          required
-          autoComplete={mode === "login" ? "current-password" : "new-password"}
-          minLength={6}
-          placeholder="At least 6 characters"
-        />
-        {error ? <AppError message={error} /> : null}
-        <AppButton type="submit" loading={pending} className="w-full">
+        <PendingFieldset>
+          <div className="flex flex-col gap-6">
+            <AppInput
+              label="Email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="you@example.com"
+              className="h-10"
+            />
+            <AppInput
+              label="Password"
+              name="password"
+              type="password"
+              required
+              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              minLength={6}
+              placeholder="At least 6 characters"
+              className="h-10"
+            />
+          </div>
+        </PendingFieldset>
+        <FormSubmitButton className="mt-10 h-11 w-full">
           {mode === "login" ? "Sign in" : "Create account"}
-        </AppButton>
+        </FormSubmitButton>
       </form>
-      <p className="mt-4 text-center text-sm text-muted-foreground">
+      <p className="mt-8 border-t border-border pt-6 text-center text-sm text-muted-foreground">
         {mode === "login" ? (
           <>
             No account yet?{" "}

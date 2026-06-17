@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { VerifyEmailPanel } from "@/components/app/VerifyEmailPanel";
 import { BrandLogo } from "@/components/ui/BrandLogo";
 import { isEmailVerified } from "@/lib/auth/verification";
-import { isEmailVerificationRequired } from "@/lib/email/env";
 import { getAuthUser } from "@/lib/supabase/server";
 
 export default async function VerifyEmailPage() {
@@ -11,23 +10,18 @@ export default async function VerifyEmailPage() {
     redirect("/login?next=/verify-email");
   }
 
-  const verificationRequired = isEmailVerificationRequired();
   const verified = isEmailVerified(user);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 px-4 py-12">
-      <div className="mb-8 flex flex-col items-center gap-3">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 px-4 py-12 sm:py-16">
+      <div className="mb-10 flex flex-col items-center gap-4">
         <BrandLogo href="/" />
         <p className="text-sm text-muted-foreground">
           {verified ? "You're verified" : "Almost there"}
         </p>
       </div>
       <div className="w-full max-w-md">
-        <VerifyEmailPanel
-          email={user.email}
-          verified={verified}
-          verificationRequired={verificationRequired}
-        />
+        <VerifyEmailPanel email={user.email} verified={verified} />
       </div>
     </div>
   );

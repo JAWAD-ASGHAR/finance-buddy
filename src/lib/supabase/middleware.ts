@@ -67,8 +67,18 @@ export async function updateSession(request: NextRequest) {
   const isAuthRoute =
     pathname === "/login" ||
     pathname === "/signup" ||
-    pathname === "/verify-email";
+    pathname === "/verify-email" ||
+    pathname === "/check-email";
   const isGuestOnlyRoute = pathname === "/" || isAuthRoute;
+
+  if (
+    pathname === "/check-email" &&
+    user &&
+    isEmailVerificationRequired() &&
+    !isEmailVerified(user)
+  ) {
+    return redirectWithSession(request, supabaseResponse, "/verify-email");
+  }
 
   if (isGuestOnlyRoute && user && pathname !== "/verify-email") {
     return redirectWithSession(request, supabaseResponse, "/dashboard");

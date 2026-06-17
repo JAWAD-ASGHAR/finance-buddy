@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createSharedExpense } from "@/actions/shared-expenses";
 import { useCurrency } from "@/components/app/CurrencyProvider";
 import {
   AppButton,
   AppCard,
-  AppError,
   AppInput,
   AppSelect,
 } from "@/components/app/ui";
@@ -37,7 +37,6 @@ export function SharedExpenseForm({
   const [payerId, setPayerId] = useState(currentUserId);
   const [addToBudget, setAddToBudget] = useState(false);
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   const participants = [
@@ -59,7 +58,6 @@ export function SharedExpenseForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
-    setError(null);
 
     const result = await createSharedExpense({
       amount,
@@ -73,7 +71,7 @@ export function SharedExpenseForm({
     });
 
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPending(false);
       return;
     }
@@ -193,8 +191,6 @@ export function SharedExpenseForm({
             ) : null}
           </div>
         ) : null}
-
-        {error ? <AppError message={error} /> : null}
 
         <AppButton
           type="submit"

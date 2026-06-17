@@ -4,6 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Loader2, Send, Sparkles, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   AiMessageBubble,
   getConfirmationFromMessages,
@@ -176,6 +177,12 @@ function AiChatPanelInner() {
     });
   }, [messages, status]);
 
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message);
+    }
+  }, [error]);
+
   const isLoading = status === "streaming" || status === "submitted";
 
   const switchSession = useCallback(
@@ -282,10 +289,6 @@ function AiChatPanelInner() {
             <Loader2 className="size-3 animate-spin" />
             Thinking…
           </div>
-        ) : null}
-
-        {error ? (
-          <p className="text-sm text-red-600">{error.message}</p>
         ) : null}
       </div>
 
