@@ -4,6 +4,7 @@ import { getConfirmationSecret } from "@/lib/ai/env";
 export const DESTRUCTIVE_TOOLS = new Set([
   "delete_expense",
   "delete_shared_expense",
+  "delete_saving_goal",
   "delete_all_user_data",
 ]);
 

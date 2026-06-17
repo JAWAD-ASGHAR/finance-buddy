@@ -4,8 +4,11 @@ import type {
   CategorySummary,
   Expense,
   MonthlyReportSummary,
+  SavingGoalSummary,
 } from "@/types/finance";
 import { formatMoney } from "@/types/finance";
+import type { CurrencyCode } from "@/lib/finance/currency";
+import { DEFAULT_CURRENCY } from "@/lib/finance/currency";
 import { buildDailySpendingSeriesForRange } from "@/lib/finance/chart-data";
 import { computeCategorySummaries } from "@/lib/finance/compute";
 import { computeForecast } from "@/lib/finance/forecast";
@@ -23,6 +26,8 @@ function buildInsights(
   summaries: CategorySummary[],
   totalSpentCents: number,
   forecast: MonthlyReportSummary["forecast"],
+  savingGoals: SavingGoalSummary[] = [],
+  currency: CurrencyCode = DEFAULT_CURRENCY,
 ): string[] {
   const insights: string[] = [];
   const categoryBreakdown = summaries
@@ -37,7 +42,7 @@ function buildInsights(
           ? Math.round((top.spentCents / totalSpentCents) * 100)
           : 0;
       insights.push(
-        `You spent ${share}% of tracked spending on ${top.name} (${formatMoney(top.spentCents)} of ${formatMoney(top.allocatedCents)} allocated).`,
+        `You spent ${share}% of tracked spending on ${top.name} (${formatMoney(top.spentCents, currency)} of ${formatMoney(top.allocatedCents, currency)} allocated).`,
       );
     }
   }
@@ -54,11 +59,11 @@ function buildInsights(
   if (totalSpentCents > 0) {
     if (forecast.onTrack) {
       insights.push(
-        `At your current pace, you'll finish the month ${formatMoney(forecast.projectedEndBalanceCents)} under budget.`,
+        `At your current pace, you'll finish the month ${formatMoney(forecast.projectedEndBalanceCents, currency)} under budget.`,
       );
     } else {
       insights.push(
-        `At your current pace, you'll finish the month ${formatMoney(Math.abs(forecast.projectedEndBalanceCents))} over budget — consider slowing discretionary spending.`,
+        `At your current pace, you'll finish the month ${formatMoney(Math.abs(forecast.projectedEndBalanceCents), currency)} over budget — consider slowing discretionary spending.`,
       );
     }
   }
@@ -69,6 +74,13 @@ function buildInsights(
   if (onTrackCategories.length > 0) {
     insights.push(
       `${onTrackCategories.map((s) => s.name).join(", ")} ${onTrackCategories.length === 1 ? "is" : "are"} on track.`,
+    );
+  }
+
+  const activeGoals = savingGoals.filter((goal) => !goal.is_complete);
+  for (const goal of activeGoals.slice(0, 2)) {
+    insights.push(
+      `${goal.name}: ${goal.percent_complete}% of ${formatMoney(goal.target_cents, currency)} target reached (${formatMoney(goal.saved_cents, currency)} saved).`,
     );
   }
 
@@ -85,6 +97,8 @@ export function buildSpendingReport(
   allExpenses: Expense[],
   startDate: string,
   endDate: string,
+  savingGoals: SavingGoalSummary[] = [],
+  currency: CurrencyCode = DEFAULT_CURRENCY,
 ): MonthlyReportSummary {
   const rangeExpenses = filterExpensesByDateRange(
     allExpenses,
@@ -132,7 +146,13 @@ export function buildSpendingReport(
       endDate,
     ),
     forecast,
-    insights: buildInsights(summaries, totalSpentCents, forecast),
+    insights: buildInsights(
+      summaries,
+      totalSpentCents,
+      forecast,
+      savingGoals,
+      currency,
+    ),
     disclaimer: DISCLAIMER,
   };
 }

@@ -7,13 +7,16 @@ import {
 import { aiToolSchemas, type AiToolName } from "@/lib/ai/tools/definitions";
 import {
   createMonthlyBudgetForUser,
+  updateBudgetAlertThresholdForUser,
   updateBudgetIncomeForUser,
+  updateMonthlyBudgetForUser,
 } from "@/lib/services/budgets";
 import {
   addExpenseForUser,
   addExpenseFromTextForUser,
   deleteAllUserDataForUser,
   deleteExpenseForUser,
+  suggestCategoryForDescriptionForUser,
   updateExpenseCategoryForUser,
 } from "@/lib/services/expenses";
 import { markAlertReadForUser } from "@/lib/services/alerts";
@@ -21,7 +24,9 @@ import { getSpendingReportForUser } from "@/lib/services/reports";
 import { getDefaultReportDateRange } from "@/lib/finance/report-date-range";
 import {
   listFriendsForUser,
+  listPendingRequestsForUser,
   respondToFriendRequestForUser,
+  searchUsersByUsernameForUser,
   sendFriendRequestByUsernameForUser,
 } from "@/lib/services/friends";
 import {
@@ -30,22 +35,41 @@ import {
   listSharedExpensesForUser,
 } from "@/lib/services/shared-expenses";
 import {
-  getFriendActivityForUser,
-  getFriendBalancesForUser,
   recordSettlementForUser,
 } from "@/lib/services/settlements";
+import {
+  addSavingContributionForUser,
+  createSavingGoalForUser,
+  deleteSavingGoalForUser,
+  getSavingGoalsWithProgressForUser,
+  markSavingGoalCompleteForUser,
+} from "@/lib/services/saving-goals";
+import {
+  markAllNotificationsReadForUser,
+  markNotificationReadForUser,
+} from "@/lib/services/notifications";
+import {
+  updateUserPreferencesForUser,
+} from "@/lib/services/user-profile";
 import {
   getCurrentBudgetSnapshotForUser,
   getDashboardSnapshotForUser,
   getLatestReportSnapshotForUser,
+  getFriendActivitySnapshotForUser,
+  getSharedOverviewForUser,
+  getUserProfileSnapshotForUser,
   listAlertsForUser,
   listCategoriesForUser,
   listExpensesForUser,
+  listNotificationsSnapshotForUser,
+  listSavingGoalsSnapshotForUser,
+  listSupportedCurrenciesSnapshot,
 } from "@/lib/services/reads";
 import {
   revalidateBudgetPaths,
   revalidateExpensePaths,
   revalidateSharedPaths,
+  revalidateSavingsPaths,
 } from "@/lib/services/revalidate";
 
 export type ToolExecutionContext = {
@@ -71,8 +95,16 @@ function wrapServiceResult(result: {
 const WRITE_REVALIDATE: Partial<
   Record<AiToolName, (input?: Record<string, unknown>) => void>
 > = {
+  update_user_preferences: () => {
+    revalidateBudgetPaths();
+    revalidateExpensePaths();
+    revalidateSavingsPaths();
+    revalidateSharedPaths();
+  },
   create_monthly_budget: () => revalidateBudgetPaths(),
+  update_monthly_budget: () => revalidateBudgetPaths(),
   update_budget_income: () => revalidateBudgetPaths(),
+  update_budget_alert_threshold: () => revalidateBudgetPaths(),
   add_expense: () => revalidateExpensePaths(),
   add_expense_from_text: () => revalidateExpensePaths(),
   update_expense_category: () => revalidateExpensePaths(),
@@ -80,8 +112,14 @@ const WRITE_REVALIDATE: Partial<
   delete_all_user_data: () => {
     revalidateBudgetPaths();
     revalidateExpensePaths();
+    revalidateSavingsPaths();
   },
   mark_alert_read: () => revalidateBudgetPaths(),
+  list_saving_goals: () => undefined,
+  create_saving_goal: () => revalidateSavingsPaths(),
+  add_saving_contribution: () => revalidateSavingsPaths(),
+  mark_saving_goal_complete: () => revalidateSavingsPaths(),
+  delete_saving_goal: () => revalidateSavingsPaths(),
   send_friend_request: () => revalidateSharedPaths(),
   respond_to_friend_request: () => revalidateSharedPaths(),
   create_shared_expense: () => {
@@ -94,7 +132,15 @@ const WRITE_REVALIDATE: Partial<
   },
   record_settlement: (input) =>
     revalidateSharedPaths(input?.friendId as string | undefined),
+  mark_notification_read: () => revalidateSharedPaths(),
+  mark_all_notifications_read: () => revalidateSharedPaths(),
 };
+
+type DestructiveToolName =
+  | "delete_expense"
+  | "delete_shared_expense"
+  | "delete_saving_goal"
+  | "delete_all_user_data";
 
 export async function executeAiTool(
   toolName: AiToolName,
@@ -111,7 +157,6 @@ export async function executeAiTool(
   }
 
   const { userId } = context;
-  // Narrowed per-case at runtime by Zod; union type is impractical in switch.
   const toolInput = parsed.data as Record<string, unknown>;
 
   if (DESTRUCTIVE_TOOLS.has(toolName)) {
@@ -139,6 +184,17 @@ export async function executeAiTool(
   let result: unknown;
 
   switch (toolName) {
+    case "get_user_profile":
+      result = await getUserProfileSnapshotForUser(userId);
+      break;
+    case "update_user_preferences":
+      result = wrapServiceResult(
+        await updateUserPreferencesForUser(userId, toolInput as never),
+      );
+      break;
+    case "list_supported_currencies":
+      result = await listSupportedCurrenciesSnapshot();
+      break;
     case "get_dashboard":
       result = await getDashboardSnapshotForUser(userId);
       break;
@@ -154,20 +210,44 @@ export async function executeAiTool(
     case "list_categories":
       result = await listCategoriesForUser(userId);
       break;
-    case "list_alerts":
-      result = await listAlertsForUser(userId);
+    case "list_alerts": {
+      const alerts = await listAlertsForUser(userId);
+      result =
+        toolInput.unreadOnly === true
+          ? alerts.filter((alert) => !alert.read)
+          : alerts;
+      break;
+    }
+    case "suggest_expense_category":
+      result = wrapServiceResult(
+        await suggestCategoryForDescriptionForUser(
+          userId,
+          toolInput.description as string,
+        ),
+      );
       break;
     case "list_friends":
       result = wrapServiceResult(await listFriendsForUser(userId));
       break;
+    case "list_pending_friend_requests":
+      result = wrapServiceResult(await listPendingRequestsForUser(userId));
+      break;
+    case "search_users_by_username":
+      result = wrapServiceResult(
+        await searchUsersByUsernameForUser(userId, toolInput.query as string),
+      );
+      break;
     case "get_friend_balances":
-      result = await getFriendBalancesForUser(userId);
+      result = await getFriendBalancesSnapshotForUser(userId);
       break;
     case "get_friend_activity":
-      result = await getFriendActivityForUser(
+      result = await getFriendActivitySnapshotForUser(
         userId,
         toolInput.friendId as string,
       );
+      break;
+    case "get_shared_overview":
+      result = await getSharedOverviewForUser(userId);
       break;
     case "list_shared_expenses":
       result = wrapServiceResult(await listSharedExpensesForUser(userId));
@@ -186,9 +266,19 @@ export async function executeAiTool(
         await createMonthlyBudgetForUser(userId, toolInput as never),
       );
       break;
+    case "update_monthly_budget":
+      result = wrapServiceResult(
+        await updateMonthlyBudgetForUser(userId, toolInput as never),
+      );
+      break;
     case "update_budget_income":
       result = wrapServiceResult(
         await updateBudgetIncomeForUser(userId, toolInput as never),
+      );
+      break;
+    case "update_budget_alert_threshold":
+      result = wrapServiceResult(
+        await updateBudgetAlertThresholdForUser(userId, toolInput as never),
       );
       break;
     case "add_expense":
@@ -222,6 +312,34 @@ export async function executeAiTool(
       );
       break;
     }
+    case "list_saving_goals": {
+      const goals = await listSavingGoalsSnapshotForUser(userId);
+      result =
+        toolInput.includeCompleted === false
+          ? goals.filter((goal) => !goal.isComplete)
+          : goals;
+      break;
+    }
+    case "create_saving_goal":
+      result = wrapServiceResult(
+        await createSavingGoalForUser(userId, toolInput as never),
+      );
+      break;
+    case "add_saving_contribution":
+      result = wrapServiceResult(
+        await addSavingContributionForUser(userId, toolInput as never),
+      );
+      break;
+    case "mark_saving_goal_complete":
+      result = wrapServiceResult(
+        await markSavingGoalCompleteForUser(userId, toolInput.goalId as string),
+      );
+      break;
+    case "delete_saving_goal":
+      result = wrapServiceResult(
+        await deleteSavingGoalForUser(userId, toolInput.goalId as string),
+      );
+      break;
     case "send_friend_request":
       result = wrapServiceResult(
         await sendFriendRequestByUsernameForUser(
@@ -259,6 +377,26 @@ export async function executeAiTool(
         await deleteSharedExpenseForUser(userId, toolInput.expenseId as string),
       );
       break;
+    case "list_notifications":
+      result = await listNotificationsSnapshotForUser(
+        userId,
+        (toolInput.limit as number | undefined) ?? 30,
+      );
+      break;
+    case "mark_notification_read": {
+      const updated = await markNotificationReadForUser(
+        userId,
+        toolInput.notificationId as string,
+      );
+      result = updated
+        ? { success: true }
+        : { error: "Notification not found" };
+      break;
+    }
+    case "mark_all_notifications_read":
+      await markAllNotificationsReadForUser(userId);
+      result = { success: true };
+      break;
     case "delete_all_user_data":
       result = wrapServiceResult(await deleteAllUserDataForUser(userId));
       break;
@@ -273,7 +411,7 @@ export async function executeAiTool(
       }
       const token = createConfirmationToken(
         userId,
-        toolInput.toolName as "delete_expense" | "delete_shared_expense" | "delete_all_user_data",
+        toolInput.toolName as DestructiveToolName,
         toolInput.payload,
       );
       result = {

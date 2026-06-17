@@ -127,6 +127,33 @@ export type DetectedAlert = {
   message: string;
 };
 
+export type SavingGoal = {
+  id: string;
+  user_id: string;
+  name: string;
+  target_cents: number;
+  target_date: string | null;
+  created_at: string;
+  completed_at: string | null;
+};
+
+export type SavingContribution = {
+  id: string;
+  saving_goal_id: string;
+  user_id: string;
+  amount_cents: number;
+  contributed_at: string;
+  note: string;
+  created_at: string;
+};
+
+export type SavingGoalSummary = SavingGoal & {
+  saved_cents: number;
+  remaining_cents: number;
+  percent_complete: number;
+  is_complete: boolean;
+};
+
 export type DailySpendPoint = {
   day: number;
   label: string;

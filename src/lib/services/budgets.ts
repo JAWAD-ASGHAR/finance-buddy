@@ -192,3 +192,31 @@ export async function updateBudgetIncomeForUser(
 
   return { success: true, data: mapBudget(row) };
 }
+
+export async function updateBudgetAlertThresholdForUser(
+  userId: string,
+  input: { budgetId: string; alertThresholdPct: number },
+): Promise<ActionResult<Budget>> {
+  if (input.alertThresholdPct < 1 || input.alertThresholdPct > 100) {
+    return {
+      success: false,
+      error: "Alert threshold must be between 1 and 100",
+    };
+  }
+
+  const db = getDb();
+  const [row] = await db
+    .update(budgets)
+    .set({
+      alertThresholdPct: input.alertThresholdPct,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(budgets.id, input.budgetId), eq(budgets.userId, userId)))
+    .returning();
+
+  if (!row) {
+    return { success: false, error: "Budget not found" };
+  }
+
+  return { success: true, data: mapBudget(row) };
+}

@@ -12,6 +12,7 @@ export function revalidateExpensePaths() {
 }
 
 export function revalidateSharedPaths(friendId?: string) {
+  revalidatePath("/dashboard");
   revalidatePath("/shared");
   revalidatePath("/friends");
   revalidatePath("/profile");
@@ -21,5 +22,11 @@ export function revalidateSharedPaths(friendId?: string) {
 }
 
 export function revalidateReportPaths() {
+  revalidatePath("/reports");
+}
+
+export function revalidateSavingsPaths() {
+  revalidatePath("/savings");
+  revalidatePath("/dashboard");
   revalidatePath("/reports");
 }

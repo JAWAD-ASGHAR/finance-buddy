@@ -17,6 +17,7 @@ import {
   parseReceiptText,
 } from "@/lib/finance/parse-text";
 import { refreshAlertsForBudget } from "@/lib/services/alerts";
+import { deleteAllSavingGoalsForUser } from "@/lib/services/saving-goals";
 import type { ActionResult, Expense, ExpenseSource } from "@/types/finance";
 import { parseMoneyToCents } from "@/types/finance";
 
@@ -233,6 +234,7 @@ export async function deleteAllUserDataForUser(
       await tx.delete(categories).where(eq(categories.userId, userId));
       await tx.delete(budgets).where(eq(budgets.userId, userId));
     });
+    await deleteAllSavingGoalsForUser(userId);
   } catch (error) {
     return {
       success: false,

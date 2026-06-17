@@ -31,7 +31,10 @@ export default async function SharedPage() {
       />
       <div className="space-y-6">
         <PendingRequestsBanner incoming={pending.incoming} />
-        <FriendBalanceList balances={balances} />
+        <FriendBalanceList
+          balances={balances}
+          description="Who owes whom across shared bills."
+        />
       </div>
     </>
   );
