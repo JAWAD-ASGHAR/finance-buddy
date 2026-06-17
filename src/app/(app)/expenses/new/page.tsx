@@ -14,7 +14,7 @@ export default async function NewExpensePage() {
           <p className="mb-4 text-sm text-muted-foreground">
             Set up your monthly budget before logging expenses.
           </p>
-          <Link href="/budget/setup">
+          <Link href="/dashboard">
             <AppButton>Set up budget</AppButton>
           </Link>
         </AppCard>

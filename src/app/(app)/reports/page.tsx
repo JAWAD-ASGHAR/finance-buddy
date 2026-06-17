@@ -21,7 +21,7 @@ export default async function ReportsPage() {
           <p className="mb-4 text-sm text-muted-foreground">
             Create a budget and log expenses to view a spending report.
           </p>
-          <Link href="/budget/setup">
+          <Link href="/dashboard">
             <AppButton>Set up budget</AppButton>
           </Link>
         </AppCard>

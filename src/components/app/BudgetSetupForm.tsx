@@ -1,6 +1,6 @@
 "use client";
 
-import { createMonthlyBudget } from "@/actions/budgets";
+import { createMonthlyBudget, updateMonthlyBudget } from "@/actions/budgets";
 import { BudgetStepper } from "@/components/app/BudgetStepper";
 import { useCurrency } from "@/components/app/CurrencyProvider";
 import {
@@ -19,7 +19,12 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type CategoryRow = { name: string; allocated: string };
+type CategoryRow = {
+  id?: string;
+  name: string;
+  allocated: string;
+  spentCents?: number;
+};
 
 const STEPS = [
   { id: 1, label: "Income" },
@@ -41,16 +46,21 @@ function buildInitialCategories(initialCategories?: CategoryRow[]): CategoryRow[
 }
 
 export function BudgetSetupForm({
+  mode = "create",
+  budgetId,
   initialIncome,
   initialThreshold,
   initialCategories,
 }: {
+  mode?: "create" | "edit";
+  budgetId?: string;
   initialIncome?: string;
   initialThreshold?: number;
   initialCategories?: CategoryRow[];
 }) {
   const router = useRouter();
   const { symbol, formatMoney } = useCurrency();
+  const isEdit = mode === "edit";
   const [step, setStep] = useState(1);
   const [income, setIncome] = useState(initialIncome ?? "800");
   const [threshold, setThreshold] = useState(String(initialThreshold ?? 80));
@@ -89,8 +99,13 @@ export function BudgetSetupForm({
     setCategories((rows) => [...rows, { name, allocated: "0" }]);
   }
 
+  function canRemoveCategory(category: CategoryRow) {
+    return categories.length > 1 && !(category.spentCents && category.spentCents > 0);
+  }
+
   function removeCategory(index: number) {
-    if (categories.length <= 1) return;
+    const category = categories[index];
+    if (!category || !canRemoveCategory(category)) return;
     setCategories((rows) => rows.filter((_, i) => i !== index));
   }
 
@@ -98,7 +113,13 @@ export function BudgetSetupForm({
     if (incomeCents === null) return nextCategories;
 
     const names = nextCategories.map((category) => category.name.trim());
-    return buildEqualCategoryAllocations(names, incomeCents);
+    const equalRows = buildEqualCategoryAllocations(names, incomeCents);
+
+    return nextCategories.map((category, index) => ({
+      ...category,
+      name: equalRows[index]?.name ?? category.name,
+      allocated: equalRows[index]?.allocated ?? category.allocated,
+    }));
   }
 
   function rebalanceEqually() {
@@ -193,7 +214,12 @@ export function BudgetSetupForm({
       const normalized = validateCategoriesStep();
       if (!normalized || incomeCents === null) return;
 
-      setCategories(applyEqualSplit(normalized));
+      if (!isEdit) {
+        setCategories(applyEqualSplit(normalized));
+      } else {
+        setCategories(normalized);
+      }
+
       setStep(3);
       return;
     }
@@ -211,13 +237,26 @@ export function BudgetSetupForm({
     const normalized = normalizeCategories();
     if (!normalized) return;
 
+    if (isEdit && !budgetId) {
+      toast.error("Budget not found");
+      return;
+    }
+
     setPending(true);
 
-    const result = await createMonthlyBudget({
+    const payload = {
       income,
       alertThresholdPct: Number.parseInt(threshold, 10) || 80,
-      categories: normalized,
-    });
+      categories: normalized.map(({ id, name, allocated }) => ({
+        id,
+        name,
+        allocated,
+      })),
+    };
+
+    const result = isEdit
+      ? await updateMonthlyBudget({ budgetId: budgetId!, ...payload })
+      : await createMonthlyBudget(payload);
 
     if (!result.success) {
       toast.error(result.error);
@@ -238,7 +277,11 @@ export function BudgetSetupForm({
       {step === 1 ? (
         <AppCard
           title="Monthly income"
-          description="Set how much you have to spend this month and when you want spending alerts."
+          description={
+            isEdit
+              ? "Update your allowance for this month and when you want spending alerts."
+              : "Set how much you have to spend this month and when you want spending alerts."
+          }
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <AppInput
@@ -266,7 +309,11 @@ export function BudgetSetupForm({
       {step === 2 ? (
         <AppCard
           title="Your categories"
-          description="Choose the spending groups for your budget. These apply only to your account."
+          description={
+            isEdit
+              ? "Rename categories, add new ones, or remove unused ones. Categories with expenses cannot be removed."
+              : "Choose the spending groups for your budget. These apply only to your account."
+          }
         >
           <div className="space-y-4">
             {availableSuggestions.length > 0 ? (
@@ -290,30 +337,44 @@ export function BudgetSetupForm({
             ) : null}
 
             <div className="space-y-3">
-              {categories.map((category, index) => (
-                <div key={index} className="flex items-end gap-2">
-                  <div className="min-w-0 flex-1">
-                    <AppInput
-                      label={`Category ${index + 1}`}
-                      value={category.name}
-                      onChange={(e) =>
-                        updateCategoryName(index, e.target.value)
+              {categories.map((category, index) => {
+                const removable = canRemoveCategory(category);
+
+                return (
+                  <div key={category.id ?? index} className="flex items-end gap-2">
+                    <div className="min-w-0 flex-1">
+                      <AppInput
+                        label={`Category ${index + 1}`}
+                        value={category.name}
+                        onChange={(e) =>
+                          updateCategoryName(index, e.target.value)
+                        }
+                        placeholder="e.g. Food"
+                      />
+                      {category.spentCents && category.spentCents > 0 ? (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {formatMoney(category.spentCents)} spent this month
+                        </p>
+                      ) : null}
+                    </div>
+                    <AppButton
+                      type="button"
+                      variant="secondary"
+                      className="mb-0.5 shrink-0 px-3"
+                      onClick={() => removeCategory(index)}
+                      disabled={!removable}
+                      aria-label={`Remove ${category.name || `category ${index + 1}`}`}
+                      title={
+                        !removable && category.spentCents
+                          ? "Remove expenses from this category first"
+                          : undefined
                       }
-                      placeholder="e.g. Food"
-                    />
+                    >
+                      <Trash2 className="size-4" aria-hidden />
+                    </AppButton>
                   </div>
-                  <AppButton
-                    type="button"
-                    variant="secondary"
-                    className="mb-0.5 shrink-0 px-3"
-                    onClick={() => removeCategory(index)}
-                    disabled={categories.length <= 1}
-                    aria-label={`Remove ${category.name || `category ${index + 1}`}`}
-                  >
-                    <Trash2 className="size-4" aria-hidden />
-                  </AppButton>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <AppButton
@@ -331,8 +392,12 @@ export function BudgetSetupForm({
 
       {step === 3 ? (
         <AppCard
-          title="Split your budget"
-          description="We start with an equal split — adjust any category until your full income is allocated."
+          title={isEdit ? "Adjust your budget" : "Split your budget"}
+          description={
+            isEdit
+              ? "Update category limits while keeping your existing spending history intact."
+              : "We start with an equal split — adjust any category until your full income is allocated."
+          }
         >
           <div className="space-y-4">
             <div className="grid gap-4 rounded-lg border border-border/80 bg-muted/30 p-4 sm:grid-cols-2">
@@ -354,7 +419,9 @@ export function BudgetSetupForm({
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted-foreground">
-                Edit limits below or reset to an equal split.
+                {isEdit
+                  ? "Edit limits below or reset to an equal split."
+                  : "Edit limits below or reset to an equal split."}
               </p>
               <AppButton
                 type="button"
@@ -368,16 +435,23 @@ export function BudgetSetupForm({
             <div className="space-y-3">
               {categories.map((category, index) => (
                 <div
-                  key={`${category.name}-${index}`}
+                  key={category.id ?? `${category.name}-${index}`}
                   className="grid gap-3 sm:grid-cols-2"
                 >
-                  <AppInput
-                    label="Category"
-                    value={category.name}
-                    readOnly
-                    tabIndex={-1}
-                    className="bg-muted/40"
-                  />
+                  <div>
+                    <AppInput
+                      label="Category"
+                      value={category.name}
+                      readOnly
+                      tabIndex={-1}
+                      className="bg-muted/40"
+                    />
+                    {category.spentCents && category.spentCents > 0 ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatMoney(category.spentCents)} spent
+                      </p>
+                    ) : null}
+                  </div>
                   <AppInput
                     label={`Limit (${symbol})`}
                     value={category.allocated}
@@ -435,6 +509,14 @@ export function BudgetSetupForm({
           <AppButton type="button" variant="secondary" onClick={goToPreviousStep}>
             Back
           </AppButton>
+        ) : isEdit ? (
+          <AppButton
+            type="button"
+            variant="secondary"
+            onClick={() => router.push("/dashboard")}
+          >
+            Cancel
+          </AppButton>
         ) : (
           <span />
         )}
@@ -450,7 +532,7 @@ export function BudgetSetupForm({
             disabled={!canSave}
             onClick={() => void handleSave()}
           >
-            Save monthly budget
+            {isEdit ? "Save budget changes" : "Save monthly budget"}
           </AppButton>
         )}
       </div>
