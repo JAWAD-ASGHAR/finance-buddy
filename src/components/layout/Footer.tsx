@@ -84,7 +84,7 @@ export function Footer() {
   const footerInner = (
     <div className="container-main">
       <FooterUtility compact={useReveal} />
-      <FooterDisplay parallax={!useReveal} />
+      <FooterDisplay />
     </div>
   );
 

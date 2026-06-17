@@ -330,10 +330,18 @@ body {
 }
 
 .footer-display-clip {
-  --footer-display-size: clamp(3.5rem, 10vw, 8rem);
-  --footer-display-fit: var(--footer-display-size);
+  --footer-display-size: clamp(5rem, 19vw, 15rem);
+  /* ~em-width of "FinanceBuddy" at weight 700 / letter-spacing -0.045em */
+  --footer-display-em-width: 7.2;
+  --footer-display-clip-ratio: 0.55;
+  --footer-display-fit: min(
+    var(--footer-display-size),
+    calc(100cqw / var(--footer-display-em-width))
+  );
+  container-type: inline-size;
   width: 100%;
-  height: calc(var(--footer-display-fit) * 0.68);
+  max-width: 100%;
+  height: calc(var(--footer-display-fit) * var(--footer-display-clip-ratio));
   overflow: hidden;
   position: relative;
   pointer-events: none;
@@ -409,9 +417,7 @@ body {
 }
 
 .home-footer-fixed .footer-display-clip {
-  height: calc(
-    var(--footer-display-fit) * 0.68 + env(safe-area-inset-bottom, 0px)
-  );
+  height: calc(var(--footer-display-fit) * var(--footer-display-clip-ratio));
   background: var(--background);
 }
 
@@ -438,7 +444,7 @@ body {
   }
 
   .footer-display-clip {
-    --footer-display-size: clamp(3rem, 8vw, 5rem);
+    --footer-display-size: clamp(3.5rem, 16vw, 5rem);
   }
 
   .home-footer-fixed .footer-utility {
