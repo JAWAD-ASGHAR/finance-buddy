@@ -42,14 +42,14 @@ function CodeBlock({ filename, code }: { filename?: string; code: string }) {
   }
 
   return (
-    <div className="docs-code-block group relative overflow-hidden rounded-xl border border-border bg-[#f4f4f6]">
+    <div className="docs-code-block group relative overflow-hidden rounded-xl border border-border bg-muted">
       {filename ? (
-        <div className="flex items-center justify-between gap-3 border-b border-border/80 bg-white/70 px-4 py-2.5">
+        <div className="flex items-center justify-between gap-3 border-b border-border/80 bg-background/70 px-4 py-2.5">
           <p className="font-mono text-xs text-muted-foreground">{filename}</p>
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-white hover:text-foreground"
+            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
             aria-label={copied ? "Copied" : "Copy code"}
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -60,7 +60,7 @@ function CodeBlock({ filename, code }: { filename?: string; code: string }) {
         <button
           type="button"
           onClick={handleCopy}
-          className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-white/80 px-2 py-1 text-xs font-medium text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+          className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-background/80 px-2 py-1 text-xs font-medium text-muted-foreground opacity-0 transition-opacity hover:bg-background hover:text-foreground group-hover:opacity-100"
           aria-label={copied ? "Copied" : "Copy code"}
         >
           {copied ? <Check size={14} /> : <Copy size={14} />}
@@ -173,7 +173,7 @@ export function DocsDocument({
                         )}
                       >
                         <table className="w-full min-w-[32rem] text-left text-sm">
-                          <thead className="border-b border-border bg-[#f4f4f6]">
+                          <thead className="border-b border-border bg-muted">
                             <tr>
                               {section.table.headers.map((header) => (
                                 <th
@@ -197,7 +197,7 @@ export function DocsDocument({
                                     className="px-4 py-3 align-top text-muted-foreground"
                                   >
                                     {cellIndex === 0 ? (
-                                      <code className="rounded bg-[#f4f4f6] px-1.5 py-0.5 font-mono text-xs text-foreground">
+                                      <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground">
                                         {cell}
                                       </code>
                                     ) : (
@@ -243,7 +243,7 @@ export function DocsDocument({
       </section>
 
       <section className="border-t border-border bg-[#e6e6ea] py-12">
-        <div className="container-main flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+        <div className="container-main flex flex-col gap-8">
           <div className="max-w-xl">
             <p className="heading-display text-lg font-semibold text-foreground">
               Need help connecting MCP?
