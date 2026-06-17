@@ -26,7 +26,7 @@ export function DeleteDataPanel() {
       setPending(false);
       return;
     }
-    router.push("/budget/setup");
+    router.push("/dashboard");
     router.refresh();
   }
 

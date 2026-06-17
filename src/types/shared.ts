@@ -2,6 +2,8 @@ export type FriendRequestStatus = "pending" | "accepted" | "declined";
 
 export type SplitMode = "equal" | "single_payer";
 
+export type SettlementDirection = "pay_friend" | "record_friend_payment";
+
 export type Friend = {
   id: string;
   username: string | null;

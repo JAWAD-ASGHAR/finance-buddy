@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { BudgetSetupForm } from "@/components/app/BudgetSetupForm";
+import { SharedBalanceSummary } from "@/components/shared/SharedBalanceSummary";
 import { getUnreadAlerts, requireAuthUser } from "@/lib/db/queries";
 import { syncAlertsForBudget } from "@/lib/finance/sync-alerts";
 import { AlertBanner } from "@/components/app/AlertBanner";
@@ -9,6 +11,7 @@ import { AppButton, AppCard, AppPageHeader } from "@/components/app/ui";
 import { FriendBalanceList } from "@/components/shared/FriendBalanceList";
 import { computeCategorySummaries, computeMonthlyRemaining } from "@/lib/finance/compute";
 import { computeForecast } from "@/lib/finance/forecast";
+import { computeFriendBalanceTotals } from "@/lib/finance/friend-balances";
 import { getUserCurrency } from "@/lib/auth/user-preferences";
 import { getCurrentBudget } from "@/lib/supabase/queries";
 import { getActiveSavingGoals } from "@/actions/saving-goals";
@@ -27,6 +30,7 @@ export default async function DashboardPage() {
     getActiveSavingGoals(2),
     getFriendBalancesForCurrentUser(),
   ]);
+  const friendBalanceTotals = computeFriendBalanceTotals(friendBalances);
 
   if (budget) {
     await syncAlertsForBudget(budget.id, user.id);
@@ -41,14 +45,7 @@ export default async function DashboardPage() {
           title="Dashboard"
           description="Set up your monthly budget to start tracking spending."
         />
-        <AppCard title="No budget yet">
-          <p className="mb-4 text-sm text-muted-foreground">
-            Create your allowance and category limits for this month.
-          </p>
-          <Link href="/budget/setup">
-            <AppButton>Set up budget</AppButton>
-          </Link>
-        </AppCard>
+        <BudgetSetupForm mode="create" />
       </>
     );
   }
@@ -66,14 +63,25 @@ export default async function DashboardPage() {
         title="Dashboard"
         description="Your remaining budget, forecast, and alerts for this month."
         action={
-          <Link href="/expenses/new">
-            <AppButton>Add expense</AppButton>
-          </Link>
+          <>
+            <Link href="/dashboard/budget/edit">
+              <AppButton variant="secondary">Edit budget</AppButton>
+            </Link>
+            <Link href="/expenses/new">
+              <AppButton>Add expense</AppButton>
+            </Link>
+          </>
         }
       />
 
       <div className="space-y-6">
         <AlertBanner alerts={alerts} />
+
+        <SharedBalanceSummary
+          totals={friendBalanceTotals}
+          currency={currency}
+          compact
+        />
 
         <div className="grid gap-4 sm:grid-cols-3">
           <AppCard>
@@ -104,13 +112,11 @@ export default async function DashboardPage() {
           </AppCard>
         </div>
 
-        <FriendBalanceList
-          balances={friendBalances}
-          title="Shared with friends"
-          description="What friends owe you and what you owe them."
-          owingOnly
-          footerLink={{ href: "/shared", label: "View all shared expenses" }}
-        />
+        {friendBalances.some((balance) => balance.net_cents !== 0) ? (
+          <FriendBalanceList
+            balances={friendBalances.filter((balance) => balance.net_cents !== 0)}
+          />
+        ) : null}
 
         <ForecastCard forecast={forecast} />
 

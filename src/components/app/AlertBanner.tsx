@@ -17,17 +17,34 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export function AlertBanner({ alerts }: { alerts: FinanceAlert[] }) {
   const router = useRouter();
+  const [visibleAlerts, setVisibleAlerts] = useState(alerts);
   const [dismissing, setDismissing] = useState<string | null>(null);
 
-  if (alerts.length === 0) return null;
+  useEffect(() => {
+    setVisibleAlerts(alerts);
+  }, [alerts]);
+
+  if (visibleAlerts.length === 0) return null;
 
   async function dismiss(alertId: string) {
+    const previousAlerts = visibleAlerts;
     setDismissing(alertId);
-    await markAlertRead(alertId);
+    setVisibleAlerts((current) => current.filter((item) => item.id !== alertId));
+
+    const result = await markAlertRead(alertId);
+
+    if (!result.success) {
+      setVisibleAlerts(previousAlerts);
+      toast.error(result.error);
+      setDismissing(null);
+      return;
+    }
+
     router.refresh();
     setDismissing(null);
   }
@@ -41,7 +58,7 @@ export function AlertBanner({ alerts }: { alerts: FinanceAlert[] }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        {alerts.map((item) => (
+        {visibleAlerts.map((item) => (
           <AlertUI key={item.id} className="bg-background">
             <AlertTitle className="sr-only">Budget alert</AlertTitle>
             <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -52,7 +69,7 @@ export function AlertBanner({ alerts }: { alerts: FinanceAlert[] }) {
                 size="sm"
                 disabled={dismissing === item.id}
                 aria-busy={dismissing === item.id || undefined}
-                onClick={() => dismiss(item.id)}
+                onClick={() => void dismiss(item.id)}
                 className="h-8 shrink-0 self-start text-amber-700 sm:self-auto"
               >
                 {dismissing === item.id ? (

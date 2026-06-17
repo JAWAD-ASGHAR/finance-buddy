@@ -107,6 +107,35 @@ export function buildFriendBalances(
     .sort((a, b) => Math.abs(b.net_cents) - Math.abs(a.net_cents));
 }
 
+export type FriendBalanceTotals = {
+  owedToYouCents: number;
+  youOweCents: number;
+  netCents: number;
+  activeFriendCount: number;
+};
+
+export function computeFriendBalanceTotals(
+  balances: FriendBalance[],
+): FriendBalanceTotals {
+  let owedToYouCents = 0;
+  let youOweCents = 0;
+
+  for (const { net_cents } of balances) {
+    if (net_cents > 0) {
+      owedToYouCents += net_cents;
+    } else if (net_cents < 0) {
+      youOweCents += Math.abs(net_cents);
+    }
+  }
+
+  return {
+    owedToYouCents,
+    youOweCents,
+    netCents: owedToYouCents - youOweCents,
+    activeFriendCount: balances.filter((balance) => balance.net_cents !== 0).length,
+  };
+}
+
 export function buildActivityWithFriend(
   userId: string,
   friendId: string,

@@ -21,7 +21,7 @@ export default async function ReportsPage() {
           <p className="mb-4 text-sm text-muted-foreground">
             Create a budget and log expenses to view a spending report.
           </p>
-          <Link href="/budget/setup">
+          <Link href="/dashboard">
             <AppButton>Set up budget</AppButton>
           </Link>
         </AppCard>
@@ -33,7 +33,7 @@ export default async function ReportsPage() {
     <>
       <AppPageHeader
         title="Spending report"
-        description="Review spending patterns and forecasts for any date range in your current budget."
+        description="Review weekly or monthly spending patterns and export a formatted PDF."
       />
       <ReportPanel
         initialReport={report}

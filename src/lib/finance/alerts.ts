@@ -16,10 +16,15 @@ export function detectAlerts(
     if (summary.allocatedCents <= 0) continue;
 
     if (summary.percentUsed >= thresholdPct) {
+      const usageMessage =
+        summary.remainingCents < 0
+          ? `over budget by ${formatMoney(Math.abs(summary.remainingCents))} (${formatMoney(summary.spentCents)} of ${formatMoney(summary.allocatedCents)})`
+          : `${summary.percentUsed}% of its budget (${formatMoney(summary.spentCents)} of ${formatMoney(summary.allocatedCents)})`;
+
       alerts.push({
         type: "category_threshold",
         categoryId: summary.categoryId,
-        message: `${summary.name} is at ${summary.percentUsed}% of its budget (${formatMoney(summary.spentCents)} of ${formatMoney(summary.allocatedCents)}).`,
+        message: `${summary.name} is ${usageMessage}.`,
       });
     }
   }

@@ -29,15 +29,7 @@ export default async function FriendsPage() {
             incoming={pending.incoming}
             outgoing={pending.outgoing}
           />
-          <FriendBalanceList
-            balances={balances}
-            title="Your friends"
-            emptyMessage={
-              <p className="text-sm text-muted-foreground">
-                No friends connected yet. Search above to send a request.
-              </p>
-            }
-          />
+          <FriendBalanceList balances={balances} />
         </div>
       </div>
     </>

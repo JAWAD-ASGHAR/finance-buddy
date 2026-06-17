@@ -1,15 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { recordSettlement } from "@/actions/settlements";
 import { useCurrency } from "@/components/app/CurrencyProvider";
-import {
-  AppButton,
-  AppCard,
-  AppInput,
-} from "@/components/app/ui";
+import { AppCard } from "@/components/app/ui";
+import { SettleUpSection } from "@/components/shared/SettleUpForm";
 import type { FriendActivityItem, FriendBalance } from "@/types/shared";
 import { cn } from "@/lib/utils";
 
@@ -31,39 +24,7 @@ export function FriendDetailPanel({
   netCents: number;
   activity: FriendActivityItem[];
 }) {
-  const router = useRouter();
-  const { formatMoney, amountLabel } = useCurrency();
-  const [amount, setAmount] = useState(
-    netCents < 0 ? (Math.abs(netCents) / 100).toFixed(2) : "",
-  );
-  const [note, setNote] = useState("");
-  const [pending, setPending] = useState(false);
-  const [showSettle, setShowSettle] = useState(netCents < 0);
-
-  async function handleSettle(e: React.FormEvent) {
-    e.preventDefault();
-    setPending(true);
-
-    const result = await recordSettlement({
-      friendId: friend.id,
-      amount,
-      note,
-    });
-
-    if (!result.success) {
-      toast.error(result.error);
-      setPending(false);
-      return;
-    }
-
-    toast.success("Payment recorded");
-
-    setAmount("");
-    setNote("");
-    setPending(false);
-    setShowSettle(false);
-    router.refresh();
-  }
+  const { formatMoney } = useCurrency();
 
   return (
     <div className="space-y-6">
@@ -78,41 +39,28 @@ export function FriendDetailPanel({
         >
           {balanceSummary(netCents, formatMoney)}
         </p>
+
         {netCents < 0 ? (
           <div className="mt-4">
-            {showSettle ? (
-              <form onSubmit={handleSettle} className="space-y-4">
-                <AppInput
-                  label={amountLabel}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  inputMode="decimal"
-                  required
-                />
-                <AppInput
-                  label="Note (optional)"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Cash, bank transfer..."
-                />
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <AppButton type="submit" loading={pending}>
-                    Record payment
-                  </AppButton>
-                  <AppButton
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setShowSettle(false)}
-                  >
-                    Cancel
-                  </AppButton>
-                </div>
-              </form>
-            ) : (
-              <AppButton type="button" onClick={() => setShowSettle(true)}>
-                Settle up
-              </AppButton>
-            )}
+            <SettleUpSection
+              friendId={friend.id}
+              direction="pay_friend"
+              defaultAmountCents={Math.abs(netCents)}
+              title="Send payment"
+              description="Record money you sent to this friend. They'll get a notification when you settle up."
+            />
+          </div>
+        ) : null}
+
+        {netCents > 0 ? (
+          <div className="mt-4">
+            <SettleUpSection
+              friendId={friend.id}
+              direction="record_friend_payment"
+              defaultAmountCents={netCents}
+              title="Record payment received"
+              description="Use this when your friend paid you back. They'll be notified that you recorded it."
+            />
           </div>
         ) : null}
       </AppCard>

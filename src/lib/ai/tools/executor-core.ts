@@ -9,7 +9,6 @@ import {
   createMonthlyBudgetForUser,
   updateBudgetAlertThresholdForUser,
   updateBudgetIncomeForUser,
-  updateMonthlyBudgetForUser,
 } from "@/lib/services/budgets";
 import {
   addExpenseForUser,
@@ -41,7 +40,6 @@ import {
   addSavingContributionForUser,
   createSavingGoalForUser,
   deleteSavingGoalForUser,
-  getSavingGoalsWithProgressForUser,
   markSavingGoalCompleteForUser,
 } from "@/lib/services/saving-goals";
 import {
@@ -54,8 +52,9 @@ import {
 import {
   getCurrentBudgetSnapshotForUser,
   getDashboardSnapshotForUser,
-  getLatestReportSnapshotForUser,
   getFriendActivitySnapshotForUser,
+  getFriendBalancesSnapshotForUser,
+  getLatestReportSnapshotForUser,
   getSharedOverviewForUser,
   getUserProfileSnapshotForUser,
   listAlertsForUser,
@@ -266,11 +265,31 @@ export async function executeAiTool(
         await createMonthlyBudgetForUser(userId, toolInput as never),
       );
       break;
-    case "update_monthly_budget":
+    case "update_monthly_budget": {
+      const { getCurrentBudgetForUser } = await import("@/lib/db/queries");
+      const { budget } = await getCurrentBudgetForUser(userId);
+      if (!budget || budget.id !== toolInput.budgetId) {
+        result = { error: "Budget not found for the current month" };
+        break;
+      }
+      const categories = (
+        toolInput.categories as Array<{
+          name: string;
+          allocated: string;
+        }>
+      ).map((category) => ({
+        name: category.name,
+        allocated: category.allocated,
+      }));
       result = wrapServiceResult(
-        await updateMonthlyBudgetForUser(userId, toolInput as never),
+        await createMonthlyBudgetForUser(userId, {
+          income: toolInput.income as string,
+          alertThresholdPct: toolInput.alertThresholdPct as number | undefined,
+          categories,
+        }),
       );
       break;
+    }
     case "update_budget_income":
       result = wrapServiceResult(
         await updateBudgetIncomeForUser(userId, toolInput as never),

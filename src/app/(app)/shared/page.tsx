@@ -2,16 +2,26 @@ import Link from "next/link";
 import { getFriendBalancesForCurrentUser } from "@/actions/settlements";
 import { FriendBalanceList } from "@/components/shared/FriendBalanceList";
 import { PendingRequestsBanner } from "@/components/shared/FriendSearchForm";
+import { SharedBalanceSummary } from "@/components/shared/SharedBalanceSummary";
+import { SharedExpensesList } from "@/components/shared/SharedExpensesList";
 import { AppButton, AppPageHeader } from "@/components/app/ui";
-import { getPendingFriendRequests } from "@/lib/db/shared-queries";
+import { computeFriendBalanceTotals } from "@/lib/finance/friend-balances";
+import { getUserCurrency } from "@/lib/auth/user-preferences";
+import {
+  getPendingFriendRequests,
+  getSharedExpensesForUser,
+} from "@/lib/db/shared-queries";
 import { requireAuthUser } from "@/lib/db/queries";
 
 export default async function SharedPage() {
   const user = await requireAuthUser();
-  const [balances, pending] = await Promise.all([
+  const [balances, pending, sharedExpenses, currency] = await Promise.all([
     getFriendBalancesForCurrentUser(),
     getPendingFriendRequests(user.id),
+    getSharedExpensesForUser(user.id),
+    getUserCurrency(user.id),
   ]);
+  const totals = computeFriendBalanceTotals(balances);
 
   return (
     <>
@@ -31,9 +41,16 @@ export default async function SharedPage() {
       />
       <div className="space-y-6">
         <PendingRequestsBanner incoming={pending.incoming} />
-        <FriendBalanceList
-          balances={balances}
-          description="Who owes whom across shared bills."
+        <SharedBalanceSummary
+          totals={totals}
+          currency={currency}
+          showLink={false}
+        />
+        <FriendBalanceList balances={balances} totals={totals} />
+        <SharedExpensesList
+          expenses={sharedExpenses}
+          currentUserId={user.id}
+          currency={currency}
         />
       </div>
     </>

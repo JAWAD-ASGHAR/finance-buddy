@@ -195,6 +195,7 @@ export const aiToolSchemas = {
     friendId: z.string().uuid(),
     amount: amountField,
     note: z.string().max(200).optional(),
+    direction: z.enum(["pay_friend", "record_friend_payment"]).optional(),
   }),
   delete_shared_expense: z.object({
     expenseId: z.string().uuid(),
@@ -242,8 +243,8 @@ export const aiToolDescriptions: Record<AiToolName, string> = {
     "List budget alerts (category threshold or monthly pace warnings). Set unreadOnly=true to filter unread alerts.",
   suggest_expense_category:
     "Suggest a category for an expense description before adding it. Returns categoryId, confidence, and reason. Requires an existing budget with categories.",
-  create_monthly_budget: `Create a NEW budget for the current calendar month only. Fails if a budget already exists — use update_monthly_budget instead. Category allocations must sum to income. ${moneyNote}`,
-  update_monthly_budget: `Update the current month's budget: income, alert threshold, and full category list (with optional category ids for existing rows). Allocations must sum to income. ${moneyNote}`,
+  create_monthly_budget: `Create or replace the current month's budget with income, alert threshold, and categories. Category allocations must sum to income. ${moneyNote}`,
+  update_monthly_budget: `Update the current month's budget (budgetId must match get_current_budget). Replaces income, threshold, and the full category list. ${moneyNote}`,
   update_budget_income: `Change only the monthly income on an existing budget. ${moneyNote}`,
   update_budget_alert_threshold:
     "Change the spending alert threshold percentage (1–100) on an existing budget. Alerts fire when a category reaches this % of its allocation.",
@@ -280,7 +281,7 @@ export const aiToolDescriptions: Record<AiToolName, string> = {
   respond_to_friend_request:
     "Accept or decline an incoming friend request by requestId.",
   create_shared_expense: `Split an expense with friends. splitMode 'equal' divides evenly; 'single_payer' means one participant paid the full amount. Set addToBudget=true to also log the payer's share in the personal budget. ${moneyNote}`,
-  record_settlement: `Record that the user paid a friend (or was paid) to settle a shared balance. ${moneyNote}`,
+  record_settlement: `Record a settlement with a friend. direction 'pay_friend' = you paid them; 'record_friend_payment' = they paid you. Defaults to pay_friend. ${moneyNote}`,
   delete_shared_expense:
     "Delete a shared expense the user created. Requires confirmationToken after explicit user confirmation.",
   list_notifications:

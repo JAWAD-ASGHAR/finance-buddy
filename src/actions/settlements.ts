@@ -8,12 +8,13 @@ import {
 } from "@/lib/services/settlements";
 import { revalidateSharedPaths } from "@/lib/services/revalidate";
 import type { ActionResult } from "@/types/finance";
-import type { Settlement } from "@/types/shared";
+import type { Settlement, SettlementDirection } from "@/types/shared";
 
 export async function recordSettlement(input: {
   friendId: string;
   amount: string;
   note?: string;
+  direction?: SettlementDirection;
 }): Promise<ActionResult<Settlement>> {
   const user = await requireAuthUser();
   const result = await recordSettlementForUser(user.id, input);

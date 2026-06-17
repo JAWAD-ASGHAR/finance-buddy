@@ -159,10 +159,11 @@ export async function listExpenseAttachmentsForExpenses(
   }
 
   const db = getDb();
-  const rows = await db.query.expenseAttachments.findMany({
-    where: inArray(expenseAttachments.expenseId, expenseIds),
-    orderBy: asc(expenseAttachments.sortOrder),
-  });
+  const rows = await db
+    .select()
+    .from(expenseAttachments)
+    .where(inArray(expenseAttachments.expenseId, expenseIds))
+    .orderBy(asc(expenseAttachments.sortOrder));
 
   return rows.reduce<Record<string, ExpenseAttachment[]>>((acc, row) => {
     const attachment = mapExpenseAttachment(row);
@@ -178,13 +179,15 @@ export async function deleteExpenseAttachmentsForExpense(
   expenseId: string,
 ): Promise<void> {
   const db = getDb();
-  const rows = await db.query.expenseAttachments.findMany({
-    where: and(
-      eq(expenseAttachments.expenseId, expenseId),
-      eq(expenseAttachments.userId, userId),
-    ),
-    columns: { storagePath: true },
-  });
+  const rows = await db
+    .select({ storagePath: expenseAttachments.storagePath })
+    .from(expenseAttachments)
+    .where(
+      and(
+        eq(expenseAttachments.expenseId, expenseId),
+        eq(expenseAttachments.userId, userId),
+      ),
+    );
 
   if (rows.length === 0) {
     return;
