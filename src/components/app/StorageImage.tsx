@@ -8,10 +8,12 @@ export function StorageImage({
   storagePath,
   alt,
   className,
+  onClick,
 }: {
   storagePath: string;
   alt: string;
   className?: string;
+  onClick?: (url: string) => void;
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -57,6 +59,27 @@ export function StorageImage({
           className,
         )}
       />
+    );
+  }
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={() => onClick(url)}
+        className={cn(
+          "cursor-zoom-in overflow-hidden rounded-md p-0",
+          className,
+        )}
+        aria-label={`View ${alt}`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={url}
+          alt={alt}
+          className="size-full rounded-md object-cover"
+        />
+      </button>
     );
   }
 

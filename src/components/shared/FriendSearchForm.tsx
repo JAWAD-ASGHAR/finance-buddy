@@ -13,6 +13,7 @@ import {
   AppCard,
   AppInput,
 } from "@/components/app/ui";
+import { UserAvatar } from "@/components/app/UserAvatar";
 import { normalizeUsername } from "@/lib/auth/username";
 import type { Friend, FriendRequest } from "@/types/shared";
 
@@ -95,15 +96,23 @@ export function FriendSearchForm() {
               key={friend.id}
               className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between"
             >
-              <div>
-                <p className="text-sm font-medium">
-                  {friend.display_name ?? "User"}
-                </p>
-                {friend.username ? (
-                  <p className="text-xs text-muted-foreground">
-                    @{friend.username}
+              <div className="flex min-w-0 items-center gap-3">
+                <UserAvatar
+                  displayName={friend.display_name}
+                  username={friend.username}
+                  avatarPath={friend.avatar_path}
+                  className="size-10"
+                />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">
+                    {friend.display_name ?? "User"}
                   </p>
-                ) : null}
+                  {friend.username ? (
+                    <p className="text-xs text-muted-foreground">
+                      @{friend.username}
+                    </p>
+                  ) : null}
+                </div>
               </div>
               <AppButton
                 type="button"
