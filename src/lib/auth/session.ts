@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db/index";
 import { profiles } from "@/db/schema";
 import { displayNameFromEmail } from "@/lib/auth/email";
+import { ensureUserProfile } from "@/lib/auth/profile";
 import { getAuthUser } from "@/lib/supabase/server";
 import type { AppSession } from "@/types/app-session";
 
@@ -25,6 +26,10 @@ export async function getAppSession(): Promise<AppSession | null> {
     (typeof metaDisplayName === "string" && metaDisplayName
       ? metaDisplayName
       : displayNameFromEmail(user.email));
+
+  if (!profile) {
+    await ensureUserProfile(user.id, displayName);
+  }
 
   return {
     email: user.email,

@@ -55,13 +55,38 @@ Endpoints:
 - `GET /health` — health check
 - `POST /mcp` — MCP Streamable HTTP (initialize with `Authorization: Bearer fb_live_...`)
 
-Suggested production setup:
+### EC2 + nginx (production example)
 
-1. Create a Railway/Fly service from this repo
-2. Start command: `npm run mcp:http`
-3. Set `DATABASE_URL` in the service env
-4. Point `mcp.financebuddy.app` CNAME to the service
-5. Configure MCP clients with URL `https://mcp.financebuddy.app/mcp` and your personal API key
+When nginx terminates TLS on port 443 and proxies to the Node process on `8080`:
+
+| Public URL | Purpose |
+|------------|---------|
+| `https://finance-buddy.duckdns.org/health` | Health check |
+| `https://finance-buddy.duckdns.org/mcp` | MCP endpoint |
+
+Cursor `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "finance-buddy": {
+      "url": "https://finance-buddy.duckdns.org/mcp",
+      "headers": {
+        "Authorization": "Bearer ${env:FINANCE_BUDDY_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+Do **not** include `:8080` in the client URL when nginx listens on 443 — only the upstream Node app uses 8080 internally.
+
+Suggested production setup (Railway / Fly / EC2):
+
+1. Deploy with start command: `npm run mcp:http` (Node listens on `8080` or `MCP_PORT`)
+2. Set `DATABASE_URL` in the service env
+3. Put nginx/Caddy on 443 → proxy to `127.0.0.1:8080`
+4. Configure MCP clients with `https://your-domain/mcp` and a personal API key from Settings
 
 ## Vercel (web app)
 
