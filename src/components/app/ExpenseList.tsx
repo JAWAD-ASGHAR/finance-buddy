@@ -1,6 +1,7 @@
 "use client";
 
 import { deleteExpense, updateExpenseCategory } from "@/actions/expenses";
+import { ExpenseAttachmentGallery } from "@/components/app/ExpenseAttachmentGallery";
 import { useCurrency } from "@/components/app/CurrencyProvider";
 import type { Category, Expense } from "@/types/finance";
 import { useRouter } from "next/navigation";
@@ -91,6 +92,7 @@ export function ExpenseList({
                 <p className="mt-1 text-xs text-muted-foreground">
                   {expense.expense_date}
                 </p>
+                <ExpenseAttachmentGallery attachments={expense.attachments} />
               </div>
               <p className="shrink-0 text-sm font-semibold">
                 {formatMoney(expense.amount_cents)}
@@ -137,7 +139,10 @@ export function ExpenseList({
                   {expense.expense_date}
                 </TableCell>
                 <TableCell className="max-w-[16rem] break-words whitespace-normal">
-                  {expense.description}
+                  <div className="space-y-2">
+                    <p>{expense.description}</p>
+                    <ExpenseAttachmentGallery attachments={expense.attachments} />
+                  </div>
                 </TableCell>
                 <TableCell className="font-medium">
                   {formatMoney(expense.amount_cents)}

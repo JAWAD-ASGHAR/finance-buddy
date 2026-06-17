@@ -10,6 +10,7 @@ import {
   monthlyReports,
 } from "@/db/schema";
 import { getCurrentBudgetForUser } from "@/lib/db/queries";
+import { deleteExpenseAttachmentsForExpense } from "@/lib/services/images";
 import { suggestCategory } from "@/lib/finance/categorize";
 import {
   parseExpenseText,
@@ -217,6 +218,16 @@ export async function deleteExpenseForUser(
 
   if (!existing) {
     return { success: false, error: "Expense not found" };
+  }
+
+  try {
+    await deleteExpenseAttachmentsForExpense(userId, expenseId);
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to delete attachments",
+    };
   }
 
   await db

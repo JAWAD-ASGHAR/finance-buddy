@@ -3,12 +3,14 @@ import type {
   Budget,
   Category,
   Expense,
+  ExpenseAttachment,
   MonthlyReport,
 } from "@/types/finance";
 import type {
   AlertRow,
   BudgetRow,
   CategoryRow,
+  ExpenseAttachmentRow,
   ExpenseRow,
   MonthlyReportRow,
 } from "@/db/schema";
@@ -38,7 +40,24 @@ export function mapCategory(row: CategoryRow): Category {
   };
 }
 
-export function mapExpense(row: ExpenseRow): Expense {
+export function mapExpenseAttachment(row: ExpenseAttachmentRow): ExpenseAttachment {
+  return {
+    id: row.id,
+    expense_id: row.expenseId,
+    user_id: row.userId,
+    storage_path: row.storagePath,
+    file_name: row.fileName,
+    content_type: row.contentType,
+    size_bytes: row.sizeBytes,
+    sort_order: row.sortOrder,
+    created_at: row.createdAt.toISOString(),
+  };
+}
+
+export function mapExpense(
+  row: ExpenseRow,
+  attachments?: ExpenseAttachment[],
+): Expense {
   return {
     id: row.id,
     user_id: row.userId,
@@ -51,6 +70,7 @@ export function mapExpense(row: ExpenseRow): Expense {
     source: row.source,
     user_corrected: row.userCorrected,
     created_at: row.createdAt.toISOString(),
+    attachments,
   };
 }
 

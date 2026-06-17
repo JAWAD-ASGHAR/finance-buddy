@@ -1,6 +1,7 @@
 import { DeleteDataPanel } from "@/components/app/DeleteDataPanel";
 import { McpApiKeysPanel } from "@/components/app/McpApiKeysPanel";
 import { ProfileFriendsSummary } from "@/components/app/ProfileFriendsSummary";
+import { ProfileAvatarPicker } from "@/components/app/ProfileAvatarPicker";
 import { UserPreferencesPanel } from "@/components/app/UserPreferencesForm";
 import { AppCard, AppPageHeader } from "@/components/app/ui";
 import { getUserPreferences } from "@/lib/auth/user-preferences";
@@ -29,6 +30,12 @@ export default async function ProfilePage() {
         description="Your account details, preferences, and privacy settings."
       />
       <div className="space-y-6">
+        <AppCard title="Profile photo">
+          <ProfileAvatarPicker
+            userId={user.id}
+            initialAvatarPath={prefs?.avatarPath ?? null}
+          />
+        </AppCard>
         <UserPreferencesPanel
           initial={{
             username: prefs?.username ?? null,
@@ -38,6 +45,7 @@ export default async function ProfilePage() {
             currencyCode: prefs?.currencyCode ?? DEFAULT_CURRENCY,
             countryCode: prefs?.countryCode ?? null,
             onboardingCompleted: prefs?.onboardingCompleted ?? true,
+            avatarPath: prefs?.avatarPath ?? null,
           }}
         />
         <ProfileFriendsSummary

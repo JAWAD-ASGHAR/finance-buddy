@@ -5,6 +5,8 @@ import {
   addExpenseFromText,
   suggestCategoryForDescription,
 } from "@/actions/expenses";
+import { registerExpenseAttachment } from "@/actions/images";
+import { ImageFilePicker } from "@/components/app/ImageFilePicker";
 import type { Category } from "@/types/finance";
 import { suggestCategory } from "@/lib/finance/categorize";
 import { useRouter } from "next/navigation";
@@ -20,8 +22,15 @@ import {
   AppTextarea,
 } from "@/components/app/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { uploadExpenseImages } from "@/lib/storage/client-upload";
 
-export function ExpenseForm({ categories }: { categories: Category[] }) {
+export function ExpenseForm({
+  categories,
+  userId,
+}: {
+  categories: Category[];
+  userId: string;
+}) {
   const router = useRouter();
   const { amountLabel } = useCurrency();
   const [tab, setTab] = useState("manual");
@@ -36,6 +45,32 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
     typeof suggestCategory
   > | null>(null);
   const [pending, setPending] = useState(false);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+
+  async function attachImages(expenseId: string) {
+    if (imageFiles.length === 0) {
+      return true;
+    }
+
+    const uploads = await uploadExpenseImages(userId, expenseId, imageFiles);
+
+    for (const upload of uploads) {
+      const result = await registerExpenseAttachment({
+        expenseId,
+        storagePath: upload.storagePath,
+        fileName: upload.fileName,
+        contentType: upload.contentType,
+        sizeBytes: upload.sizeBytes,
+        sortOrder: upload.sortOrder,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+    }
+
+    return true;
+  }
 
   async function refreshSuggestion(nextDescription: string) {
     if (tab !== "manual" || nextDescription.length < 2) {
@@ -73,6 +108,18 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
 
     if (!result.success) {
       toast.error(result.error);
+      setPending(false);
+      return;
+    }
+
+    try {
+      await attachImages(result.data.id);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Expense saved but images failed to upload",
+      );
       setPending(false);
       return;
     }
@@ -147,6 +194,11 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
                 </option>
               ))}
             </AppSelect>
+            <ImageFilePicker
+              files={imageFiles}
+              onChange={setImageFiles}
+              disabled={pending}
+            />
             <AppButton type="submit" loading={pending}>
               Add expense
             </AppButton>

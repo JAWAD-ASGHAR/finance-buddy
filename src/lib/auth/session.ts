@@ -45,6 +45,7 @@ export async function getAppSession(): Promise<AppSession | null> {
     currencyCode: DEFAULT_CURRENCY,
     countryCode: null,
     onboardingCompleted: false,
+    avatarPath: null,
   };
 
   return {

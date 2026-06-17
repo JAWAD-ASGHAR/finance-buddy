@@ -27,6 +27,7 @@ export default async function OnboardingPage() {
             currencyCode: prefs?.currencyCode ?? DEFAULT_CURRENCY,
             countryCode: prefs?.countryCode ?? null,
             onboardingCompleted: false,
+            avatarPath: prefs?.avatarPath ?? null,
           }}
         />
       </AppCard>
