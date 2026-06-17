@@ -15,6 +15,7 @@ function mapPreferences(row: {
   currencyCode: string;
   countryCode: string | null;
   onboardingCompletedAt: Date | null;
+  avatarPath: string | null;
 }): UserPreferences {
   return {
     username: row.username,
@@ -24,6 +25,7 @@ function mapPreferences(row: {
       : DEFAULT_CURRENCY,
     countryCode: row.countryCode,
     onboardingCompleted: row.onboardingCompletedAt !== null,
+    avatarPath: row.avatarPath,
   };
 }
 
@@ -39,6 +41,7 @@ export async function getUserPreferences(
       currencyCode: true,
       countryCode: true,
       onboardingCompletedAt: true,
+      avatarPath: true,
     },
   });
 
@@ -116,6 +119,7 @@ export async function updateUserPreferences(
       currencyCode: profiles.currencyCode,
       countryCode: profiles.countryCode,
       onboardingCompletedAt: profiles.onboardingCompletedAt,
+      avatarPath: profiles.avatarPath,
     });
 
   if (!row) {

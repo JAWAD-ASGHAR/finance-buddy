@@ -14,6 +14,7 @@ import {
   expenses,
   monthlyReports,
 } from "@/db/schema";
+import { listExpenseAttachmentsForExpenses } from "@/lib/services/images";
 import { getAuthUser } from "@/lib/supabase/server";
 import { getCurrentBudgetPeriod } from "@/types/finance";
 
@@ -44,10 +45,16 @@ export async function getCurrentBudgetForUser(userId: string) {
     }),
   ]);
 
+  const attachmentsByExpense = await listExpenseAttachmentsForExpenses(
+    expenseRows.map((row) => row.id),
+  );
+
   return {
     budget: mapBudget(budgetRow),
     categories: categoryRows.map(mapCategory),
-    expenses: expenseRows.map(mapExpense),
+    expenses: expenseRows.map((row) =>
+      mapExpense(row, attachmentsByExpense[row.id]),
+    ),
   };
 }
 
@@ -156,9 +163,15 @@ export async function getBudgetBundle(budgetId: string, userId: string) {
 
   if (!budgetRow) return null;
 
+  const attachmentsByExpense = await listExpenseAttachmentsForExpenses(
+    expenseRows.map((row) => row.id),
+  );
+
   return {
     budget: mapBudget(budgetRow),
     categories: categoryRows.map(mapCategory),
-    expenses: expenseRows.map(mapExpense),
+    expenses: expenseRows.map((row) =>
+      mapExpense(row, attachmentsByExpense[row.id]),
+    ),
   };
 }
