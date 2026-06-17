@@ -38,7 +38,7 @@ export function SpendingTrendChart({ data, className }: SpendingTrendChartProps)
   return (
     <ChartContainer
       config={spendingTrendChartConfig}
-      className={className ?? "aspect-[2/1] min-h-[240px] w-full"}
+      className={className ?? "aspect-[4/3] min-h-[200px] w-full sm:aspect-[2/1] sm:min-h-[240px]"}
     >
       <AreaChart
         data={chartData}

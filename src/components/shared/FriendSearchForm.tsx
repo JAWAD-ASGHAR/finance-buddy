@@ -106,7 +106,7 @@ export function PendingRequestsPanel({
                 <span className="text-sm font-medium">
                   {request.requester?.display_name ?? "Someone"} wants to connect
                 </span>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row">
                   <AppButton
                     type="button"
                     variant="secondary"

@@ -25,7 +25,7 @@ export function CategorySpendChart({ data, className }: CategorySpendChartProps)
   return (
     <ChartContainer
       config={categorySpendChartConfig}
-      className={className ?? "aspect-[4/3] min-h-[260px] w-full"}
+      className={className ?? "aspect-square min-h-[220px] w-full sm:aspect-[4/3] sm:min-h-[260px]"}
     >
       <BarChart
         data={data}

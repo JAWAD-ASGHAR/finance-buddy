@@ -39,14 +39,14 @@ export function FriendBalanceList({ balances }: { balances: FriendBalance[] }) {
           <li key={friend.id}>
             <Link
               href={`/shared/friends/${friend.id}`}
-              className="flex items-center justify-between gap-4 py-4 transition-colors hover:text-accent-green"
+              className="flex flex-col gap-1 py-4 transition-colors hover:text-accent-green sm:flex-row sm:items-center sm:justify-between sm:gap-4"
             >
               <span className="font-medium">
                 {friend.display_name ?? "Friend"}
               </span>
               <span
                 className={cn(
-                  "text-sm",
+                  "text-sm sm:text-right",
                   net_cents > 0 && "text-accent-green",
                   net_cents < 0 && "text-destructive",
                   net_cents === 0 && "text-muted-foreground",

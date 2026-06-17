@@ -22,9 +22,9 @@ export function CategoryProgressBar({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-3 text-sm">
+      <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <span className="font-medium">{summary.name}</span>
-        <span className="text-muted-foreground">
+        <span className="text-muted-foreground sm:text-right">
           {formatMoney(summary.spentCents)} / {formatMoney(summary.allocatedCents)}
         </span>
       </div>

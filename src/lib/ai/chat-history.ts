@@ -1,8 +1,9 @@
 import type { UIMessage } from "ai";
 
-const SESSIONS_KEY = "finance-buddy-ai-sessions";
-const ACTIVE_SESSION_KEY = "finance-buddy-ai-active-session";
+const SESSIONS_KEY_PREFIX = "finance-buddy-ai-sessions";
+const ACTIVE_SESSION_KEY_PREFIX = "finance-buddy-ai-active-session";
 const MAX_SESSIONS = 50;
+export const MESSAGES_PAGE_SIZE = 20;
 
 export type StoredAiChatSession = {
   id: string;
@@ -11,6 +12,14 @@ export type StoredAiChatSession = {
   updatedAt: number;
   createdAt: number;
 };
+
+function sessionsKey(userId: string) {
+  return `${SESSIONS_KEY_PREFIX}:${userId}`;
+}
+
+function activeSessionKey(userId: string) {
+  return `${ACTIVE_SESSION_KEY_PREFIX}:${userId}`;
+}
 
 function readStorage<T>(key: string, fallback: T): T {
   try {
@@ -30,28 +39,31 @@ function writeStorage(key: string, value: unknown) {
   }
 }
 
-export function loadChatSessions(): StoredAiChatSession[] {
-  return readStorage<StoredAiChatSession[]>(SESSIONS_KEY, []);
+export function loadChatSessions(userId: string): StoredAiChatSession[] {
+  return readStorage<StoredAiChatSession[]>(sessionsKey(userId), []);
 }
 
-export function saveChatSessions(sessions: StoredAiChatSession[]) {
+export function saveChatSessions(
+  userId: string,
+  sessions: StoredAiChatSession[],
+) {
   const trimmed = [...sessions]
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .slice(0, MAX_SESSIONS);
-  writeStorage(SESSIONS_KEY, trimmed);
+  writeStorage(sessionsKey(userId), trimmed);
 }
 
-export function getActiveSessionId(): string | null {
+export function getActiveSessionId(userId: string): string | null {
   try {
-    return localStorage.getItem(ACTIVE_SESSION_KEY);
+    return localStorage.getItem(activeSessionKey(userId));
   } catch {
     return null;
   }
 }
 
-export function setActiveSessionId(id: string) {
+export function setActiveSessionId(userId: string, id: string) {
   try {
-    localStorage.setItem(ACTIVE_SESSION_KEY, id);
+    localStorage.setItem(activeSessionKey(userId), id);
   } catch {
     // ignore
   }
@@ -68,9 +80,9 @@ export function createChatSession(): StoredAiChatSession {
   };
 }
 
-export function getOrCreateActiveSession(): StoredAiChatSession {
-  const sessions = loadChatSessions();
-  const activeId = getActiveSessionId();
+export function getOrCreateActiveSession(userId: string): StoredAiChatSession {
+  const sessions = loadChatSessions(userId);
+  const activeId = getActiveSessionId(userId);
   const existing = activeId
     ? sessions.find((session) => session.id === activeId)
     : undefined;
@@ -80,8 +92,8 @@ export function getOrCreateActiveSession(): StoredAiChatSession {
   }
 
   const created = createChatSession();
-  saveChatSessions([created, ...sessions]);
-  setActiveSessionId(created.id);
+  saveChatSessions(userId, [created, ...sessions]);
+  setActiveSessionId(userId, created.id);
   return created;
 }
 
@@ -126,10 +138,11 @@ export function buildConversationContext(messages: UIMessage[]): string | null {
 }
 
 export function upsertChatSession(
+  userId: string,
   sessionId: string,
   messages: UIMessage[],
 ): StoredAiChatSession {
-  const sessions = loadChatSessions();
+  const sessions = loadChatSessions(userId);
   const now = Date.now();
   const existing = sessions.find((session) => session.id === sessionId);
   const title = deriveSessionTitle(messages);
@@ -150,7 +163,7 @@ export function upsertChatSession(
       };
 
   const withoutCurrent = sessions.filter((session) => session.id !== sessionId);
-  saveChatSessions([nextSession, ...withoutCurrent]);
-  setActiveSessionId(sessionId);
+  saveChatSessions(userId, [nextSession, ...withoutCurrent]);
+  setActiveSessionId(userId, sessionId);
   return nextSession;
 }

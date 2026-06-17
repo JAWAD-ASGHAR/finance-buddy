@@ -122,8 +122,8 @@ export function UserPreferencesForm({
       ) : (
         <p className="text-sm text-muted-foreground">
           Changing currency updates how amounts are displayed. Existing budget
-          numbers stay as entered — only shared expenses are converted using
-          approximate exchange rates.
+          numbers stay as entered — shared expenses use live exchange rates when
+          converting between currencies.
         </p>
       )}
 

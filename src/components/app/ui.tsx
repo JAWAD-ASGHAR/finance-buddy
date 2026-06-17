@@ -58,16 +58,22 @@ export function AppPageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight">{title}</h1>
+    <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          {title}
+        </h1>
         {description ? (
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
             {description}
           </p>
         ) : null}
       </div>
-      {action}
+      {action ? (
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap [&_a]:w-full sm:[&_a]:w-auto [&_button]:w-full sm:[&_button]:w-auto">
+          {action}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -121,10 +127,10 @@ export function AppSelect({
     <div className="space-y-2">
       <Label htmlFor={selectId}>{label}</Label>
       <Select value={value}>
-        <SelectTrigger id={selectId}>
+        <SelectTrigger id={selectId} className="w-full">
           <SelectValue placeholder="Select..." />
         </SelectTrigger>
-        <SelectContent>{children}</SelectContent>
+        <SelectContent align="start">{children}</SelectContent>
       </Select>
     </div>
   );

@@ -71,7 +71,7 @@ export function AiMessageBubble({
   return (
     <div
       className={cn(
-        "max-w-[95%] rounded-2xl px-3 py-2",
+        "max-w-[95%] break-words rounded-2xl px-3 py-2",
         isUser
           ? "ml-auto bg-primary text-primary-foreground"
           : "mr-auto bg-muted text-foreground",

@@ -46,6 +46,7 @@ export async function getAppSession(): Promise<AppSession | null> {
   };
 
   return {
+    userId: user.id,
     email: user.email,
     displayName: prefs.displayName ?? displayName,
     currencyCode: prefs.currencyCode,

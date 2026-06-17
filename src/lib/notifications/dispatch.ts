@@ -8,7 +8,7 @@ import {
 } from "@/lib/email/templates";
 import { notifyUser } from "@/lib/services/notifications";
 import { getUserCurrency } from "@/lib/auth/user-preferences";
-import { convertCents, type CurrencyCode } from "@/lib/finance/currency";
+import { convertCents, refreshExchangeRatesIfStale, type CurrencyCode } from "@/lib/finance/currency";
 import { formatMoney } from "@/types/finance";
 
 export async function notifyFriendRequestReceived({
@@ -78,6 +78,7 @@ export async function notifySharedExpenseCreated({
   shareCents: number;
   currencyCode: CurrencyCode;
 }) {
+  await refreshExchangeRatesIfStale();
   const recipientCurrency = await getUserCurrency(participantId);
   const displayTotal = convertCents(totalCents, currencyCode, recipientCurrency);
   const displayShare = convertCents(shareCents, currencyCode, recipientCurrency);
@@ -122,6 +123,7 @@ export async function notifySettlementRecorded({
   note: string;
   friendId: string;
 }) {
+  await refreshExchangeRatesIfStale();
   const recipientCurrency = await getUserCurrency(recipientId);
   const displayAmount = convertCents(amountCents, currencyCode, recipientCurrency);
   const amount = formatMoney(displayAmount, recipientCurrency);

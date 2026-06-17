@@ -76,7 +76,7 @@ export default async function DashboardPage() {
             <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
               Monthly income
             </p>
-            <p className="mt-1 text-2xl font-semibold">
+            <p className="mt-1 text-xl font-semibold sm:text-2xl">
               {formatMoney(budget.income_cents, currency)}
             </p>
           </AppCard>
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
               Remaining this month
             </p>
             <p
-              className={`mt-1 text-2xl font-semibold ${monthlyRemaining >= 0 ? "text-emerald-700" : "text-red-600"}`}
+              className={`mt-1 text-xl font-semibold sm:text-2xl ${monthlyRemaining >= 0 ? "text-emerald-700" : "text-red-600"}`}
             >
               {formatMoney(monthlyRemaining, currency)}
             </p>
@@ -94,7 +94,7 @@ export default async function DashboardPage() {
             <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
               Alert threshold
             </p>
-            <p className="mt-1 text-2xl font-semibold">
+            <p className="mt-1 text-xl font-semibold sm:text-2xl">
               {budget.alert_threshold_pct}%
             </p>
           </AppCard>

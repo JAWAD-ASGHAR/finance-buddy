@@ -1,24 +1,50 @@
 "use client";
 
+import { useEffect } from "react";
 import { AiChatPanel } from "@/components/ai/AiChatPanel";
 import { DRAWER_WIDTH, useAiAssistant } from "@/components/ai/AiAssistantProvider";
 import { cn } from "@/lib/utils";
 
-export function AiDrawer() {
-  const { open } = useAiAssistant();
+export function AiDrawer({ userId }: { userId: string }) {
+  const { open, setOpen } = useAiAssistant();
+
+  useEffect(() => {
+    if (!open) return;
+
+    const mediaQuery = window.matchMedia("(max-width: 639px)");
+    if (!mediaQuery.matches) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
 
   return (
-    <aside
-      aria-hidden={!open}
-      aria-label="AI assistant"
-      className={cn(
-        "fixed inset-y-0 right-0 z-40 border-l border-border bg-background shadow-xl transition-transform duration-300 ease-out motion-reduce:transition-none",
-        "w-full sm:w-[min(100vw,420px)]",
-        open ? "translate-x-0" : "translate-x-full pointer-events-none",
-      )}
-      style={{ maxWidth: DRAWER_WIDTH }}
-    >
-      <AiChatPanel />
-    </aside>
+    <>
+      {open ? (
+        <button
+          type="button"
+          aria-label="Close assistant"
+          className="fixed inset-0 z-30 bg-black/40 sm:hidden"
+          onClick={() => setOpen(false)}
+        />
+      ) : null}
+
+      <aside
+        aria-hidden={!open}
+        aria-label="AI assistant"
+        className={cn(
+          "fixed inset-y-0 right-0 z-40 flex h-dvh max-h-dvh flex-col border-l border-border bg-background shadow-xl transition-transform duration-300 ease-out motion-reduce:transition-none",
+          "w-full sm:w-[min(100vw,420px)]",
+          open ? "translate-x-0" : "pointer-events-none translate-x-full",
+        )}
+        style={{ maxWidth: DRAWER_WIDTH }}
+      >
+        <AiChatPanel userId={userId} />
+      </aside>
+    </>
   );
 }

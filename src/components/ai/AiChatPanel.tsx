@@ -18,16 +18,24 @@ import {
   createChatSession,
   getOrCreateActiveSession,
   loadChatSessions,
+  MESSAGES_PAGE_SIZE,
   saveChatSessions,
   setActiveSessionId,
   upsertChatSession,
   type StoredAiChatSession,
 } from "@/lib/ai/chat-history";
 
+const SCROLL_LOAD_THRESHOLD_PX = 80;
+const STICK_TO_BOTTOM_THRESHOLD_PX = 48;
+
 function AiChatEmptyState() {
   return (
     <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
       <p className="font-medium text-foreground">How can I help?</p>
+      <p className="mt-1 text-xs">
+        I can only help with Finance Buddy — budgets, expenses, friends, and
+        shared bills.
+      </p>
       <ul className="mt-2 list-inside list-disc space-y-1">
         <li>&quot;What&apos;s left in my Food budget?&quot;</li>
         <li>&quot;Log $12.50 lunch at the campus cafe&quot;</li>
@@ -46,8 +54,8 @@ function AiChatPanelShell({
   onClose: () => void;
 }) {
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background px-4 sm:px-6">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 sm:gap-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-2">
           <Sparkles className="size-4 shrink-0 text-primary" />
           <p className="truncate text-sm font-semibold">Finance Buddy AI</p>
@@ -64,8 +72,8 @@ function AiChatPanelShell({
           </Button>
         </div>
       </div>
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">{children}</div>
-      <div className="border-t border-border p-4 sm:px-6">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">{children}</div>
+      <div className="shrink-0 border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
         <div className="flex items-end gap-2">
           <AiChatInput
             value=""
@@ -90,7 +98,7 @@ function AiChatPanelShell({
   );
 }
 
-export function AiChatPanel() {
+export function AiChatPanel({ userId }: { userId: string }) {
   const { setOpen } = useAiAssistant();
   const [mounted, setMounted] = useState(false);
 
@@ -106,10 +114,20 @@ export function AiChatPanel() {
     );
   }
 
-  return <AiChatPanelInner />;
+  return <AiChatPanelInner userId={userId} />;
 }
 
-function AiChatPanelInner() {
+function scrollToBottom(
+  element: HTMLDivElement | null,
+  behavior: ScrollBehavior = "auto",
+) {
+  element?.scrollTo({
+    top: element.scrollHeight,
+    behavior,
+  });
+}
+
+function AiChatPanelInner({ userId }: { userId: string }) {
   const { setOpen } = useAiAssistant();
   const [input, setInput] = useState("");
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -117,30 +135,35 @@ function AiChatPanelInner() {
     number | null
   >(null);
   const [sessions, setSessions] = useState<StoredAiChatSession[]>(() =>
-    loadChatSessions(),
+    loadChatSessions(userId),
   );
   const [activeSessionId, setActiveSessionIdState] = useState<string>(() =>
-    getOrCreateActiveSession().id,
+    getOrCreateActiveSession(userId).id,
   );
+  const [visibleMessageCount, setVisibleMessageCount] =
+    useState(MESSAGES_PAGE_SIZE);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const stickToBottomRef = useRef(true);
+  const loadingOlderMessagesRef = useRef(false);
 
   const initialSession = useMemo(
     () =>
-      loadChatSessions().find((session) => session.id === activeSessionId) ??
-      getOrCreateActiveSession(),
-    [activeSessionId],
+      loadChatSessions(userId).find(
+        (session) => session.id === activeSessionId,
+      ) ?? getOrCreateActiveSession(userId),
+    [activeSessionId, userId],
   );
 
   const refreshSessions = useCallback(() => {
-    setSessions(loadChatSessions());
-  }, []);
+    setSessions(loadChatSessions(userId));
+  }, [userId]);
 
   const handleChatFinish = useCallback(
     ({ messages: finishedMessages }: { messages: UIMessage[] }) => {
-      upsertChatSession(activeSessionId, finishedMessages);
+      upsertChatSession(userId, activeSessionId, finishedMessages);
       refreshSessions();
     },
-    [activeSessionId, refreshSessions],
+    [activeSessionId, refreshSessions, userId],
   );
 
   const transport = useMemo(
@@ -165,17 +188,50 @@ function AiChatPanelInner() {
     onFinish: handleChatFinish,
   });
 
+  const visibleMessages = useMemo(() => {
+    if (messages.length <= visibleMessageCount) {
+      return messages;
+    }
+
+    return messages.slice(messages.length - visibleMessageCount);
+  }, [messages, visibleMessageCount]);
+
+  const hasOlderMessages = messages.length > visibleMessages.length;
+
   const pendingConfirmation = useMemo(() => {
     if (dismissedConfirmationAt === messages.length) return null;
     return getConfirmationFromMessages(messages);
   }, [dismissedConfirmationAt, messages]);
 
+  const resetMessageWindow = useCallback(() => {
+    setVisibleMessageCount(MESSAGES_PAGE_SIZE);
+    stickToBottomRef.current = true;
+  }, []);
+
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
+    setSessions(loadChatSessions(userId));
+    setActiveSessionIdState(getOrCreateActiveSession(userId).id);
+    resetMessageWindow();
+  }, [userId, resetMessageWindow]);
+
+  useEffect(() => {
+    resetMessageWindow();
+    requestAnimationFrame(() => {
+      scrollToBottom(scrollRef.current, "auto");
     });
-  }, [messages, status]);
+  }, [activeSessionId, resetMessageWindow]);
+
+  useEffect(() => {
+    if (!stickToBottomRef.current) return;
+
+    scrollToBottom(scrollRef.current, "auto");
+  }, [messages, status, visibleMessages.length]);
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      scrollToBottom(scrollRef.current, "auto");
+    });
+  }, []);
 
   useEffect(() => {
     if (error) {
@@ -183,36 +239,75 @@ function AiChatPanelInner() {
     }
   }, [error]);
 
+  const loadOlderMessages = useCallback(() => {
+    if (!hasOlderMessages || loadingOlderMessagesRef.current) return;
+
+    const element = scrollRef.current;
+    if (!element) return;
+
+    loadingOlderMessagesRef.current = true;
+    const previousScrollHeight = element.scrollHeight;
+    const previousScrollTop = element.scrollTop;
+
+    setVisibleMessageCount((current) =>
+      Math.min(messages.length, current + MESSAGES_PAGE_SIZE),
+    );
+
+    requestAnimationFrame(() => {
+      const nextElement = scrollRef.current;
+      if (nextElement) {
+        nextElement.scrollTop =
+          nextElement.scrollHeight - previousScrollHeight + previousScrollTop;
+      }
+      loadingOlderMessagesRef.current = false;
+    });
+  }, [hasOlderMessages, messages.length]);
+
+  const handleScroll = useCallback(() => {
+    const element = scrollRef.current;
+    if (!element) return;
+
+    const distanceFromBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight;
+    stickToBottomRef.current =
+      distanceFromBottom <= STICK_TO_BOTTOM_THRESHOLD_PX;
+
+    if (element.scrollTop <= SCROLL_LOAD_THRESHOLD_PX) {
+      loadOlderMessages();
+    }
+  }, [loadOlderMessages]);
+
   const isLoading = status === "streaming" || status === "submitted";
 
   const switchSession = useCallback(
     (sessionId: string) => {
       if (sessionId === activeSessionId) return;
 
-      upsertChatSession(activeSessionId, messages);
-      setActiveSessionId(sessionId);
+      upsertChatSession(userId, activeSessionId, messages);
+      setActiveSessionId(userId, sessionId);
       setActiveSessionIdState(sessionId);
       refreshSessions();
       setInput("");
     },
-    [activeSessionId, messages, refreshSessions],
+    [activeSessionId, messages, refreshSessions, userId],
   );
 
   const startNewChat = useCallback(() => {
-    upsertChatSession(activeSessionId, messages);
+    upsertChatSession(userId, activeSessionId, messages);
     const created = createChatSession();
-    saveChatSessions([created, ...loadChatSessions()]);
-    setActiveSessionId(created.id);
+    saveChatSessions(userId, [created, ...loadChatSessions(userId)]);
+    setActiveSessionId(userId, created.id);
     setActiveSessionIdState(created.id);
     refreshSessions();
     setInput("");
-  }, [activeSessionId, messages, refreshSessions]);
+  }, [activeSessionId, messages, refreshSessions, userId]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
 
+    stickToBottomRef.current = true;
     setInput("");
     await sendMessage({ text });
   }
@@ -240,6 +335,7 @@ function AiChatPanelInner() {
         throw new Error(data.error ?? "Failed to confirm action");
       }
 
+      stickToBottomRef.current = true;
       await sendMessage({
         text: `I confirm. Use confirmationToken "${data.confirmationToken}" for ${pendingConfirmation.toolName}.`,
       });
@@ -251,8 +347,8 @@ function AiChatPanelInner() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background px-4 sm:px-6">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 sm:gap-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-2">
           <Sparkles className="size-4 shrink-0 text-primary" />
           <p className="truncate text-sm font-semibold">Finance Buddy AI</p>
@@ -277,10 +373,20 @@ function AiChatPanelInner() {
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4"
+      >
+        {hasOlderMessages ? (
+          <p className="py-1 text-center text-xs text-muted-foreground">
+            Scroll up for earlier messages
+          </p>
+        ) : null}
+
         {messages.length === 0 ? <AiChatEmptyState /> : null}
 
-        {messages.map((message) => (
+        {visibleMessages.map((message) => (
           <AiMessageBubble key={message.id} message={message} />
         ))}
 
@@ -300,7 +406,7 @@ function AiChatPanelInner() {
           <p className="mt-1 text-xs text-amber-800 dark:text-amber-200">
             {pendingConfirmation.description}
           </p>
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
             <Button
               type="button"
               size="sm"
@@ -325,7 +431,7 @@ function AiChatPanelInner() {
 
       <form
         onSubmit={handleSubmit}
-        className="border-t border-border p-4 sm:px-6"
+        className="shrink-0 border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6"
       >
         <div className="flex items-end gap-2">
           <AiChatInput

@@ -65,7 +65,7 @@ export function AppAccountMenu({ session }: { session: AppSession }) {
       {open ? (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-56 overflow-hidden rounded-lg border border-border bg-background shadow-lg"
+          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(14rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-border bg-background shadow-lg"
         >
           <div className="border-b border-border px-3 py-3 sm:hidden">
             <p className="truncate text-sm font-medium text-foreground">
