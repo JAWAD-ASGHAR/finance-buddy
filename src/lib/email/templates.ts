@@ -20,6 +20,14 @@ function layout(content: string): string {
 </html>`;
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function button(href: string, label: string): string {
   return `<a href="${href}" style="display:inline-block;margin-top:24px;padding:14px 24px;border-radius:999px;background:#16a34a;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;">${label}</a>`;
 }
@@ -126,6 +134,53 @@ export function settlementEmailHtml({
       Amount: <strong>${amount}</strong>${note ? `<br />Note: ${note}` : ""}
     </p>
     ${button(sharedUrl, "View balances")}
+  `);
+}
+
+export function contactFormEmailHtml({
+  name,
+  email,
+  university,
+  year,
+  feature,
+  message,
+}: {
+  name: string;
+  email: string;
+  university: string;
+  year: string;
+  feature: string;
+  message: string;
+}): string {
+  const rows = [
+    ["Name", name],
+    ["Email", email],
+    ["University", university],
+    ["Year of study", year],
+    ["Interest", feature],
+  ] as const;
+
+  const detailRows = rows
+    .filter(([, value]) => value.trim().length > 0)
+    .map(
+      ([label, value]) =>
+        `<tr>
+          <td style="padding:8px 0;font-size:13px;font-weight:600;color:#71717a;vertical-align:top;width:120px;">${escapeHtml(label)}</td>
+          <td style="padding:8px 0;font-size:14px;line-height:1.5;color:#18181b;">${escapeHtml(value)}</td>
+        </tr>`,
+    )
+    .join("");
+
+  const messageBlock = message.trim()
+    ? `<p style="margin:24px 0 8px;font-size:13px;font-weight:600;color:#71717a;">Message</p>
+       <p style="margin:0;font-size:15px;line-height:1.6;color:#52525b;white-space:pre-wrap;">${escapeHtml(message)}</p>`
+    : "";
+
+  return layout(`
+    <p style="margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#71717a;">Contact form</p>
+    <h1 style="margin:0 0 16px;font-size:24px;line-height:1.2;">New message from ${escapeHtml(name)}</h1>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">${detailRows}</table>
+    ${messageBlock}
   `);
 }
 

@@ -21,6 +21,12 @@ export function isEmailConfigured(): boolean {
   return Boolean(getResendApiKey());
 }
 
+export function getContactInboxEmail(): string {
+  return (
+    process.env.CONTACT_INBOX_EMAIL?.trim() || "connect.jawadasghar@gmail.com"
+  );
+}
+
 /** When true, new signups must verify email before using the app. Off by default. */
 export function isEmailVerificationRequired(): boolean {
   return process.env.EMAIL_VERIFICATION_REQUIRED === "true";

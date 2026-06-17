@@ -14,6 +14,7 @@ type PageHeroSectionProps = {
   titleAccent?: string;
   description: string;
   highlights?: readonly Highlight[];
+  meta?: string;
   tall?: boolean;
 };
 
@@ -23,6 +24,7 @@ export function PageHeroSection({
   titleAccent,
   description,
   highlights,
+  meta,
   tall = false,
 }: PageHeroSectionProps) {
   return (
@@ -53,6 +55,11 @@ export function PageHeroSection({
             <p className="mt-6 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">
               {description}
             </p>
+            {meta ? (
+              <p className="mt-8 text-xs font-medium uppercase tracking-[0.12em] text-white/45">
+                {meta}
+              </p>
+            ) : null}
           </ScrollReveal>
         </ParallaxLayer>
 

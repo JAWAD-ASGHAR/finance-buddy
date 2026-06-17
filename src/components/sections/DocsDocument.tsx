@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
-import { ParallaxLayer } from "@/components/motion/ParallaxLayer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { PageHeroSection } from "@/components/sections/PageHeroSection";
 import type { DocsSection } from "@/lib/docs-content";
 import { legalFooterLinks, site } from "@/lib/content";
 import { cn } from "@/lib/utils";
@@ -92,35 +92,13 @@ export function DocsDocument({
 }: DocsDocumentProps) {
   return (
     <>
-      <section className="page-hero relative -mt-[4.5rem] overflow-hidden bg-dark text-white">
-        <div
-          className="marketing-hero-glow pointer-events-none absolute inset-0"
-          aria-hidden
-        />
-        <div className="container-main relative z-10 pb-16 pt-[calc(4.5rem+7rem)] sm:pb-20 sm:pt-[calc(4.5rem+8rem)]">
-          <ParallaxLayer speed={0.03}>
-            <ScrollReveal>
-              <p className="mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-white/55">
-                {eyebrow}
-              </p>
-              <h1 className="heading-display max-w-3xl text-4xl font-semibold sm:text-5xl lg:text-[3.25rem]">
-                {title}
-                {titleAccent ? (
-                  <>
-                    <span className="block text-white/80">{titleAccent}</span>
-                  </>
-                ) : null}
-              </h1>
-              <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/65 sm:text-lg">
-                {intro}
-              </p>
-              <p className="mt-8 text-xs font-medium uppercase tracking-[0.12em] text-white/40">
-                Last updated {updated}
-              </p>
-            </ScrollReveal>
-          </ParallaxLayer>
-        </div>
-      </section>
+      <PageHeroSection
+        eyebrow={eyebrow}
+        title={title}
+        titleAccent={titleAccent}
+        description={intro}
+        meta={`Last updated ${updated}`}
+      />
 
       <section className="section-padding bg-white">
         <div className="container-main">
