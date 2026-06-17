@@ -5,6 +5,8 @@ import type {
   Expense,
   ExpenseAttachment,
   MonthlyReport,
+  SavingContribution,
+  SavingGoal,
 } from "@/types/finance";
 import type {
   AlertRow,
@@ -13,6 +15,8 @@ import type {
   ExpenseAttachmentRow,
   ExpenseRow,
   MonthlyReportRow,
+  SavingContributionRow,
+  SavingGoalRow,
 } from "@/db/schema";
 
 export function mapBudget(row: BudgetRow): Budget {
@@ -94,5 +98,31 @@ export function mapMonthlyReport(row: MonthlyReportRow): MonthlyReport {
     budget_id: row.budgetId,
     summary_json: row.summaryJson as MonthlyReport["summary_json"],
     generated_at: row.generatedAt.toISOString(),
+  };
+}
+
+export function mapSavingGoal(row: SavingGoalRow): SavingGoal {
+  return {
+    id: row.id,
+    user_id: row.userId,
+    name: row.name,
+    target_cents: row.targetCents,
+    target_date: row.targetDate,
+    created_at: row.createdAt.toISOString(),
+    completed_at: row.completedAt?.toISOString() ?? null,
+  };
+}
+
+export function mapSavingContribution(
+  row: SavingContributionRow,
+): SavingContribution {
+  return {
+    id: row.id,
+    saving_goal_id: row.savingGoalId,
+    user_id: row.userId,
+    amount_cents: row.amountCents,
+    contributed_at: row.contributedAt,
+    note: row.note,
+    created_at: row.createdAt.toISOString(),
   };
 }

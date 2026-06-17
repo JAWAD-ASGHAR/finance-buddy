@@ -151,6 +151,40 @@ async function seedBudget(userId) {
   return { budget, categories };
 }
 
+async function seedSavingsGoals(userId) {
+  await supabase.from("saving_contributions").delete().eq("user_id", userId);
+  await supabase.from("saving_goals").delete().eq("user_id", userId);
+
+  const targetDate = new Date(now);
+  targetDate.setMonth(targetDate.getMonth() + 3);
+  const targetDateStr = targetDate.toISOString().slice(0, 10);
+
+  const { data: goal, error: goalError } = await supabase
+    .from("saving_goals")
+    .insert({
+      user_id: userId,
+      name: "Emergency fund",
+      target_cents: 50000,
+      target_date: targetDateStr,
+    })
+    .select("*")
+    .single();
+
+  if (goalError || !goal) throw goalError;
+
+  const { error: contributionError } = await supabase
+    .from("saving_contributions")
+    .insert({
+      saving_goal_id: goal.id,
+      user_id: userId,
+      amount_cents: 15000,
+      contributed_at: today,
+      note: "Initial deposit",
+    });
+
+  if (contributionError) throw contributionError;
+}
+
 async function seedSharedDemo(userId, friendId) {
   await supabase
     .from("friend_requests")
@@ -216,10 +250,12 @@ async function main() {
   const displayName = email.split("@")[0] ?? email;
   const userId = await ensureUser(email, password, displayName);
   await seedBudget(userId);
+  await seedSavingsGoals(userId);
 
   console.log("Demo data seeded for", email);
   console.log("- Budget:", `${year}-${month}`, "£800 income");
   console.log("- Expenses: 5 records (Food should be near alert threshold)");
+  console.log("- Savings: Emergency fund £500 target, £150 saved");
 
   if (friendEmail) {
     const friendDisplayName = friendEmail.split("@")[0] ?? friendEmail;

@@ -246,22 +246,21 @@ export function DashboardFixture() {
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-5">
-          <AppCard
-            className="lg:col-span-3"
-            title="Spending trend"
-            description="Your cumulative spend this month against an even budget pace."
-          >
-            <ChartPlaceholder />
-          </AppCard>
-          <AppCard
-            className="lg:col-span-2"
-            title="Category spend"
-            description="Quick view of where your budget is going."
-          >
-            <ChartPlaceholder className="h-56" />
-          </AppCard>
-        </div>
+        <AppCard
+          title="Shared with friends"
+          description="What friends owe you and what you owe them."
+        >
+          <ul className="divide-y divide-border text-sm">
+            <li className="flex items-center justify-between py-3">
+              <span>Alex Chen</span>
+              <span className="text-accent-green">owes you {formatMoney(4200)}</span>
+            </li>
+            <li className="flex items-center justify-between py-3">
+              <span>Sam Rivera</span>
+              <span className="text-destructive">you owe {formatMoney(1500)}</span>
+            </li>
+          </ul>
+        </AppCard>
 
         <ForecastCard forecast={mockForecast} />
 
@@ -533,54 +532,50 @@ export function FriendsFixture() {
     <>
       <AppPageHeader
         title="Friends"
-        description="Find people, manage requests, and view your connections."
+        description="Find people, manage requests, and view shared activity."
       />
       <div className="space-y-6">
-        <AppCard
-          title="Find people"
-          description="Search by username to send a friend request and split costs together."
-        >
-          <AppInput label="Search username" defaultValue="alex" readOnly />
-        </AppCard>
-        <AppCard title="Pending requests">
-          <ul className="divide-y divide-border text-sm">
-            <li className="flex items-center justify-between py-3">
-              <span>Incoming · Sam Rivera</span>
-              <div className="flex gap-2">
-                <AppButton variant="secondary">Decline</AppButton>
-                <AppButton>Accept</AppButton>
-              </div>
-            </li>
-            <li className="flex items-center justify-between py-3">
-              <span>Outgoing · Jordan Lee</span>
-              <AppButton variant="secondary">Cancel</AppButton>
-            </li>
-          </ul>
-        </AppCard>
-        <AppCard title="Your friends">
-          <ul className="divide-y divide-border">
-            {[
-              ["Alex Chen", "alexchen"],
-              ["Sam Rivera", "samr"],
-              ["Jordan Lee", "jordanlee"],
-            ].map(([name, username]) => (
-              <li
-                key={username}
-                className="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <span className="text-sm font-medium">
-                  {name}{" "}
-                  <span className="font-normal text-muted-foreground">
-                    @{username}
-                  </span>
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  View activity →
-                </span>
+        <div className="max-w-md">
+          <AppInput label="Find people" defaultValue="alex" readOnly />
+        </div>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <AppCard title="Requests">
+            <ul className="divide-y divide-border text-sm">
+              <li className="flex items-center justify-between py-3">
+                <span>Incoming · Sam Rivera</span>
+                <div className="flex gap-2">
+                  <AppButton variant="secondary">Decline</AppButton>
+                  <AppButton>Accept</AppButton>
+                </div>
               </li>
-            ))}
-          </ul>
-        </AppCard>
+              <li className="py-3 text-muted-foreground">
+                Sent · Waiting for Jordan Lee to accept
+              </li>
+            </ul>
+          </AppCard>
+          <AppCard title="Your friends">
+            <ul className="divide-y divide-border">
+              {[
+                ["Alex Chen", "alexchen", `owes you ${formatMoney(4200)}`],
+                ["Sam Rivera", "samr", `you owe ${formatMoney(1500)}`],
+                ["Jordan Lee", "jordanlee", "Settled up"],
+              ].map(([name, username, balance]) => (
+                <li
+                  key={username}
+                  className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <span className="text-sm font-medium">
+                    {name}{" "}
+                    <span className="font-normal text-muted-foreground">
+                      @{username}
+                    </span>
+                  </span>
+                  <span className="text-sm text-muted-foreground">{balance}</span>
+                </li>
+              ))}
+            </ul>
+          </AppCard>
+        </div>
       </div>
     </>
   );

@@ -14,7 +14,13 @@ export function createFinanceBuddyMcpServer(userId: string) {
     },
     {
       instructions:
-        "Finance Buddy MCP server. Manage budgets, expenses, friends, shared expenses, and reports for the authenticated user. Destructive tools require confirmationToken from request_destructive_confirmation.",
+        "Finance Buddy MCP server — full access to the authenticated user's account. " +
+        "Capabilities: profile & currency settings, monthly budgets, expenses (manual/text/receipt), " +
+        "category suggestions, alerts, forecasts, spending reports, savings goals, friends, " +
+        "shared expense splits, settlements, and notifications. " +
+        "Call get_user_profile first when formatting money. Amounts use the user's profile currency " +
+        "(GBP, USD, EUR, CAD, AUD, PKR, INR). Destructive tools require confirmationToken from " +
+        "request_destructive_confirmation after explicit user confirmation.",
     },
   );
 

@@ -81,99 +81,203 @@ function BalanceSection({
   );
 }
 
+type FriendBalanceListProps = {
+  balances: FriendBalance[];
+  totals?: FriendBalanceTotals;
+  title?: string;
+  description?: string;
+  emptyMessage?: React.ReactNode;
+  owingOnly?: boolean;
+  footerLink?: { href: string; label: string };
+  variant?: "simple" | "detailed";
+};
+
 export function FriendBalanceList({
   balances,
   totals: totalsProp,
-}: {
-  balances: FriendBalance[];
-  totals?: FriendBalanceTotals;
-}) {
+  title = "Balances",
+  description,
+  emptyMessage,
+  owingOnly = false,
+  footerLink,
+  variant = "simple",
+}: FriendBalanceListProps) {
   const { formatMoney } = useCurrency();
   const totals = totalsProp ?? computeFriendBalanceTotals(balances);
 
+  if (variant === "detailed") {
+    if (balances.length === 0) {
+      return (
+        <AppCard title="Friends" description="Connect with friends to split bills.">
+          <p className="text-sm text-muted-foreground">
+            No friends yet.{" "}
+            <Link
+              href="/friends"
+              className="font-medium text-accent-green underline-offset-4 hover:underline"
+            >
+              Find people
+            </Link>{" "}
+            to get started.
+          </p>
+        </AppCard>
+      );
+    }
+
+    const owedToYou = balances.filter((balance) => balance.net_cents > 0);
+    const youOwe = balances.filter((balance) => balance.net_cents < 0);
+    const settled = balances.filter((balance) => balance.net_cents === 0);
+
+    return (
+      <div className="space-y-6">
+        <AppCard title="Totals" description="Quick summary across all friends.">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
+                Friends owe you
+              </p>
+              <p className="mt-1 text-lg font-semibold text-accent-green">
+                {formatMoney(totals.owedToYouCents)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
+                You owe friends
+              </p>
+              <p className="mt-1 text-lg font-semibold text-destructive">
+                {formatMoney(totals.youOweCents)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
+                Net
+              </p>
+              <p
+                className={cn(
+                  "mt-1 text-lg font-semibold",
+                  totals.netCents > 0 && "text-accent-green",
+                  totals.netCents < 0 && "text-destructive",
+                  totals.netCents === 0 && "text-muted-foreground",
+                )}
+              >
+                {totals.netCents === 0
+                  ? "Settled"
+                  : formatMoney(Math.abs(totals.netCents))}
+              </p>
+            </div>
+          </div>
+        </AppCard>
+
+        <AppCard title="By friend" description="Tap a friend for activity and settle up.">
+          <div className="space-y-6">
+            <BalanceSection
+              title="Friends who owe you"
+              description="They still need to pay you back."
+              balances={owedToYou}
+              formatMoney={formatMoney}
+            />
+            <BalanceSection
+              title="Friends you owe"
+              description="You still need to pay them back."
+              balances={youOwe}
+              formatMoney={formatMoney}
+            />
+            <BalanceSection
+              title="Settled up"
+              description="No open balance right now."
+              balances={settled}
+              formatMoney={formatMoney}
+            />
+          </div>
+        </AppCard>
+      </div>
+    );
+  }
+
+  const visibleBalances = owingOnly
+    ? balances.filter((b) => b.net_cents !== 0)
+    : balances;
+
   if (balances.length === 0) {
     return (
-      <AppCard title="Friends" description="Connect with friends to split bills.">
+      <AppCard title={title} description={description}>
+        {emptyMessage ?? (
+          <p className="text-sm text-muted-foreground">
+            No friends yet.{" "}
+            <Link
+              href="/friends"
+              className="font-medium text-accent-green underline-offset-4 hover:underline"
+            >
+              Find people
+            </Link>{" "}
+            to get started.
+          </p>
+        )}
+      </AppCard>
+    );
+  }
+
+  if (owingOnly && visibleBalances.length === 0) {
+    return (
+      <AppCard title={title} description={description}>
         <p className="text-sm text-muted-foreground">
-          No friends yet.{" "}
-          <Link
-            href="/friends"
-            className="font-medium text-accent-green underline-offset-4 hover:underline"
-          >
-            Find people
-          </Link>{" "}
-          to get started.
+          All settled up with your friends.
+          {footerLink ? (
+            <>
+              {" "}
+              <Link
+                href={footerLink.href}
+                className="font-medium text-accent-green underline-offset-4 hover:underline"
+              >
+                {footerLink.label}
+              </Link>
+            </>
+          ) : null}
         </p>
       </AppCard>
     );
   }
 
-  const owedToYou = balances.filter((balance) => balance.net_cents > 0);
-  const youOwe = balances.filter((balance) => balance.net_cents < 0);
-  const settled = balances.filter((balance) => balance.net_cents === 0);
-
   return (
-    <div className="space-y-6">
-      <AppCard title="Totals" description="Quick summary across all friends.">
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
-              Friends owe you
-            </p>
-            <p className="mt-1 text-lg font-semibold text-accent-green">
-              {formatMoney(totals.owedToYouCents)}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
-              You owe friends
-            </p>
-            <p className="mt-1 text-lg font-semibold text-destructive">
-              {formatMoney(totals.youOweCents)}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
-              Net
-            </p>
-            <p
-              className={cn(
-                "mt-1 text-lg font-semibold",
-                totals.netCents > 0 && "text-accent-green",
-                totals.netCents < 0 && "text-destructive",
-                totals.netCents === 0 && "text-muted-foreground",
-              )}
+    <AppCard title={title} description={description}>
+      <ul className="divide-y divide-border">
+        {visibleBalances.map(({ friend, net_cents }) => (
+          <li key={friend.id}>
+            <Link
+              href={`/friends/${friend.id}`}
+              className="flex flex-col gap-1 py-3 transition-colors hover:text-accent-green sm:flex-row sm:items-center sm:justify-between sm:gap-4"
             >
-              {totals.netCents === 0
-                ? "Settled"
-                : formatMoney(Math.abs(totals.netCents))}
-            </p>
-          </div>
-        </div>
-      </AppCard>
-
-      <AppCard title="By friend" description="Tap a friend for activity and settle up.">
-        <div className="space-y-6">
-          <BalanceSection
-            title="Friends who owe you"
-            description="They still need to pay you back."
-            balances={owedToYou}
-            formatMoney={formatMoney}
-          />
-          <BalanceSection
-            title="Friends you owe"
-            description="You still need to pay them back."
-            balances={youOwe}
-            formatMoney={formatMoney}
-          />
-          <BalanceSection
-            title="Settled up"
-            description="No open balance right now."
-            balances={settled}
-            formatMoney={formatMoney}
-          />
-        </div>
-      </AppCard>
-    </div>
+              <span className="text-sm font-medium">
+                {friend.display_name ?? "Friend"}
+                {friend.username ? (
+                  <span className="ml-2 font-normal text-muted-foreground">
+                    @{friend.username}
+                  </span>
+                ) : null}
+              </span>
+              <span
+                className={cn(
+                  "text-sm sm:text-right",
+                  net_cents > 0 && "text-accent-green",
+                  net_cents < 0 && "text-destructive",
+                  net_cents === 0 && "text-muted-foreground",
+                )}
+              >
+                {balanceLabel(net_cents, formatMoney)}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {footerLink ? (
+        <p className="mt-4 text-sm">
+          <Link
+            href={footerLink.href}
+            className="font-medium text-accent-green underline-offset-4 hover:underline"
+          >
+            {footerLink.label}
+          </Link>
+        </p>
+      ) : null}
+    </AppCard>
   );
 }

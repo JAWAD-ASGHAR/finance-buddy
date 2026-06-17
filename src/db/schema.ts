@@ -35,6 +35,7 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "friend_request_accepted",
   "shared_expense",
   "settlement",
+  "budget_alert",
 ]);
 
 export const profiles = pgTable(
@@ -324,6 +325,43 @@ export const notifications = pgTable(
   ],
 );
 
+export const savingGoals = pgTable(
+  "saving_goals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull(),
+    name: text("name").notNull(),
+    targetCents: integer("target_cents").notNull(),
+    targetDate: date("target_date"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (table) => [index("saving_goals_user_id_idx").on(table.userId)],
+);
+
+export const savingContributions = pgTable(
+  "saving_contributions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    savingGoalId: uuid("saving_goal_id")
+      .notNull()
+      .references(() => savingGoals.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    contributedAt: date("contributed_at").notNull().default(sql`CURRENT_DATE`),
+    note: text("note").notNull().default(""),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("saving_contributions_saving_goal_id_idx").on(table.savingGoalId),
+    index("saving_contributions_user_id_idx").on(table.userId),
+  ],
+);
+
 export const budgetsRelations = relations(budgets, ({ many }) => ({
   categories: many(categories),
   expenses: many(expenses),
@@ -378,6 +416,20 @@ export const sharedExpenseSplitsRelations = relations(
   }),
 );
 
+export const savingGoalsRelations = relations(savingGoals, ({ many }) => ({
+  contributions: many(savingContributions),
+}));
+
+export const savingContributionsRelations = relations(
+  savingContributions,
+  ({ one }) => ({
+    goal: one(savingGoals, {
+      fields: [savingContributions.savingGoalId],
+      references: [savingGoals.id],
+    }),
+  }),
+);
+
 export type BudgetRow = typeof budgets.$inferSelect;
 export type CategoryRow = typeof categories.$inferSelect;
 export type ExpenseRow = typeof expenses.$inferSelect;
@@ -391,3 +443,5 @@ export type SettlementRow = typeof settlements.$inferSelect;
 export type McpApiKeyRow = typeof mcpApiKeys.$inferSelect;
 export type NotificationRow = typeof notifications.$inferSelect;
 export type ProfileRow = typeof profiles.$inferSelect;
+export type SavingGoalRow = typeof savingGoals.$inferSelect;
+export type SavingContributionRow = typeof savingContributions.$inferSelect;

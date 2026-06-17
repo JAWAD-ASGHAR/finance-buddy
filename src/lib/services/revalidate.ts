@@ -24,3 +24,9 @@ export function revalidateSharedPaths(friendId?: string) {
 export function revalidateReportPaths() {
   revalidatePath("/reports");
 }
+
+export function revalidateSavingsPaths() {
+  revalidatePath("/savings");
+  revalidatePath("/dashboard");
+  revalidatePath("/reports");
+}
