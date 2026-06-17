@@ -1,17 +1,30 @@
-import { Resend } from "resend";
-import { getResendApiKey } from "@/lib/email/env";
+import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
+import {
+  getSmtpHost,
+  getSmtpPass,
+  getSmtpPort,
+  getSmtpUser,
+} from "@/lib/email/env";
 
-let resendClient: Resend | null = null;
+let transporter: Transporter | null = null;
 
-export function getResendClient(): Resend | null {
-  const apiKey = getResendApiKey();
-  if (!apiKey) {
+export function getSmtpTransporter(): Transporter | null {
+  const user = getSmtpUser();
+  const pass = getSmtpPass();
+  if (!user || !pass) {
     return null;
   }
 
-  if (!resendClient) {
-    resendClient = new Resend(apiKey);
+  if (!transporter) {
+    const port = getSmtpPort();
+    transporter = nodemailer.createTransport({
+      host: getSmtpHost(),
+      port,
+      secure: port === 465,
+      auth: { user, pass },
+    });
   }
 
-  return resendClient;
+  return transporter;
 }

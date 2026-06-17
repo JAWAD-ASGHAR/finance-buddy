@@ -1,5 +1,5 @@
+import { getSmtpTransporter } from "@/lib/email/client";
 import { getEmailFromAddress, isEmailConfigured } from "@/lib/email/env";
-import { getResendClient } from "@/lib/email/client";
 
 export type SendEmailInput = {
   to: string;
@@ -16,27 +16,29 @@ export async function sendEmail(
     return { ok: false, error: "Email is not configured" };
   }
 
-  const resend = getResendClient();
-  if (!resend) {
+  const transporter = getSmtpTransporter();
+  if (!transporter) {
     return { ok: false, error: "Email is not configured" };
   }
 
-  const { data, error } = await resend.emails.send({
-    from: getEmailFromAddress(),
-    to: [input.to],
-    subject: input.subject,
-    html: input.html,
-    text: input.text,
-    replyTo: input.replyTo,
-  });
+  try {
+    const info = await transporter.sendMail({
+      from: getEmailFromAddress(),
+      to: input.to,
+      subject: input.subject,
+      html: input.html,
+      text: input.text,
+      replyTo: input.replyTo,
+    });
 
-  if (error) {
-    return { ok: false, error: error.message };
+    if (!info.messageId) {
+      return { ok: false, error: "Email provider did not return a message id" };
+    }
+
+    return { ok: true, id: info.messageId };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to send email";
+    return { ok: false, error: message };
   }
-
-  if (!data?.id) {
-    return { ok: false, error: "Email provider did not return a message id" };
-  }
-
-  return { ok: true, id: data.id };
 }
