@@ -35,6 +35,7 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "friend_request_accepted",
   "shared_expense",
   "settlement",
+  "budget_alert",
 ]);
 
 export const profiles = pgTable(

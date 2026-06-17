@@ -1,4 +1,6 @@
 import {
+  budgetAlertEmailHtml,
+  dashboardPageUrl,
   friendRequestAcceptedEmailHtml,
   friendRequestEmailHtml,
   friendsPageUrl,
@@ -10,6 +12,42 @@ import { notifyUser } from "@/lib/services/notifications";
 import { getUserCurrency } from "@/lib/auth/user-preferences";
 import { convertCents, refreshExchangeRatesIfStale, type CurrencyCode } from "@/lib/finance/currency";
 import { formatMoney } from "@/types/finance";
+import type { AlertType } from "@/types/finance";
+
+function budgetAlertTitle(alertType: AlertType): string {
+  return alertType === "category_threshold"
+    ? "Category budget alert"
+    : "Spending pace alert";
+}
+
+export async function notifyBudgetAlert({
+  userId,
+  alertId,
+  alertType,
+  message,
+}: {
+  userId: string;
+  alertId: string;
+  alertType: AlertType;
+  message: string;
+}) {
+  const title = budgetAlertTitle(alertType);
+  const dashboardUrl = dashboardPageUrl();
+
+  await notifyUser({
+    userId,
+    type: "budget_alert",
+    title,
+    body: message,
+    href: "/dashboard",
+    metadata: { alertId, alertType },
+    email: {
+      subject: `${title} — Finance Buddy`,
+      html: budgetAlertEmailHtml({ title, message, dashboardUrl }),
+      text: `${message}\n\nGuidance only — not financial advice.\n\nOpen ${dashboardUrl}`,
+    },
+  });
+}
 
 export async function notifyFriendRequestReceived({
   recipientId,

@@ -152,25 +152,6 @@ export async function addExpenseFromTextForUser(
   });
 }
 
-export async function suggestCategoryForDescriptionForUser(
-  userId: string,
-  description: string,
-): Promise<ActionResult<ReturnType<typeof suggestCategory>>> {
-  const { categories: budgetCategories, expenses: existingExpenses } =
-    await getCurrentBudgetForUser(userId);
-
-  if (budgetCategories.length === 0) {
-    return { success: false, error: "Create categories first" };
-  }
-
-  const suggestion = suggestCategory(
-    description,
-    budgetCategories,
-    existingExpenses,
-  );
-  return { success: true, data: suggestion };
-}
-
 export async function updateExpenseCategoryForUser(
   userId: string,
   input: { expenseId: string; categoryId: string },

@@ -1,18 +1,12 @@
 "use client";
 
-import {
-  addExpense,
-  addExpenseFromText,
-  suggestCategoryForDescription,
-} from "@/actions/expenses";
+import { addExpense, addExpenseFromText } from "@/actions/expenses";
 import { registerExpenseAttachment } from "@/actions/images";
 import { ImageFilePicker } from "@/components/app/ImageFilePicker";
 import type { Category } from "@/types/finance";
-import { suggestCategory } from "@/lib/finance/categorize";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
-import { CategorySuggestion } from "@/components/app/CategorySuggestion";
 import { useCurrency } from "@/components/app/CurrencyProvider";
 import {
   AppButton,
@@ -41,9 +35,6 @@ export function ExpenseForm({
   );
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
   const [rawText, setRawText] = useState("");
-  const [suggestion, setSuggestion] = useState<ReturnType<
-    typeof suggestCategory
-  > | null>(null);
   const [pending, setPending] = useState(false);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
 
@@ -72,79 +63,60 @@ export function ExpenseForm({
     return true;
   }
 
-  async function refreshSuggestion(nextDescription: string) {
-    if (tab !== "manual" || nextDescription.length < 2) {
-      setSuggestion(null);
-      return;
-    }
-
-    const result = await suggestCategoryForDescription(nextDescription);
-    if (result.success) {
-      setSuggestion(result.data);
-      setCategoryId((current) =>
-        !current || current === categories[0]?.id
-          ? result.data.categoryId
-          : current,
-      );
-    }
-  }
-
   async function handleManualSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
 
-    const suggestedId = suggestion?.categoryId ?? categoryId;
-    const userCorrected = suggestedId !== categoryId;
-
-    const result = await addExpense({
-      amount,
-      description,
-      expenseDate,
-      categoryId,
-      suggestedCategoryId: suggestedId,
-      userCorrected,
-      source: "manual",
-    });
-
-    if (!result.success) {
-      toast.error(result.error);
-      setPending(false);
-      return;
-    }
-
     try {
-      await attachImages(result.data.id);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Expense saved but images failed to upload",
-      );
-      setPending(false);
-      return;
-    }
+      const result = await addExpense({
+        amount,
+        description,
+        expenseDate,
+        categoryId,
+        source: "manual",
+      });
 
-    router.push("/expenses");
-    router.refresh();
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+
+      try {
+        await attachImages(result.data.id);
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Expense saved but images failed to upload",
+        );
+        return;
+      }
+
+      await router.push("/expenses");
+    } finally {
+      setPending(false);
+    }
   }
 
   async function handleTextSubmit(source: "receipt_text" | "nl_text") {
     setPending(true);
 
-    const result = await addExpenseFromText({
-      rawText,
-      source,
-      categoryId: categoryId || undefined,
-    });
+    try {
+      const result = await addExpenseFromText({
+        rawText,
+        source,
+        categoryId: categoryId || undefined,
+      });
 
-    if (!result.success) {
-      toast.error(result.error);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+
+      await router.push("/expenses");
+    } finally {
       setPending(false);
-      return;
     }
-
-    router.push("/expenses");
-    router.refresh();
   }
 
   return (
@@ -178,11 +150,9 @@ export function ExpenseForm({
               label="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              onBlur={(e) => void refreshSuggestion(e.target.value)}
               placeholder="Coffee before lecture"
               required
             />
-            {suggestion ? <CategorySuggestion suggestion={suggestion} /> : null}
             <AppSelect
               label="Category"
               value={categoryId}

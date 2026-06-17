@@ -2,7 +2,8 @@ export type NotificationType =
   | "friend_request"
   | "friend_request_accepted"
   | "shared_expense"
-  | "settlement";
+  | "settlement"
+  | "budget_alert";
 
 export type AppNotification = {
   id: string;

@@ -78,6 +78,10 @@ export function sharedPageUrl(): string {
   return new URL("/shared", siteUrl).toString();
 }
 
+export function dashboardPageUrl(): string {
+  return new URL("/dashboard", siteUrl).toString();
+}
+
 export function friendRequestAcceptedEmailHtml({
   friendName,
   sharedUrl,
@@ -113,6 +117,28 @@ export function sharedExpenseEmailHtml({
       <strong>${description}</strong> — ${amount} total. Open Finance Buddy to see your share.
     </p>
     ${button(sharedUrl, "View shared expenses")}
+  `);
+}
+
+export function budgetAlertEmailHtml({
+  title,
+  message,
+  dashboardUrl,
+}: {
+  title: string;
+  message: string;
+  dashboardUrl: string;
+}): string {
+  return layout(`
+    <p style="margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#71717a;">Budget alert</p>
+    <h1 style="margin:0 0 16px;font-size:24px;line-height:1.2;">${escapeHtml(title)}</h1>
+    <p style="margin:0;font-size:15px;line-height:1.6;color:#52525b;">
+      ${escapeHtml(message)}
+    </p>
+    ${button(dashboardUrl, "View dashboard")}
+    <p style="margin:24px 0 0;font-size:13px;line-height:1.6;color:#71717a;">
+      Guidance only — not financial advice.
+    </p>
   `);
 }
 

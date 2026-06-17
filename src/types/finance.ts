@@ -115,13 +115,6 @@ export type ForecastResult = {
   onTrack: boolean;
 };
 
-export type CategorySuggestion = {
-  categoryId: string;
-  categoryName: string;
-  confidence: "high" | "medium" | "low";
-  reason: string;
-};
-
 export type ParsedExpenseText = {
   amountCents: number | null;
   description: string;
