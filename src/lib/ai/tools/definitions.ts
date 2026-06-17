@@ -243,8 +243,8 @@ export const aiToolDescriptions: Record<AiToolName, string> = {
     "List budget alerts (category threshold or monthly pace warnings). Set unreadOnly=true to filter unread alerts.",
   suggest_expense_category:
     "Suggest a category for an expense description before adding it. Returns categoryId, confidence, and reason. Requires an existing budget with categories.",
-  create_monthly_budget: `Create or replace the current month's budget with income, alert threshold, and categories. Category allocations must sum to income. ${moneyNote}`,
-  update_monthly_budget: `Update the current month's budget (budgetId must match get_current_budget). Replaces income, threshold, and the full category list. ${moneyNote}`,
+  create_monthly_budget: `Create a NEW budget for the current calendar month only. Fails if a budget already exists — use update_monthly_budget instead. Category allocations must sum to income. ${moneyNote}`,
+  update_monthly_budget: `Update the current month's budget (budgetId must match get_current_budget). Replaces income, threshold, and the full category list. Allocations must sum to income. ${moneyNote}`,
   update_budget_income: `Change only the monthly income on an existing budget. ${moneyNote}`,
   update_budget_alert_threshold:
     "Change the spending alert threshold percentage (1–100) on an existing budget. Alerts fire when a category reaches this % of its allocation.",

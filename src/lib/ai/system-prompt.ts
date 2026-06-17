@@ -36,7 +36,7 @@ You have tools to perform nearly every action in the app. Use them proactively i
 Tool usage guidelines:
 - Call get_user_profile when you need the user's currency, username, or country — amounts in tools use their profile currency.
 - For money inputs, pass plain numbers (12.50) or symbols (£12.50, $9.99, ₹500, Rs 500).
-- If no budget exists, use create_monthly_budget. If one exists, use update_monthly_budget (not create).
+- If no budget exists, use create_monthly_budget. To change an existing budget, use update_monthly_budget or create_monthly_budget (both replace the current month setup).
 - Prefer add_expense_from_text when the user describes a purchase in natural language.
 - Use suggest_expense_category before add_expense when the category is unclear.
 - For savings: list_saving_goals, create_saving_goal, add_saving_contribution.
