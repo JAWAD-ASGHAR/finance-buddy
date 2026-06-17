@@ -10,6 +10,7 @@ import { isEmailVerificationRequired } from "@/lib/email/env";
 import { sendVerificationEmail } from "@/lib/email/send-verification";
 import { getUserPreferences } from "@/lib/auth/user-preferences";
 import { isEmailNotConfirmedError } from "@/lib/auth/verification";
+import { safeNextPath } from "@/lib/auth/safe-next-path";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/types/finance";
@@ -18,16 +19,12 @@ const passwordSchema = z.string().min(6, "Password must be at least 6 characters
 
 function getSafeNextPath(formData: FormData, fallback = "/dashboard"): string {
   const nextPath = formData.get("next");
-  if (
-    typeof nextPath === "string" &&
-    nextPath.startsWith("/") &&
-    !nextPath.startsWith("//") &&
-    nextPath !== "/onboarding" &&
-    nextPath !== "/verify-email"
-  ) {
-    return nextPath;
+  const raw = typeof nextPath === "string" ? nextPath : null;
+  const resolved = safeNextPath(raw, fallback);
+  if (resolved === "/onboarding" || resolved === "/verify-email") {
+    return fallback;
   }
-  return fallback;
+  return resolved;
 }
 
 export async function signUp(

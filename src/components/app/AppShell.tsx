@@ -76,3 +76,54 @@ export function AppShell({
     </CurrencyProvider>
   );
 }
+
+function AppShellHeaderFallback({
+  mobileNavOpen,
+  onMobileNavOpenChange,
+}: {
+  mobileNavOpen: boolean;
+  onMobileNavOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 sm:gap-4 sm:px-6">
+      <AppSidebarMobileTrigger
+        open={mobileNavOpen}
+        onToggle={() => onMobileNavOpenChange(!mobileNavOpen)}
+      />
+      <div className="ml-auto flex items-center gap-2 sm:gap-3">
+        <div className="size-9 animate-pulse rounded-md bg-border" aria-hidden />
+        <div className="size-9 animate-pulse rounded-md bg-border" aria-hidden />
+        <div className="size-9 animate-pulse rounded-md bg-border" aria-hidden />
+        <div className="h-9 w-9 animate-pulse rounded-full bg-border" aria-hidden />
+      </div>
+    </header>
+  );
+}
+
+export function AppShellFallback({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  return (
+    <div className="flex min-h-screen bg-muted/40">
+      <AppSidebar
+        mobileOpen={mobileNavOpen}
+        onMobileOpenChange={setMobileNavOpen}
+      />
+
+      <div className="flex min-w-0 flex-1 flex-col pt-[env(safe-area-inset-top,0px)] lg:ml-60">
+        <AppShellHeaderFallback
+          mobileNavOpen={mobileNavOpen}
+          onMobileNavOpenChange={setMobileNavOpen}
+        />
+
+        <main className="flex-1 px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-8 lg:px-8">
+          <div className="container-app">{children}</div>
+        </main>
+      </div>
+    </div>
+  );
+}

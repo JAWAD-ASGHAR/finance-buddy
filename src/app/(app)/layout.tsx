@@ -1,18 +1,21 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { AppShell } from "@/components/app/AppShell";
+import { AppShell, AppShellFallback } from "@/components/app/AppShell";
 import { getAppSession } from "@/lib/auth/session";
 import { refreshExchangeRatesIfStale } from "@/lib/finance/currency";
 
 export const dynamic = "force-dynamic";
 
-export default async function AppLayout({
+async function AppLayoutContent({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  await refreshExchangeRatesIfStale();
+  const [, session] = await Promise.all([
+    refreshExchangeRatesIfStale(),
+    getAppSession(),
+  ]);
 
-  const session = await getAppSession();
   if (!session) {
     redirect("/login");
   }
@@ -22,4 +25,16 @@ export default async function AppLayout({
   }
 
   return <AppShell session={session}>{children}</AppShell>;
+}
+
+export default function AppLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense fallback={<AppShellFallback>{children}</AppShellFallback>}>
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </Suspense>
+  );
 }
