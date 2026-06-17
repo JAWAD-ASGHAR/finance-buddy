@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "crypto";
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { getDb } from "@/db/index";
 import { mcpApiKeys } from "@/db/schema";
+import { ensureUserProfile } from "@/lib/auth/profile";
 
 export function hashMcpApiKey(rawKey: string): string {
   return createHash("sha256").update(rawKey).digest("hex");
@@ -69,11 +70,17 @@ export async function listMcpApiKeysForUser(userId: string) {
   }));
 }
 
-export async function createMcpApiKeyForUser(userId: string, name: string) {
+export async function createMcpApiKeyForUser(
+  userId: string,
+  name: string,
+  displayName?: string | null,
+) {
   const trimmed = name.trim();
   if (!trimmed) {
     return { success: false as const, error: "Enter a key name" };
   }
+
+  await ensureUserProfile(userId, displayName);
 
   const { rawKey, prefix } = generateMcpApiKeySecret();
   const db = getDb();
