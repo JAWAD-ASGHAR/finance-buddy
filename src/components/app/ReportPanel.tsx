@@ -34,8 +34,8 @@ export function ReportPanel({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-3">
-        <AppButton type="button" disabled={pending} onClick={handleGenerate}>
-          {pending ? "Generating..." : "Generate monthly report"}
+        <AppButton type="button" loading={pending} onClick={handleGenerate}>
+          Generate monthly report
         </AppButton>
       </div>
       {error ? <AppError message={error} /> : null}

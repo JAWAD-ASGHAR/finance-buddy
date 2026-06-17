@@ -15,6 +15,11 @@ import {
   sharedExpenseSplits,
   sharedExpenses,
 } from "@/db/schema";
+import { getUserCurrency } from "@/lib/auth/user-preferences";
+import {
+  convertSettlementsForViewer,
+  convertSharedExpenseDetailsForViewer,
+} from "@/lib/finance/shared-currency";
 import type {
   Friend,
   FriendRequest,
@@ -206,7 +211,7 @@ export async function getSharedExpensesForUser(
     splitsByExpense.set(split.sharedExpenseId, list);
   }
 
-  return expenseRows.map((row) =>
+  const details = expenseRows.map((row) =>
     mapSharedExpenseDetail(
       row,
       (splitsByExpense.get(row.id) ?? []).map((split) =>
@@ -214,6 +219,9 @@ export async function getSharedExpensesForUser(
       ),
     ),
   );
+
+  const viewerCurrency = await getUserCurrency(userId);
+  return convertSharedExpenseDetailsForViewer(details, viewerCurrency);
 }
 
 export async function getSettlementsForUser(userId: string): Promise<Settlement[]> {
@@ -226,7 +234,9 @@ export async function getSettlementsForUser(userId: string): Promise<Settlement[
     orderBy: desc(settlements.createdAt),
   });
 
-  return rows.map(mapSettlement);
+  const mapped = rows.map(mapSettlement);
+  const viewerCurrency = await getUserCurrency(userId);
+  return convertSettlementsForViewer(mapped, viewerCurrency);
 }
 
 export async function getSettlementsBetweenUsers(

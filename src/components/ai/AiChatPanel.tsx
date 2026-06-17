@@ -23,7 +23,92 @@ import {
   type StoredAiChatSession,
 } from "@/lib/ai/chat-history";
 
+function AiChatEmptyState() {
+  return (
+    <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+      <p className="font-medium text-foreground">How can I help?</p>
+      <ul className="mt-2 list-inside list-disc space-y-1">
+        <li>&quot;What&apos;s left in my Food budget?&quot;</li>
+        <li>&quot;Log $12.50 lunch at the campus cafe&quot;</li>
+        <li>&quot;Split a $60 dinner with Alex&quot;</li>
+        <li>&quot;Generate my monthly report&quot;</li>
+      </ul>
+    </div>
+  );
+}
+
+function AiChatPanelShell({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-2">
+          <Sparkles className="size-4 shrink-0 text-primary" />
+          <p className="truncate text-sm font-semibold">Finance Buddy AI</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={onClose}
+            aria-label="Close assistant"
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
+      </div>
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">{children}</div>
+      <div className="border-t border-border p-4 sm:px-6">
+        <div className="flex items-end gap-2">
+          <AiChatInput
+            value=""
+            onChange={() => {}}
+            onSubmit={() => {}}
+            disabled
+            placeholder="Ask me to log an expense, check balances…"
+            className="flex-1"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled
+            aria-label="Send message"
+            className="size-8 shrink-0"
+          >
+            <Send className="size-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AiChatPanel() {
+  const { setOpen } = useAiAssistant();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <AiChatPanelShell onClose={() => setOpen(false)}>
+        <AiChatEmptyState />
+      </AiChatPanelShell>
+    );
+  }
+
+  return <AiChatPanelInner />;
+}
+
+function AiChatPanelInner() {
   const { setOpen } = useAiAssistant();
   const [input, setInput] = useState("");
   const [confirmLoading, setConfirmLoading] = useState(false);
@@ -64,6 +149,7 @@ export function AiChatPanel() {
         prepareSendMessagesRequest: ({ messages, body }) => ({
           body: {
             ...body,
+            messages,
             conversationContext: buildConversationContext(messages),
           },
         }),
@@ -185,17 +271,7 @@ export function AiChatPanel() {
       </div>
 
       <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
-        {messages.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">How can I help?</p>
-            <ul className="mt-2 list-inside list-disc space-y-1">
-              <li>&quot;What&apos;s left in my Food budget?&quot;</li>
-              <li>&quot;Log $12.50 lunch at the campus cafe&quot;</li>
-              <li>&quot;Split a $60 dinner with Alex&quot;</li>
-              <li>&quot;Generate my monthly report&quot;</li>
-            </ul>
-          </div>
-        ) : null}
+        {messages.length === 0 ? <AiChatEmptyState /> : null}
 
         {messages.map((message) => (
           <AiMessageBubble key={message.id} message={message} />
@@ -261,10 +337,15 @@ export function AiChatPanel() {
             type="submit"
             size="icon"
             disabled={!input.trim() || isLoading}
+            aria-busy={isLoading || undefined}
             aria-label="Send message"
             className="size-8 shrink-0"
           >
-            <Send className="size-4" />
+            {isLoading ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : (
+              <Send className="size-4" />
+            )}
           </Button>
         </div>
       </form>

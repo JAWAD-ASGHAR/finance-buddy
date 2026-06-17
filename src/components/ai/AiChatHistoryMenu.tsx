@@ -49,6 +49,12 @@ export function AiChatHistoryMenu({
     };
   }, [open]);
 
+  useEffect(() => {
+    if (open) {
+      onOpen?.();
+    }
+  }, [open, onOpen]);
+
   const sortedSessions = [...sessions].sort(
     (a, b) => b.updatedAt - a.updatedAt,
   );
@@ -62,15 +68,7 @@ export function AiChatHistoryMenu({
         aria-label="Chat history"
         aria-expanded={open}
         aria-haspopup="menu"
-        onClick={() =>
-          setOpen((current) => {
-            const next = !current;
-            if (next) {
-              onOpen?.();
-            }
-            return next;
-          })
-        }
+        onClick={() => setOpen((current) => !current)}
         className={cn(open && "bg-muted")}
       >
         <History className="size-4" />

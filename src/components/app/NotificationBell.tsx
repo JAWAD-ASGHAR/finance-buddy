@@ -36,6 +36,24 @@ function getRequestId(notification: AppNotification): string | null {
   return typeof requestId === "string" ? requestId : null;
 }
 
+function NotificationListSkeleton() {
+  return (
+    <ul className="divide-y divide-border" aria-hidden>
+      {Array.from({ length: 3 }, (_, index) => (
+        <li key={index} className="px-4 py-3">
+          <div className="flex animate-pulse gap-3">
+            <div className="size-8 shrink-0 rounded-full bg-muted" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="h-3.5 w-3/4 rounded bg-muted" />
+              <div className="h-3 w-full rounded bg-muted" />
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function NotificationBell() {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -44,6 +62,7 @@ export function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
+  const [pendingAccept, setPendingAccept] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const refreshUnreadCount = useCallback(async () => {
@@ -132,17 +151,20 @@ export function NotificationBell() {
     if (!requestId) return;
 
     setPendingRequestId(requestId);
+    setPendingAccept(accept);
     setError(null);
 
     const result = await respondToFriendRequest(requestId, accept);
     if (!result.success) {
       setError(result.error);
       setPendingRequestId(null);
+      setPendingAccept(null);
       return;
     }
 
     await markNotificationRead(notification.id);
     setPendingRequestId(null);
+    setPendingAccept(null);
     await loadNotifications();
     router.refresh();
   }
@@ -192,9 +214,7 @@ export function NotificationBell() {
             ) : null}
 
             {loading && notifications.length === 0 ? (
-              <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-                Loading...
-              </p>
+              <NotificationListSkeleton />
             ) : null}
 
             {!loading && notifications.length === 0 ? (
@@ -246,6 +266,10 @@ export function NotificationBell() {
                               <AppButton
                                 type="button"
                                 variant="secondary"
+                                loading={
+                                  pendingRequestId === requestId &&
+                                  pendingAccept === false
+                                }
                                 disabled={pendingRequestId === requestId}
                                 onClick={() =>
                                   void handleFriendRequestResponse(
@@ -258,6 +282,10 @@ export function NotificationBell() {
                               </AppButton>
                               <AppButton
                                 type="button"
+                                loading={
+                                  pendingRequestId === requestId &&
+                                  pendingAccept === true
+                                }
                                 disabled={pendingRequestId === requestId}
                                 onClick={() =>
                                   void handleFriendRequestResponse(

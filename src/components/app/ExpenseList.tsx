@@ -1,8 +1,8 @@
 "use client";
 
 import { deleteExpense, updateExpenseCategory } from "@/actions/expenses";
+import { useCurrency } from "@/components/app/CurrencyProvider";
 import type { Category, Expense } from "@/types/finance";
-import { formatMoney } from "@/types/finance";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AppButton, AppCard } from "@/components/app/ui";
@@ -23,6 +23,7 @@ export function ExpenseList({
   categories: Category[];
 }) {
   const router = useRouter();
+  const { formatMoney } = useCurrency();
   const [pendingId, setPendingId] = useState<string | null>(null);
 
   async function handleCategoryChange(expenseId: string, categoryId: string) {
@@ -91,7 +92,7 @@ export function ExpenseList({
                 <AppButton
                   type="button"
                   variant="secondary"
-                  disabled={pendingId === expense.id}
+                  loading={pendingId === expense.id}
                   onClick={() => handleDelete(expense.id)}
                 >
                   Delete

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import {
   createMcpApiKey,
   listMcpApiKeys,
@@ -27,7 +27,8 @@ export function McpApiKeysPanel({
   const [name, setName] = useState("");
   const [newSecret, setNewSecret] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
+  const [creating, setCreating] = useState(false);
+  const [revokingId, setRevokingId] = useState<string | null>(null);
 
   async function refreshKeys() {
     const result = await listMcpApiKeys();
@@ -36,34 +37,38 @@ export function McpApiKeysPanel({
     }
   }
 
-  function handleCreate(event: React.FormEvent) {
+  async function handleCreate(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setNewSecret(null);
+    setCreating(true);
 
-    startTransition(async () => {
-      const result = await createMcpApiKey({ name });
-      if (!result.success) {
-        setError(result.error);
-        return;
-      }
+    const result = await createMcpApiKey({ name });
+    if (!result.success) {
+      setError(result.error);
+      setCreating(false);
+      return;
+    }
 
-      setNewSecret(result.data.secret);
-      setName("");
-      await refreshKeys();
-    });
+    setNewSecret(result.data.secret);
+    setName("");
+    await refreshKeys();
+    setCreating(false);
   }
 
-  function handleRevoke(keyId: string) {
+  async function handleRevoke(keyId: string) {
     setError(null);
-    startTransition(async () => {
-      const result = await revokeMcpApiKey(keyId);
-      if (!result.success) {
-        setError(result.error);
-        return;
-      }
-      await refreshKeys();
-    });
+    setRevokingId(keyId);
+
+    const result = await revokeMcpApiKey(keyId);
+    if (!result.success) {
+      setError(result.error);
+      setRevokingId(null);
+      return;
+    }
+
+    setRevokingId(null);
+    await refreshKeys();
   }
 
   return (
@@ -71,6 +76,13 @@ export function McpApiKeysPanel({
       title="API keys for MCP"
       description="Generate personal keys to connect Finance Buddy from Cursor, Claude Desktop, or other MCP clients."
     >
+      <p className="mb-4 text-sm text-muted-foreground">
+        Setup instructions and tool reference:{" "}
+        <a href="/docs" className="text-accent-green hover:underline">
+          MCP documentation
+        </a>
+        .
+      </p>
       <form onSubmit={handleCreate} className="space-y-3">
         <div className="space-y-2">
           <Label htmlFor="mcp-key-name">Key name</Label>
@@ -82,7 +94,7 @@ export function McpApiKeysPanel({
             maxLength={50}
           />
         </div>
-        <AppButton type="submit" disabled={pending || !name.trim()}>
+        <AppButton type="submit" loading={creating} disabled={!name.trim()}>
           Create API key
         </AppButton>
       </form>
@@ -122,8 +134,9 @@ export function McpApiKeysPanel({
               <AppButton
                 type="button"
                 variant="secondary"
-                disabled={pending}
-                onClick={() => handleRevoke(key.id)}
+                loading={revokingId === key.id}
+                disabled={revokingId !== null || creating}
+                onClick={() => void handleRevoke(key.id)}
               >
                 Revoke
               </AppButton>

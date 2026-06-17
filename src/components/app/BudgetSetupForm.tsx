@@ -10,6 +10,7 @@ import {
   AppError,
   AppInput,
 } from "@/components/app/ui";
+import { useCurrency } from "@/components/app/CurrencyProvider";
 
 type CategoryRow = { name: string; allocated: string };
 
@@ -23,6 +24,7 @@ export function BudgetSetupForm({
   initialCategories?: CategoryRow[];
 }) {
   const router = useRouter();
+  const { symbol } = useCurrency();
   const [income, setIncome] = useState(initialIncome ?? "800");
   const [threshold, setThreshold] = useState(String(initialThreshold ?? 80));
   const [categories, setCategories] = useState<CategoryRow[]>(
@@ -67,7 +69,7 @@ export function BudgetSetupForm({
       <AppCard title="Monthly income">
         <div className="grid gap-4 sm:grid-cols-2">
           <AppInput
-            label="Allowance / income (£)"
+            label={`Allowance / income (${symbol})`}
             name="income"
             type="text"
             inputMode="decimal"
@@ -100,7 +102,7 @@ export function BudgetSetupForm({
                 onChange={(e) => updateCategory(index, "name", e.target.value)}
               />
               <AppInput
-                label="Limit (£)"
+                label={`Limit (${symbol})`}
                 value={category.allocated}
                 inputMode="decimal"
                 onChange={(e) =>
@@ -114,8 +116,8 @@ export function BudgetSetupForm({
 
       {error ? <AppError message={error} /> : null}
 
-      <AppButton type="submit" disabled={pending}>
-        {pending ? "Saving..." : "Save monthly budget"}
+      <AppButton type="submit" loading={pending}>
+        Save monthly budget
       </AppButton>
     </form>
   );

@@ -17,10 +17,13 @@ export type FriendRequest = {
   recipient?: Friend;
 };
 
+import type { CurrencyCode } from "@/lib/finance/currency";
+
 export type SharedExpense = {
   id: string;
   description: string;
   total_cents: number;
+  currency_code: CurrencyCode;
   expense_date: string;
   created_by_user_id: string;
   created_at: string;
@@ -45,6 +48,7 @@ export type Settlement = {
   from_user_id: string;
   to_user_id: string;
   amount_cents: number;
+  currency_code: CurrencyCode;
   note: string;
   created_by_user_id: string;
   created_at: string;
@@ -64,6 +68,8 @@ export type FriendActivityItem =
       total_cents: number;
       your_share_cents: number;
       your_paid_cents: number;
+      original_currency_code?: CurrencyCode;
+      original_total_cents?: number;
     }
   | {
       type: "settlement";
@@ -72,4 +78,6 @@ export type FriendActivityItem =
       amount_cents: number;
       direction: "you_paid" | "you_received";
       note: string;
+      original_currency_code?: CurrencyCode;
+      original_amount_cents?: number;
     };

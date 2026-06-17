@@ -1,5 +1,6 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -157,9 +158,12 @@ export function AppButton({
   children,
   variant = "primary",
   className,
+  loading = false,
+  disabled,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: "primary" | "secondary" | "danger";
+  loading?: boolean;
 }) {
   const mappedVariant =
     variant === "danger"
@@ -172,8 +176,13 @@ export function AppButton({
     <Button
       variant={mappedVariant}
       className={cn("uppercase tracking-[0.08em]", className)}
+      disabled={disabled || loading}
+      aria-busy={loading || undefined}
       {...props}
     >
+      {loading ? (
+        <Loader2 className="size-4 animate-spin" aria-hidden />
+      ) : null}
       {children}
     </Button>
   );

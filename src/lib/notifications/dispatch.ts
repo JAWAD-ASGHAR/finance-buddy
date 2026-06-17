@@ -7,6 +7,8 @@ import {
   sharedPageUrl,
 } from "@/lib/email/templates";
 import { notifyUser } from "@/lib/services/notifications";
+import { getUserCurrency } from "@/lib/auth/user-preferences";
+import { convertCents, type CurrencyCode } from "@/lib/finance/currency";
 import { formatMoney } from "@/types/finance";
 
 export async function notifyFriendRequestReceived({
@@ -66,6 +68,7 @@ export async function notifySharedExpenseCreated({
   description,
   totalCents,
   shareCents,
+  currencyCode,
 }: {
   participantId: string;
   sharedExpenseId: string;
@@ -73,9 +76,13 @@ export async function notifySharedExpenseCreated({
   description: string;
   totalCents: number;
   shareCents: number;
+  currencyCode: CurrencyCode;
 }) {
-  const amount = formatMoney(totalCents);
-  const yourShare = formatMoney(shareCents);
+  const recipientCurrency = await getUserCurrency(participantId);
+  const displayTotal = convertCents(totalCents, currencyCode, recipientCurrency);
+  const displayShare = convertCents(shareCents, currencyCode, recipientCurrency);
+  const amount = formatMoney(displayTotal, recipientCurrency);
+  const yourShare = formatMoney(displayShare, recipientCurrency);
   const sharedUrl = sharedPageUrl();
 
   await notifyUser({
@@ -103,6 +110,7 @@ export async function notifySettlementRecorded({
   settlementId,
   payerName,
   amountCents,
+  currencyCode,
   note,
   friendId,
 }: {
@@ -110,10 +118,13 @@ export async function notifySettlementRecorded({
   settlementId: string;
   payerName: string;
   amountCents: number;
+  currencyCode: CurrencyCode;
   note: string;
   friendId: string;
 }) {
-  const amount = formatMoney(amountCents);
+  const recipientCurrency = await getUserCurrency(recipientId);
+  const displayAmount = convertCents(amountCents, currencyCode, recipientCurrency);
+  const amount = formatMoney(displayAmount, recipientCurrency);
   const sharedUrl = sharedPageUrl();
 
   await notifyUser({

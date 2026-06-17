@@ -77,10 +77,10 @@ export function VerifyEmailPanel({
           <AppButton
             type="button"
             onClick={handleResend}
-            disabled={pending}
+            loading={pending}
             className="w-full"
           >
-            {pending ? "Sending..." : "Resend confirmation email"}
+            Resend confirmation email
           </AppButton>
           {!verificationRequired ? (
             <Link

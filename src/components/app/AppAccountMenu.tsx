@@ -4,10 +4,12 @@ import { signOut } from "@/actions/auth";
 import type { AppSession } from "@/types/app-session";
 import { getAccountInitials } from "@/lib/auth/email";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export function AppAccountMenu({ session }: { session: AppSession }) {
   const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const initials = getAccountInitials(session.displayName, session.email);
 
@@ -75,12 +77,28 @@ export function AppAccountMenu({ session }: { session: AppSession }) {
           </div>
 
           <div className="p-1">
-            <form action={signOut}>
+            <form
+              action={async () => {
+                setSigningOut(true);
+                try {
+                  await signOut();
+                } catch {
+                  // redirect throws — expected on success
+                } finally {
+                  setSigningOut(false);
+                }
+              }}
+            >
               <button
                 type="submit"
                 role="menuitem"
-                className="w-full rounded-md px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10"
+                disabled={signingOut}
+                aria-busy={signingOut || undefined}
+                className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
               >
+                {signingOut ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : null}
                 Sign out
               </button>
             </form>

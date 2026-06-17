@@ -1,5 +1,6 @@
-import { PageSpinner } from "@/components/loading/PageSpinner";
+import { RouteSkeleton } from "@/components/loading/RouteSkeleton";
+import { SKELETON_NAMES } from "@/components/loading/skeleton-names";
 
-export default function SignupLoading() {
-  return <PageSpinner label="Loading sign up" />;
+export default function Loading() {
+  return <RouteSkeleton name={SKELETON_NAMES.authForm} />;
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSharedExpense } from "@/actions/shared-expenses";
+import { useCurrency } from "@/components/app/CurrencyProvider";
 import {
   AppButton,
   AppCard,
@@ -25,6 +26,7 @@ export function SharedExpenseForm({
   hasBudget: boolean;
 }) {
   const router = useRouter();
+  const { amountLabel } = useCurrency();
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [expenseDate, setExpenseDate] = useState(
@@ -101,7 +103,7 @@ export function SharedExpenseForm({
           required
         />
         <AppInput
-          label="Amount (£)"
+          label={amountLabel}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="24.50"
@@ -194,8 +196,12 @@ export function SharedExpenseForm({
 
         {error ? <AppError message={error} /> : null}
 
-        <AppButton type="submit" disabled={pending || selectedFriendIds.length === 0}>
-          {pending ? "Saving..." : "Add shared expense"}
+        <AppButton
+          type="submit"
+          loading={pending}
+          disabled={selectedFriendIds.length === 0}
+        >
+          Add shared expense
         </AppButton>
       </form>
     </AppCard>

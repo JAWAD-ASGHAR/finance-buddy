@@ -63,12 +63,8 @@ export function AuthForm({
           placeholder="At least 6 characters"
         />
         {error ? <AppError message={error} /> : null}
-        <AppButton type="submit" disabled={pending} className="w-full">
-          {pending
-            ? "Please wait..."
-            : mode === "login"
-              ? "Sign in"
-              : "Create account"}
+        <AppButton type="submit" loading={pending} className="w-full">
+          {mode === "login" ? "Sign in" : "Create account"}
         </AppButton>
       </form>
       <p className="mt-4 text-center text-sm text-muted-foreground">

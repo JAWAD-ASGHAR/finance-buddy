@@ -55,8 +55,8 @@ export function FriendSearchForm() {
         {success ? (
           <p className="text-sm text-accent-green">{success}</p>
         ) : null}
-        <AppButton type="submit" disabled={pending}>
-          {pending ? "Sending..." : "Send request"}
+        <AppButton type="submit" loading={pending}>
+          Send request
         </AppButton>
       </form>
     </AppCard>
@@ -73,19 +73,23 @@ export function PendingRequestsPanel({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [pendingAccept, setPendingAccept] = useState<boolean | null>(null);
 
   async function handleRespond(requestId: string, accept: boolean) {
     setPendingId(requestId);
+    setPendingAccept(accept);
     setError(null);
 
     const result = await respondToFriendRequest(requestId, accept);
     if (!result.success) {
       setError(result.error);
       setPendingId(null);
+      setPendingAccept(null);
       return;
     }
 
     setPendingId(null);
+    setPendingAccept(null);
     router.refresh();
   }
 
@@ -114,6 +118,7 @@ export function PendingRequestsPanel({
                   <AppButton
                     type="button"
                     variant="secondary"
+                    loading={pendingId === request.id && pendingAccept === false}
                     disabled={pendingId === request.id}
                     onClick={() => handleRespond(request.id, false)}
                   >
@@ -121,6 +126,7 @@ export function PendingRequestsPanel({
                   </AppButton>
                   <AppButton
                     type="button"
+                    loading={pendingId === request.id && pendingAccept === true}
                     disabled={pendingId === request.id}
                     onClick={() => handleRespond(request.id, true)}
                   >

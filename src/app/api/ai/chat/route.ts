@@ -51,6 +51,10 @@ export async function POST(req: Request) {
   }
 
   const messages = body.messages ?? [];
+  if (messages.length === 0) {
+    return new Response("Messages are required", { status: 400 });
+  }
+
   const conversationContext =
     typeof body.conversationContext === "string"
       ? body.conversationContext

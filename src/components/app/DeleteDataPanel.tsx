@@ -44,10 +44,10 @@ export function DeleteDataPanel() {
       <AppButton
         type="button"
         variant="danger"
-        disabled={pending}
+        loading={pending}
         onClick={handleDelete}
       >
-        {pending ? "Deleting..." : "Delete all my data"}
+        Delete all my data
       </AppButton>
     </AppCard>
   );

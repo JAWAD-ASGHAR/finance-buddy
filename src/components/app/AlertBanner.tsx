@@ -8,6 +8,7 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -50,9 +51,13 @@ export function AlertBanner({ alerts }: { alerts: FinanceAlert[] }) {
                 variant="ghost"
                 size="sm"
                 disabled={dismissing === item.id}
+                aria-busy={dismissing === item.id || undefined}
                 onClick={() => dismiss(item.id)}
                 className="shrink-0 text-amber-700"
               >
+                {dismissing === item.id ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : null}
                 Dismiss
               </Button>
             </AlertDescription>

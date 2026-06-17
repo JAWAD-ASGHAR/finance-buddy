@@ -10,6 +10,7 @@ import { suggestCategory } from "@/lib/finance/categorize";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { CategorySuggestion } from "@/components/app/CategorySuggestion";
+import { useCurrency } from "@/components/app/CurrencyProvider";
 import {
   AppButton,
   AppCard,
@@ -22,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function ExpenseForm({ categories }: { categories: Category[] }) {
   const router = useRouter();
+  const { amountLabel } = useCurrency();
   const [tab, setTab] = useState("manual");
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -114,7 +116,7 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
           <form onSubmit={handleManualSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <AppInput
-                label="Amount (£)"
+                label={amountLabel}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 inputMode="decimal"
@@ -149,8 +151,8 @@ export function ExpenseForm({ categories }: { categories: Category[] }) {
               ))}
             </AppSelect>
             {error ? <AppError message={error} /> : null}
-            <AppButton type="submit" disabled={pending}>
-              {pending ? "Saving..." : "Add expense"}
+            <AppButton type="submit" loading={pending}>
+              Add expense
             </AppButton>
           </form>
         </AppCard>
@@ -240,10 +242,11 @@ function TextEntryForm({
       {error ? <AppError message={error} /> : null}
       <AppButton
         type="button"
-        disabled={pending || !rawText.trim()}
+        loading={pending}
+        disabled={!rawText.trim()}
         onClick={onSubmit}
       >
-        {pending ? "Parsing..." : "Add from text"}
+        Add from text
       </AppButton>
     </div>
   );

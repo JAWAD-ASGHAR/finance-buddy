@@ -7,6 +7,7 @@ import {
   sharedExpenseSplits,
   sharedExpenses,
 } from "@/db/schema";
+import { getUserCurrency } from "@/lib/auth/user-preferences";
 import {
   areFriends,
   getProfile,
@@ -114,6 +115,7 @@ export async function createSharedExpenseForUser(
   }
 
   const db = getDb();
+  const creatorCurrency = await getUserCurrency(userId);
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -122,6 +124,7 @@ export async function createSharedExpenseForUser(
         .values({
           description: parsed.data.description,
           totalCents,
+          currencyCode: creatorCurrency,
           expenseDate: parsed.data.expenseDate,
           createdByUserId: userId,
         })
@@ -194,6 +197,7 @@ export async function createSharedExpenseForUser(
         description: parsed.data.description,
         totalCents,
         shareCents: split.shareCents,
+        currencyCode: creatorCurrency,
       });
     }
 
