@@ -35,7 +35,7 @@ function AppShellInner({
       <div
         className={cn(
           "flex min-w-0 flex-1 flex-col pt-[env(safe-area-inset-top,0px)] transition-[margin] duration-300 ease-out motion-reduce:transition-none lg:ml-60",
-          aiOpen && "max-sm:overflow-hidden sm:mr-[min(420px,100vw)]",
+          aiOpen ? "max-sm:overflow-hidden sm:mr-[420px]" : "sm:mr-0",
         )}
       >
         <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 sm:gap-4 sm:px-6">

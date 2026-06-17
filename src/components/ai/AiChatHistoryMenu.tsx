@@ -4,6 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { History, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { StoredAiChatSession } from "@/lib/ai/chat-history";
+import { AppFlyoutPanel } from "@/components/app/AppFlyoutPanel";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -134,12 +135,11 @@ export function AiChatHistoryMenu({
         <History className="size-4" />
       </Button>
 
-      {open ? (
-        <div
-          role="menu"
-          aria-label="Chat history"
-          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(18rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-border bg-background shadow-lg sm:w-72"
-        >
+      <AppFlyoutPanel
+        open={open}
+        className="w-[min(18rem,calc(100vw-2rem))] sm:w-72"
+      >
+        <div role="menu" aria-label="Chat history">
           <div className="border-b border-border p-2">
             <button
               type="button"
@@ -204,7 +204,7 @@ export function AiChatHistoryMenu({
             )}
           </div>
         </div>
-      ) : null}
+      </AppFlyoutPanel>
     </div>
   );
 }

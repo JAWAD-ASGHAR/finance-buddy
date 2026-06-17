@@ -14,6 +14,7 @@ import {
   markNotificationRead,
 } from "@/actions/notifications";
 import { AppButton } from "@/components/app/ui";
+import { AppFlyoutPanel } from "@/components/app/AppFlyoutPanel";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { AppNotification, NotificationType } from "@/types/notifications";
@@ -191,11 +192,11 @@ export function NotificationBell() {
         ) : null}
       </Button>
 
-      {open ? (
-        <div
-          role="menu"
-          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-border bg-background shadow-lg"
-        >
+      <AppFlyoutPanel
+        open={open}
+        className="w-[min(22rem,calc(100vw-2rem))]"
+      >
+        <div role="menu">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <p className="text-sm font-semibold text-foreground">Notifications</p>
             {unreadCount > 0 ? (
@@ -314,7 +315,7 @@ export function NotificationBell() {
             </ul>
           </div>
         </div>
-      ) : null}
+      </AppFlyoutPanel>
     </div>
   );
 }

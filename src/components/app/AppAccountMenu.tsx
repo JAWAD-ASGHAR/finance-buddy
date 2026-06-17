@@ -3,6 +3,7 @@
 import { signOut } from "@/actions/auth";
 import type { AppSession } from "@/types/app-session";
 import { getAccountInitials } from "@/lib/auth/email";
+import { AppFlyoutPanel } from "@/components/app/AppFlyoutPanel";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -62,11 +63,11 @@ export function AppAccountMenu({ session }: { session: AppSession }) {
         </span>
       </button>
 
-      {open ? (
-        <div
-          role="menu"
-          className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(14rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-border bg-background shadow-lg"
-        >
+      <AppFlyoutPanel
+        open={open}
+        className="w-[min(14rem,calc(100vw-2rem))]"
+      >
+        <div role="menu">
           <div className="border-b border-border px-3 py-3 sm:hidden">
             <p className="truncate text-sm font-medium text-foreground">
               {session.displayName}
@@ -104,7 +105,7 @@ export function AppAccountMenu({ session }: { session: AppSession }) {
             </form>
           </div>
         </div>
-      ) : null}
+      </AppFlyoutPanel>
     </div>
   );
 }
