@@ -1,5 +1,7 @@
+"use client";
+
 import type { MonthlyReportSummary } from "@/types/finance";
-import { formatMoney } from "@/types/finance";
+import { useCurrency } from "@/components/app/CurrencyProvider";
 import { ForecastCard } from "@/components/app/ForecastCard";
 import { AppCard } from "@/components/app/ui";
 import { CategorySpendChart } from "@/components/charts/CategorySpendChart";
@@ -11,6 +13,7 @@ export function MonthlyReportView({
 }: {
   summary: MonthlyReportSummary;
 }) {
+  const { formatMoney } = useCurrency();
   const categoryChartData = buildCategoryChartData(
     summary.categoryBreakdown.map((category) => ({
       categoryId: category.name,

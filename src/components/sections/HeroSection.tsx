@@ -17,6 +17,10 @@ export function HeroSection() {
           className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/15 to-black/25"
           aria-hidden
         />
+        <div
+          className="marketing-hero-glow pointer-events-none absolute inset-0"
+          aria-hidden
+        />
       </div>
 
       <div className="container-main relative z-10 flex h-full flex-col justify-end pb-28 pt-24 sm:pb-32">

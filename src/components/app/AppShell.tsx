@@ -7,6 +7,7 @@ import {
 } from "@/components/app/AppSidebar";
 import { AppAccountMenu } from "@/components/app/AppAccountMenu";
 import { NotificationBell } from "@/components/app/NotificationBell";
+import { CurrencyProvider } from "@/components/app/CurrencyProvider";
 import { AiAssistantProvider, useAiAssistant } from "@/components/ai/AiAssistantProvider";
 import { AiDrawer } from "@/components/ai/AiDrawer";
 import { AiHeaderButton } from "@/components/ai/AiHeaderButton";
@@ -66,8 +67,10 @@ export function AppShell({
   session: AppSession;
 }) {
   return (
-    <AiAssistantProvider>
-      <AppShellInner session={session}>{children}</AppShellInner>
-    </AiAssistantProvider>
+    <CurrencyProvider currency={session.currencyCode}>
+      <AiAssistantProvider>
+        <AppShellInner session={session}>{children}</AppShellInner>
+      </AiAssistantProvider>
+    </CurrencyProvider>
   );
 }

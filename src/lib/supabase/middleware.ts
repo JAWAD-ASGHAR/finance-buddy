@@ -54,6 +54,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
+  const isOnboardingRoute = pathname === "/onboarding";
   const isAppRoute =
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/") ||
@@ -61,7 +62,8 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/expenses") ||
     pathname.startsWith("/shared") ||
     pathname.startsWith("/reports") ||
-    pathname.startsWith("/settings");
+    pathname.startsWith("/settings") ||
+    isOnboardingRoute;
   const isAuthRoute =
     pathname === "/login" ||
     pathname === "/signup" ||
@@ -90,6 +92,30 @@ export async function updateSession(request: NextRequest) {
       supabaseResponse,
       `${url.pathname}?${url.searchParams.toString()}`,
     );
+  }
+
+  if (user && isAppRoute && !isOnboardingRoute && pathname !== "/verify-email") {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_completed_at")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile && !profile.onboarding_completed_at) {
+      return redirectWithSession(request, supabaseResponse, "/onboarding");
+    }
+  }
+
+  if (user && isOnboardingRoute) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarding_completed_at")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile?.onboarding_completed_at) {
+      return redirectWithSession(request, supabaseResponse, "/dashboard");
+    }
   }
 
   return supabaseResponse;

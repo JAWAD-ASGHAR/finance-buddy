@@ -44,7 +44,7 @@ export function LegalDocument({
     <>
       <section className="page-hero relative -mt-[4.5rem] overflow-hidden bg-dark text-white">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_0%,rgba(74,127,212,0.18),transparent_55%)]"
+          className="marketing-hero-glow pointer-events-none absolute inset-0"
           aria-hidden
         />
         <div className="container-main relative z-10 pb-16 pt-[calc(4.5rem+7rem)] sm:pb-20 sm:pt-[calc(4.5rem+8rem)]">
@@ -150,7 +150,7 @@ export function LegalDocument({
               <Link
                 key={link.href}
                 href={link.href}
-                className="nav-link inline-flex h-11 items-center text-muted-foreground transition-colors hover:text-foreground"
+                className="nav-link inline-flex h-11 items-center text-muted-foreground transition-colors hover:text-accent-green"
               >
                 {link.label}
               </Link>

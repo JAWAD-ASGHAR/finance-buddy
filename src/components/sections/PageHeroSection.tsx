@@ -30,7 +30,7 @@ export function PageHeroSection({
       className={`page-hero relative -mt-[4.5rem] overflow-hidden bg-dark text-white ${tall ? "min-h-[min(88vh,46rem)]" : ""}`}
     >
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_0%,rgba(74,127,212,0.18),transparent_55%)]"
+        className="marketing-hero-glow pointer-events-none absolute inset-0"
         aria-hidden
       />
 

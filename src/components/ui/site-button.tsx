@@ -16,7 +16,7 @@ const variants = {
   primary: "bg-dark text-white hover:bg-dark-muted hover:-translate-y-0.5",
   outline:
     "bg-white/95 text-foreground border border-white/80 hover:bg-white hover:-translate-y-0.5 backdrop-blur-sm",
-  hero: "border border-white/50 bg-transparent text-white hover:bg-white/10 hover:text-white",
+  hero: "border border-white/50 bg-transparent text-white hover:border-accent-green hover:bg-accent-green/10 hover:text-accent-green",
   ghost: "text-foreground hover:text-accent-green",
 };
 

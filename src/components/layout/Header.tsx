@@ -52,10 +52,10 @@ function HeaderBar({
                 light
                   ? pathname === link.href
                     ? "text-white"
-                    : "text-white/75 hover:text-white"
+                    : "text-white/75 hover:text-accent-green"
                   : pathname === link.href
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "text-accent-green"
+                    : "text-muted-foreground hover:text-accent-green",
               )}
             >
               {link.label}
@@ -138,10 +138,10 @@ function MobileMenu({ light = false, onClose, pathname }: MobileMenuProps) {
               light
                 ? pathname === link.href
                   ? "bg-white/10 text-white"
-                  : "text-white/75 hover:bg-white/5 hover:text-white"
+                  : "text-white/75 hover:bg-white/5 hover:text-accent-green"
                 : pathname === link.href
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                  ? "bg-muted text-accent-green"
+                  : "text-muted-foreground hover:bg-muted/70 hover:text-accent-green",
             )}
           >
             {link.label}
@@ -162,8 +162,8 @@ function MobileMenu({ light = false, onClose, pathname }: MobileMenuProps) {
           className={cn(
             "mt-3 block text-center text-xs font-semibold uppercase tracking-[0.12em] transition-colors",
             light
-              ? "text-white/75 hover:text-white"
-              : "text-muted-foreground hover:text-foreground",
+              ? "text-white/75 hover:text-accent-green"
+              : "text-muted-foreground hover:text-accent-green",
           )}
         >
           Contact support

@@ -10,7 +10,8 @@ import {
 } from "recharts";
 import type { DailySpendPoint } from "@/lib/finance/chart-data";
 import { toChartCurrency } from "@/lib/finance/chart-data";
-import { formatMoney } from "@/types/finance";
+import { useCurrency } from "@/components/app/CurrencyProvider";
+import { compactCurrencyFormatter } from "@/lib/finance/currency";
 import {
   ChartContainer,
   ChartTooltip,
@@ -24,6 +25,8 @@ type SpendingTrendChartProps = {
 };
 
 export function SpendingTrendChart({ data, className }: SpendingTrendChartProps) {
+  const { formatMoney, currency } = useCurrency();
+  const compactFormat = compactCurrencyFormatter(currency);
   const chartData = data.map((point) => ({
     ...point,
     cumulative: toChartCurrency(point.cumulativeCents),
@@ -69,14 +72,7 @@ export function SpendingTrendChart({ data, className }: SpendingTrendChartProps)
           axisLine={false}
           tickMargin={8}
           width={56}
-          tickFormatter={(value) =>
-            new Intl.NumberFormat("en-GB", {
-              style: "currency",
-              currency: "GBP",
-              notation: "compact",
-              maximumFractionDigits: 1,
-            }).format(Number(value))
-          }
+          tickFormatter={(value) => compactFormat(Number(value))}
         />
         <ChartTooltip
           content={

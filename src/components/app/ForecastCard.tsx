@@ -1,8 +1,11 @@
+"use client";
+
+import { useCurrency } from "@/components/app/CurrencyProvider";
 import type { ForecastResult } from "@/types/finance";
-import { formatMoney } from "@/types/finance";
 import { AppCard } from "@/components/app/ui";
 
 export function ForecastCard({ forecast }: { forecast: ForecastResult }) {
+  const { formatMoney } = useCurrency();
   return (
     <AppCard title="Month-end forecast">
       <div className="grid gap-4 sm:grid-cols-2">
