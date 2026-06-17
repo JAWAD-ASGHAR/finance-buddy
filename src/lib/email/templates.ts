@@ -118,22 +118,35 @@ export function sharedExpenseEmailHtml({
 
 export function settlementEmailHtml({
   payerName,
+  recorderName,
   amount,
   note,
   sharedUrl,
+  direction = "pay_friend",
 }: {
   payerName: string;
+  recorderName?: string;
   amount: string;
   note: string;
   sharedUrl: string;
+  direction?: "pay_friend" | "record_friend_payment";
 }): string {
+  const heading =
+    direction === "pay_friend"
+      ? `${payerName} sent you a payment`
+      : `${recorderName ?? payerName} recorded your payment`;
+  const detail =
+    direction === "pay_friend"
+      ? `${payerName} recorded sending you <strong>${amount}</strong>.`
+      : `${recorderName ?? payerName} recorded that you paid them <strong>${amount}</strong>.`;
+
   return layout(`
     <p style="margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#71717a;">Settlement recorded</p>
-    <h1 style="margin:0 0 16px;font-size:24px;line-height:1.2;">${payerName} recorded a payment</h1>
+    <h1 style="margin:0 0 16px;font-size:24px;line-height:1.2;">${heading}</h1>
     <p style="margin:0;font-size:15px;line-height:1.6;color:#52525b;">
-      Amount: <strong>${amount}</strong>${note ? `<br />Note: ${note}` : ""}
+      ${detail}${note ? `<br />Note: ${note}` : ""}
     </p>
-    ${button(sharedUrl, "View balances")}
+    ${button(sharedUrl, "View activity")}
   `);
 }
 
