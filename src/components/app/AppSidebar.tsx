@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { BrandLogo } from "@/components/ui/BrandLogo";
+import { AppOverlay } from "@/components/app/AppOverlay";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -134,18 +135,16 @@ export function AppSidebar({
 
   return (
     <>
-      {mobileOpen ? (
-        <button
-          type="button"
-          aria-label="Close navigation"
-          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
-          onClick={() => onMobileOpenChange(false)}
-        />
-      ) : null}
+      <AppOverlay
+        open={mobileOpen}
+        onClose={() => onMobileOpenChange(false)}
+        aria-label="Close navigation"
+        className="lg:hidden"
+      />
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-sidebar-border bg-sidebar pt-[env(safe-area-inset-top,0px)] transition-transform duration-200 lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-sidebar-border bg-sidebar pt-[env(safe-area-inset-top,0px)] transition-transform duration-300 ease-out motion-reduce:transition-none lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { AiChatPanel } from "@/components/ai/AiChatPanel";
 import { DRAWER_WIDTH, useAiAssistant } from "@/components/ai/AiAssistantProvider";
+import { AppOverlay } from "@/components/app/AppOverlay";
 import { cn } from "@/lib/utils";
 
 export function AiDrawer({ userId }: { userId: string }) {
@@ -24,14 +25,12 @@ export function AiDrawer({ userId }: { userId: string }) {
 
   return (
     <>
-      {open ? (
-        <button
-          type="button"
-          aria-label="Close assistant"
-          className="fixed inset-0 z-30 bg-black/40 sm:hidden"
-          onClick={() => setOpen(false)}
-        />
-      ) : null}
+      <AppOverlay
+        open={open}
+        onClose={() => setOpen(false)}
+        aria-label="Close assistant"
+        className="z-30 sm:hidden"
+      />
 
       <aside
         aria-hidden={!open}
