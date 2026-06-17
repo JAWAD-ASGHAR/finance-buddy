@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createSharedExpense } from "@/actions/shared-expenses";
@@ -11,7 +11,9 @@ import {
   AppInput,
   AppSelect,
 } from "@/components/app/ui";
+import { computeEqualSplits } from "@/lib/finance/shared-splits";
 import type { Category } from "@/types/finance";
+import { parseMoneyToCents } from "@/types/finance";
 import type { Friend, SplitMode } from "@/types/shared";
 
 export function SharedExpenseForm({
@@ -26,7 +28,7 @@ export function SharedExpenseForm({
   hasBudget: boolean;
 }) {
   const router = useRouter();
-  const { amountLabel } = useCurrency();
+  const { amountLabel, formatMoney } = useCurrency();
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [expenseDate, setExpenseDate] = useState(
@@ -49,12 +51,43 @@ export function SharedExpenseForm({
     })),
   ];
 
+  const activeParticipants = participants.filter(
+    (participant) =>
+      participant.id === currentUserId
+      || selectedFriendIds.includes(participant.id),
+  );
+
+  const participantCount = activeParticipants.length;
+  const amountCents = parseMoneyToCents(amount);
+
+  const splitPreview = useMemo(() => {
+    if (!amountCents || selectedFriendIds.length === 0) {
+      return null;
+    }
+
+    try {
+      return computeEqualSplits({
+        totalCents: amountCents,
+        participantIds: [currentUserId, ...selectedFriendIds],
+        payerId,
+      });
+    } catch {
+      return null;
+    }
+  }, [amountCents, currentUserId, payerId, selectedFriendIds]);
+
   function toggleFriend(friendId: string) {
-    setSelectedFriendIds((current) =>
-      current.includes(friendId)
+    setSelectedFriendIds((current) => {
+      const next = current.includes(friendId)
         ? current.filter((id) => id !== friendId)
-        : [...current, friendId],
-    );
+        : [...current, friendId];
+
+      if (payerId === friendId && !next.includes(friendId)) {
+        setPayerId(currentUserId);
+      }
+
+      return next;
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -118,8 +151,14 @@ export function SharedExpenseForm({
           required
         />
 
-        <div className="space-y-2">
-          <p className="text-sm font-medium">Split with</p>
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-medium">Split with</p>
+            <p className="text-xs text-muted-foreground">
+              Select one or more friends. Group bills can include as many people
+              as you need.
+            </p>
+          </div>
           <div className="flex flex-wrap gap-2">
             {friends.map((friend) => {
               const selected = selectedFriendIds.includes(friend.id);
@@ -139,6 +178,13 @@ export function SharedExpenseForm({
               );
             })}
           </div>
+          {selectedFriendIds.length > 0 ? (
+            <p className="text-sm text-muted-foreground">
+              {selectedFriendIds.length}{" "}
+              {selectedFriendIds.length === 1 ? "friend" : "friends"} selected ·{" "}
+              {participantCount} people total
+            </p>
+          ) : null}
         </div>
 
         <AppSelect
@@ -155,17 +201,39 @@ export function SharedExpenseForm({
           value={payerId}
           onChange={(e) => setPayerId(e.target.value)}
         >
-          {participants
-            .filter(
-              (p) =>
-                p.id === currentUserId || selectedFriendIds.includes(p.id),
-            )
-            .map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.label}
-              </option>
-            ))}
+          {activeParticipants.map((participant) => (
+            <option key={participant.id} value={participant.id}>
+              {participant.label}
+            </option>
+          ))}
         </AppSelect>
+
+        {splitPreview ? (
+          <div className="rounded-lg border border-border/80 bg-muted/30 p-4 text-sm">
+            <p className="font-medium">Split preview</p>
+            <p className="mt-1 text-muted-foreground">
+              {formatMoney(amountCents ?? 0)} split {participantCount} ways ·{" "}
+              {formatMoney(splitPreview[0]?.shareCents ?? 0)} each
+            </p>
+            <ul className="mt-3 space-y-1 text-muted-foreground">
+              {splitPreview.map((split) => {
+                const participant = activeParticipants.find(
+                  (item) => item.id === split.userId,
+                );
+
+                return (
+                  <li key={split.userId}>
+                    {participant?.label ?? "Participant"}: share{" "}
+                    {formatMoney(split.shareCents)}
+                    {split.paidCents > 0
+                      ? ` · paid ${formatMoney(split.paidCents)}`
+                      : null}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
 
         {hasBudget ? (
           <div className="space-y-3 rounded-lg border border-border p-4">

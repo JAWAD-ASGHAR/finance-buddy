@@ -12,6 +12,7 @@ export function revalidateExpensePaths() {
 }
 
 export function revalidateSharedPaths(friendId?: string) {
+  revalidatePath("/dashboard");
   revalidatePath("/shared");
   revalidatePath("/friends");
   revalidatePath("/profile");

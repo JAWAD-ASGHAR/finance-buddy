@@ -1,13 +1,36 @@
-import { format, parseISO, startOfMonth } from "date-fns";
+import { format, parseISO, startOfMonth, startOfWeek } from "date-fns";
 import { getCurrentBudgetPeriod } from "@/types/finance";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
+export type ReportPeriodPreset = "weekly" | "monthly" | "custom";
+
 export function getDefaultReportDateRange(date = new Date()) {
+  return getMonthlyReportDateRange(date);
+}
+
+export function getWeeklyReportDateRange(date = new Date()) {
+  const endDate = format(date, "yyyy-MM-dd");
+  const startDate = format(startOfWeek(date, { weekStartsOn: 1 }), "yyyy-MM-dd");
+  return { startDate, endDate };
+}
+
+export function getMonthlyReportDateRange(date = new Date()) {
   const { year, month } = getCurrentBudgetPeriod(date);
   const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
   const endDate = format(date, "yyyy-MM-dd");
   return { startDate, endDate };
+}
+
+export function getReportPresetLabel(preset: ReportPeriodPreset): string {
+  switch (preset) {
+    case "weekly":
+      return "Weekly report";
+    case "monthly":
+      return "Monthly report";
+    default:
+      return "Custom report";
+  }
 }
 
 export function validateReportDateRange(

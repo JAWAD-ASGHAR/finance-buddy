@@ -23,7 +23,7 @@ export default async function NewSharedExpensePage() {
       </p>
       <AppPageHeader
         title="Add shared expense"
-        description="Split a bill equally or record who paid the full amount."
+        description="Split a bill equally between you and one or more friends."
       />
       <SharedExpenseForm
         friends={friends}

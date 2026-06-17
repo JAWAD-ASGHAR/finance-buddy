@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BudgetSetupForm } from "@/components/app/BudgetSetupForm";
+import { SharedBalanceSummary } from "@/components/shared/SharedBalanceSummary";
 import { getUnreadAlerts, requireAuthUser } from "@/lib/db/queries";
 import { syncAlertsForBudget } from "@/lib/finance/sync-alerts";
 import { AlertBanner } from "@/components/app/AlertBanner";
@@ -14,14 +15,20 @@ import {
   buildDailySpendingSeries,
 } from "@/lib/finance/chart-data";
 import { computeForecast } from "@/lib/finance/forecast";
+import { computeFriendBalanceTotals } from "@/lib/finance/friend-balances";
 import { getUserCurrency } from "@/lib/auth/user-preferences";
+import { getFriendBalancesForUser } from "@/lib/services/settlements";
 import { getCurrentBudget } from "@/lib/supabase/queries";
 import { formatMoney } from "@/types/finance";
 
 export default async function DashboardPage() {
   const user = await requireAuthUser();
   const currency = await getUserCurrency(user.id);
-  const { budget, categories, expenses } = await getCurrentBudget();
+  const [{ budget, categories, expenses }, friendBalances] = await Promise.all([
+    getCurrentBudget(),
+    getFriendBalancesForUser(user.id),
+  ]);
+  const friendBalanceTotals = computeFriendBalanceTotals(friendBalances);
 
   if (budget) {
     await syncAlertsForBudget(budget.id, user.id);
@@ -69,6 +76,12 @@ export default async function DashboardPage() {
 
       <div className="space-y-6">
         <AlertBanner alerts={alerts} />
+
+        <SharedBalanceSummary
+          totals={friendBalanceTotals}
+          currency={currency}
+          compact
+        />
 
         <div className="grid gap-4 sm:grid-cols-3">
           <AppCard>

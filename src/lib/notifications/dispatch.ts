@@ -109,42 +109,63 @@ export async function notifySharedExpenseCreated({
 export async function notifySettlementRecorded({
   recipientId,
   settlementId,
-  payerName,
+  recorderName,
+  friendName,
   amountCents,
   currencyCode,
   note,
-  friendId,
+  counterpartyUserId,
+  direction,
 }: {
   recipientId: string;
   settlementId: string;
-  payerName: string;
+  recorderName: string;
+  friendName: string;
   amountCents: number;
   currencyCode: CurrencyCode;
   note: string;
-  friendId: string;
+  counterpartyUserId: string;
+  direction: "pay_friend" | "record_friend_payment";
 }) {
   await refreshExchangeRatesIfStale();
   const recipientCurrency = await getUserCurrency(recipientId);
   const displayAmount = convertCents(amountCents, currencyCode, recipientCurrency);
   const amount = formatMoney(displayAmount, recipientCurrency);
-  const sharedUrl = sharedPageUrl();
+  const activityUrl = `/friends/${counterpartyUserId}`;
+
+  const title =
+    direction === "pay_friend"
+      ? "Payment received"
+      : "Payment recorded";
+
+  const body =
+    direction === "pay_friend"
+      ? `${recorderName} sent you ${amount}${note ? ` (${note})` : ""}.`
+      : `${recorderName} recorded that you paid them ${amount}${note ? ` (${note})` : ""}.`;
+
+  const emailSubject =
+    direction === "pay_friend"
+      ? `${recorderName} sent you ${amount} on Finance Buddy`
+      : `${recorderName} recorded your payment on Finance Buddy`;
 
   await notifyUser({
     userId: recipientId,
     type: "settlement",
-    title: "Settlement recorded",
-    body: `${payerName} recorded a payment of ${amount}${note ? `: ${note}` : "."}`,
-    href: `/friends/${friendId}`,
-    metadata: { settlementId, payerName, amountCents, friendId },
+    title,
+    body,
+    href: activityUrl,
+    metadata: { settlementId, recorderName, amountCents, direction },
     email: {
-      subject: `${payerName} recorded a settlement on Finance Buddy`,
+      subject: emailSubject,
       html: settlementEmailHtml({
-        payerName,
+        payerName: direction === "pay_friend" ? recorderName : friendName,
+        recorderName,
         amount,
         note,
-        sharedUrl,
+        sharedUrl: activityUrl,
+        direction,
       }),
-      text: `${payerName} recorded a payment of ${amount}. Open ${sharedUrl}.`,
+      text: `${body} Open ${activityUrl}.`,
     },
   });
 }

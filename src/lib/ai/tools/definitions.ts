@@ -78,6 +78,7 @@ export const aiToolSchemas = {
     friendId: z.string().uuid(),
     amount: z.string(),
     note: z.string().optional(),
+    direction: z.enum(["pay_friend", "record_friend_payment"]).optional(),
   }),
   delete_expense: z.object({
     expenseId: z.string().uuid(),
