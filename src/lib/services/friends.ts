@@ -2,14 +2,15 @@ import { and, eq } from "drizzle-orm";
 import { mapFriendRequest } from "@/db/shared-mappers";
 import { getDb } from "@/db/index";
 import { friendRequests } from "@/db/schema";
-import { parseEmail } from "@/lib/auth/email";
+import { parseUsername, normalizeUsername } from "@/lib/auth/username";
 import {
   areFriends,
-  findUserIdByEmail,
+  findUserIdByUsername,
   getAcceptedFriends,
   getExistingFriendRequest,
   getPendingFriendRequests,
   getProfile,
+  searchUsersByUsernamePrefix,
 } from "@/lib/db/shared-queries";
 import {
   notifyFriendRequestAccepted,
@@ -21,18 +22,31 @@ import {
 import type { ActionResult } from "@/types/finance";
 import type { Friend, FriendRequest } from "@/types/shared";
 
-export async function searchUserByEmailForUser(
+export async function searchUsersByUsernameForUser(
   userId: string,
-  rawEmail: string,
+  rawQuery: string,
+): Promise<ActionResult<Friend[]>> {
+  const query = normalizeUsername(rawQuery);
+  if (query.length < 2) {
+    return { success: true, data: [] };
+  }
+
+  const results = await searchUsersByUsernamePrefix(userId, query);
+  return { success: true, data: results };
+}
+
+export async function searchUserByUsernameForUser(
+  userId: string,
+  rawUsername: string,
 ): Promise<ActionResult<Friend>> {
-  const parsed = parseEmail(rawEmail);
+  const parsed = parseUsername(rawUsername);
   if (!parsed.ok) {
     return { success: false, error: parsed.error };
   }
 
-  const targetId = await findUserIdByEmail(parsed.email);
+  const targetId = await findUserIdByUsername(parsed.username);
   if (!targetId) {
-    return { success: false, error: "No account found with that email" };
+    return { success: false, error: "No account found with that username" };
   }
 
   if (targetId === userId) {
@@ -107,7 +121,7 @@ export async function sendFriendRequestForUser(
     void notifyFriendRequestReceived({
       recipientId,
       requestId: row.id,
-      requesterName: requester.display_name ?? "Someone",
+      requesterName: requester.display_name ?? requester.username ?? "Someone",
     });
   }
 
@@ -157,7 +171,7 @@ export async function respondToFriendRequestForUser(
       void notifyFriendRequestAccepted({
         requesterId: updated.requesterId,
         requestId,
-        friendName: accepter.display_name ?? "Your friend",
+        friendName: accepter.display_name ?? accepter.username ?? "Your friend",
       });
     }
   }
@@ -187,11 +201,11 @@ export async function listPendingRequestsForUser(
   return { success: true, data: pending };
 }
 
-export async function sendFriendRequestByEmailForUser(
+export async function sendFriendRequestByUsernameForUser(
   userId: string,
-  rawEmail: string,
+  rawUsername: string,
 ): Promise<ActionResult<FriendRequest>> {
-  const search = await searchUserByEmailForUser(userId, rawEmail);
+  const search = await searchUserByUsernameForUser(userId, rawUsername);
   if (!search.success) {
     return { success: false, error: search.error };
   }

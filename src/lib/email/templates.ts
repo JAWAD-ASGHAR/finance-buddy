@@ -71,7 +71,7 @@ export function friendRequestEmailHtml({
 }
 
 export function friendsPageUrl(): string {
-  return new URL("/shared/friends", siteUrl).toString();
+  return new URL("/friends", siteUrl).toString();
 }
 
 export function sharedPageUrl(): string {

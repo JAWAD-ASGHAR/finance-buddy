@@ -1,7 +1,8 @@
+import { getSpendingReportForUser } from "@/lib/services/reports";
+import { getDefaultReportDateRange } from "@/lib/finance/report-date-range";
 import {
   getAllAlertsForUser,
   getCurrentBudgetForUser,
-  getLatestReportForUser,
   getUnreadAlertsForUser,
 } from "@/lib/db/queries";
 import { getUserCurrency } from "@/lib/auth/user-preferences";
@@ -123,12 +124,23 @@ export async function listAlertsForUser(userId: string) {
   }));
 }
 
-export async function getLatestReportSnapshotForUser(userId: string) {
-  const report = await getLatestReportForUser(userId);
-  if (!report) {
-    return { report: null };
+export async function getLatestReportSnapshotForUser(
+  userId: string,
+  startDate?: string,
+  endDate?: string,
+) {
+  const defaults = getDefaultReportDateRange();
+  const result = await getSpendingReportForUser(
+    userId,
+    startDate ?? defaults.startDate,
+    endDate ?? defaults.endDate,
+  );
+
+  if (!result.success) {
+    return { report: null, error: result.error };
   }
-  return { report: report.summary_json };
+
+  return { report: result.data };
 }
 
 export async function getSharedOverviewForUser(userId: string) {

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
+  checkUsernameAvailable,
   completeOnboarding,
   saveUserPreferences,
   suggestCurrencyForCountry,
@@ -21,22 +22,27 @@ import {
   type CurrencyCode,
   currencyForCountry,
 } from "@/lib/finance/currency";
+import { normalizeUsername } from "@/lib/auth/username";
 import type { UserPreferences } from "@/types/finance";
 
 export function UserPreferencesForm({
   initial,
   mode,
 }: {
-  initial: UserPreferences & { displayName: string };
+  initial: UserPreferences & { displayName: string; username?: string | null };
   mode: "onboarding" | "settings";
 }) {
   const router = useRouter();
+  const [username, setUsername] = useState(initial.username ?? "");
   const [displayName, setDisplayName] = useState(initial.displayName);
   const [countryCode, setCountryCode] = useState(initial.countryCode ?? "GB");
   const [currencyCode, setCurrencyCode] = useState<CurrencyCode>(
     initial.currencyCode,
   );
   const [pending, setPending] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<
+    "idle" | "checking" | "available" | "taken" | "invalid"
+  >("idle");
 
   useEffect(() => {
     const suggested = currencyForCountry(countryCode);
@@ -44,6 +50,31 @@ export function UserPreferencesForm({
       setCurrencyCode(suggested);
     }
   }, [countryCode]);
+
+  useEffect(() => {
+    const normalized = normalizeUsername(username);
+    if (normalized.length < 3) {
+      setUsernameStatus("idle");
+      return;
+    }
+
+    if (normalized === initial.username) {
+      setUsernameStatus("available");
+      return;
+    }
+
+    setUsernameStatus("checking");
+    const timer = setTimeout(async () => {
+      const result = await checkUsernameAvailable(normalized);
+      if (!result.success) {
+        setUsernameStatus("invalid");
+        return;
+      }
+      setUsernameStatus(result.data.available ? "available" : "taken");
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [username, initial.username]);
 
   async function handleCountryChange(code: string) {
     setCountryCode(code);
@@ -57,7 +88,12 @@ export function UserPreferencesForm({
     e.preventDefault();
     setPending(true);
 
-    const payload = { displayName, countryCode, currencyCode };
+    const payload = {
+      username: normalizeUsername(username),
+      displayName,
+      countryCode,
+      currencyCode,
+    };
     const result =
       mode === "onboarding"
         ? await completeOnboarding(payload)
@@ -74,14 +110,46 @@ export function UserPreferencesForm({
       return;
     }
 
-    toast.success("Preferences saved");
-
+    toast.success("Profile saved");
     router.refresh();
     setPending(false);
   }
 
+  const usernameHint =
+    usernameStatus === "checking"
+      ? "Checking availability…"
+      : usernameStatus === "available"
+        ? "Username is available"
+        : usernameStatus === "taken"
+          ? "That username is taken"
+          : usernameStatus === "invalid"
+            ? "Use 3–30 lowercase letters, numbers, or underscores"
+            : "Friends can find you with this username";
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-2">
+        <AppInput
+          label="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="alex_chen"
+          autoComplete="username"
+          required
+        />
+        <p
+          className={`text-xs ${
+            usernameStatus === "taken" || usernameStatus === "invalid"
+              ? "text-destructive"
+              : usernameStatus === "available"
+                ? "text-accent-green"
+                : "text-muted-foreground"
+          }`}
+        >
+          {usernameHint}
+        </p>
+      </div>
+
       <AppInput
         label="Display name"
         value={displayName}
@@ -116,8 +184,8 @@ export function UserPreferencesForm({
 
       {mode === "onboarding" ? (
         <p className="text-sm text-muted-foreground">
-          Your budget and expenses use this currency. Shared bills with friends
-          are converted to your currency automatically when amounts differ.
+          Your username is unique and lets friends find you to split bills. Your
+          budget and expenses use your chosen currency.
         </p>
       ) : (
         <p className="text-sm text-muted-foreground">
@@ -127,8 +195,16 @@ export function UserPreferencesForm({
         </p>
       )}
 
-      <AppButton type="submit" loading={pending}>
-        {mode === "onboarding" ? "Continue to dashboard" : "Save preferences"}
+      <AppButton
+        type="submit"
+        loading={pending}
+        disabled={
+          usernameStatus === "taken" ||
+          usernameStatus === "invalid" ||
+          usernameStatus === "checking"
+        }
+      >
+        {mode === "onboarding" ? "Continue to dashboard" : "Save profile"}
       </AppButton>
     </form>
   );
@@ -137,12 +213,12 @@ export function UserPreferencesForm({
 export function UserPreferencesPanel({
   initial,
 }: {
-  initial: UserPreferences & { displayName: string };
+  initial: UserPreferences & { displayName: string; username?: string | null };
 }) {
   return (
     <AppCard
       title="Profile & currency"
-      description="Your name, location, and preferred currency for budgets and shared expenses."
+      description="Your username, name, location, and preferred currency."
     >
       <UserPreferencesForm initial={initial} mode="settings" />
     </AppCard>

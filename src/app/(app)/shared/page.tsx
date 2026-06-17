@@ -20,7 +20,7 @@ export default async function SharedPage() {
         description="Split bills with friends and track who owes what."
         action={
           <div className="flex flex-wrap gap-2">
-            <Link href="/shared/friends">
+            <Link href="/friends">
               <AppButton variant="secondary">Manage friends</AppButton>
             </Link>
             <Link href="/shared/expenses/new">

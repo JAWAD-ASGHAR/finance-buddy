@@ -23,8 +23,8 @@ export function FriendBalanceList({ balances }: { balances: FriendBalance[] }) {
       <AppCard title="Friends" description="Connect with friends to split bills.">
         <p className="text-sm text-muted-foreground">
           No friends yet.{" "}
-          <Link href="/shared/friends" className="font-medium text-accent-green underline-offset-4 hover:underline">
-            Add a friend
+          <Link href="/friends" className="font-medium text-accent-green underline-offset-4 hover:underline">
+            Find people
           </Link>{" "}
           to get started.
         </p>
@@ -38,11 +38,16 @@ export function FriendBalanceList({ balances }: { balances: FriendBalance[] }) {
         {balances.map(({ friend, net_cents }) => (
           <li key={friend.id}>
             <Link
-              href={`/shared/friends/${friend.id}`}
+              href={`/friends/${friend.id}`}
               className="flex flex-col gap-1 py-4 transition-colors hover:text-accent-green sm:flex-row sm:items-center sm:justify-between sm:gap-4"
             >
               <span className="font-medium">
                 {friend.display_name ?? "Friend"}
+                {friend.username ? (
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                    @{friend.username}
+                  </span>
+                ) : null}
               </span>
               <span
                 className={cn(

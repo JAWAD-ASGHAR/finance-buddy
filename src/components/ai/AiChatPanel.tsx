@@ -40,7 +40,7 @@ function AiChatEmptyState() {
         <li>&quot;What&apos;s left in my Food budget?&quot;</li>
         <li>&quot;Log $12.50 lunch at the campus cafe&quot;</li>
         <li>&quot;Split a $60 dinner with Alex&quot;</li>
-        <li>&quot;Generate my monthly report&quot;</li>
+        <li>&quot;Show my spending report for this month&quot;</li>
       </ul>
     </div>
   );

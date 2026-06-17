@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { userNeedsOnboarding } from "@/lib/auth/onboarding";
 import { isEmailVerified } from "@/lib/auth/verification";
@@ -8,9 +8,15 @@ import {
   getSupabaseUrl,
 } from "@/lib/supabase/env";
 
+type SessionCookie = {
+  name: string;
+  value: string;
+  options: CookieOptions;
+};
+
 function redirectWithSession(
   request: NextRequest,
-  supabaseResponse: NextResponse,
+  sessionCookies: SessionCookie[],
   destination: string,
 ) {
   const url = request.nextUrl.clone();
@@ -19,8 +25,8 @@ function redirectWithSession(
   url.search = search ? `?${search}` : "";
 
   const redirectResponse = NextResponse.redirect(url);
-  supabaseResponse.cookies.getAll().forEach(({ name, value }) => {
-    redirectResponse.cookies.set(name, value);
+  sessionCookies.forEach(({ name, value, options }) => {
+    redirectResponse.cookies.set(name, value, options);
   });
 
   return redirectResponse;
@@ -36,9 +42,10 @@ function isAppPath(pathname: string): boolean {
     pathname.startsWith("/dashboard/") ||
     pathname.startsWith("/budget") ||
     pathname.startsWith("/expenses") ||
+    pathname.startsWith("/friends") ||
     pathname.startsWith("/shared") ||
     pathname.startsWith("/reports") ||
-    pathname.startsWith("/settings")
+    pathname.startsWith("/profile")
   );
 }
 
@@ -48,6 +55,7 @@ function isProtectedPath(pathname: string): boolean {
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
+  let sessionCookies: SessionCookie[] = [];
 
   const supabase = createServerClient(
     getSupabaseUrl(),
@@ -58,6 +66,11 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
+          sessionCookies = cookiesToSet.map(({ name, value, options }) => ({
+            name,
+            value,
+            options: options ?? {},
+          }));
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
@@ -81,13 +94,17 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (!user) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     if (isProtectedPath(pathname)) {
       const url = request.nextUrl.clone();
       url.pathname = "/login";
       url.searchParams.set("next", pathname);
       return redirectWithSession(
         request,
-        supabaseResponse,
+        sessionCookies,
         `${url.pathname}?${url.searchParams.toString()}`,
       );
     }
@@ -96,7 +113,7 @@ export async function updateSession(request: NextRequest) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("onboarding_completed_at")
+    .select("onboarding_completed_at, username")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -106,7 +123,7 @@ export async function updateSession(request: NextRequest) {
 
   if (needsEmailVerify) {
     if (pathname !== "/verify-email") {
-      return redirectWithSession(request, supabaseResponse, "/verify-email");
+      return redirectWithSession(request, sessionCookies, "/verify-email");
     }
     return supabaseResponse;
   }
@@ -120,14 +137,14 @@ export async function updateSession(request: NextRequest) {
     }
 
     if (pathname !== "/onboarding") {
-      return redirectWithSession(request, supabaseResponse, "/onboarding");
+      return redirectWithSession(request, sessionCookies, "/onboarding");
     }
 
     return supabaseResponse;
   }
 
   if (pathname === "/onboarding" || pathname === "/verify-email") {
-    return redirectWithSession(request, supabaseResponse, "/dashboard");
+    return redirectWithSession(request, sessionCookies, "/dashboard");
   }
 
   const isGuestAuthPath =
@@ -137,7 +154,7 @@ export async function updateSession(request: NextRequest) {
     pathname === "/check-email";
 
   if (isGuestAuthPath) {
-    return redirectWithSession(request, supabaseResponse, "/dashboard");
+    return redirectWithSession(request, sessionCookies, "/dashboard");
   }
 
   return supabaseResponse;

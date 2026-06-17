@@ -53,8 +53,7 @@ const availableToolGroups = [
     id: "tools-reports",
     title: "Reports",
     items: [
-      "View your latest monthly spending report",
-      "Generate a new monthly report snapshot",
+      "View a spending report for a date range",
     ],
   },
   {

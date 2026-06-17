@@ -57,7 +57,7 @@ export function AppAccountMenu({ session }: { session: AppSession }) {
             {session.displayName}
           </span>
           <span className="block truncate text-[0.625rem] text-muted-foreground">
-            {session.email}
+            {session.username ? `@${session.username}` : session.email}
           </span>
         </span>
       </button>
@@ -72,7 +72,7 @@ export function AppAccountMenu({ session }: { session: AppSession }) {
               {session.displayName}
             </p>
             <p className="truncate text-xs text-muted-foreground">
-              {session.email}
+              {session.username ? `@${session.username}` : session.email}
             </p>
           </div>
 

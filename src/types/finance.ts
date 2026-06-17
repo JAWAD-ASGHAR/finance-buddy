@@ -11,6 +11,7 @@ import {
 
 export type Profile = {
   id: string;
+  username: string | null;
   display_name: string | null;
   currency_code: CurrencyCode;
   country_code: string | null;
@@ -19,6 +20,7 @@ export type Profile = {
 };
 
 export type UserPreferences = {
+  username: string | null;
   displayName: string | null;
   currencyCode: CurrencyCode;
   countryCode: string | null;

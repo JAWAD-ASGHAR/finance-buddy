@@ -64,14 +64,16 @@ function FooterDisplay({ parallax }: { parallax?: boolean }) {
   );
 
   return (
-    <div className="footer-display-clip container-main">
-      {parallax ? (
-        <ParallaxLayer className="h-full" speed={0.1}>
-          {display}
-        </ParallaxLayer>
-      ) : (
-        display
-      )}
+    <div className="container-main">
+      <div className="footer-display-clip">
+        {parallax ? (
+          <ParallaxLayer className="h-full" speed={0.1}>
+            {display}
+          </ParallaxLayer>
+        ) : (
+          display
+        )}
+      </div>
     </div>
   );
 }

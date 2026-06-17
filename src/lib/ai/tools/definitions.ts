@@ -14,7 +14,10 @@ export const aiToolSchemas = {
     friendId: z.string().uuid(),
   }),
   list_shared_expenses: z.object({}),
-  get_latest_report: z.object({}),
+  get_latest_report: z.object({
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+  }),
   create_monthly_budget: z.object({
     income: z.string(),
     alertThresholdPct: z.number().int().min(1).max(100).optional(),
@@ -50,9 +53,12 @@ export const aiToolSchemas = {
   mark_alert_read: z.object({
     alertId: z.string().uuid(),
   }),
-  generate_monthly_report: z.object({}),
+  generate_monthly_report: z.object({
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+  }),
   send_friend_request: z.object({
-    email: z.string().email(),
+    username: z.string().min(3),
   }),
   respond_to_friend_request: z.object({
     requestId: z.string().uuid(),
@@ -110,7 +116,8 @@ export const aiToolDescriptions: Record<AiToolName, string> = {
   get_friend_activity:
     "Get activity and net balance with a specific friend by friendId.",
   list_shared_expenses: "List shared expenses the user participates in.",
-  get_latest_report: "Get the latest generated monthly report if any.",
+  get_latest_report:
+    "Get a spending report for a date range (defaults to the current month through today).",
   create_monthly_budget:
     "Create or update this month's budget with income and category allocations.",
   update_budget_income: "Update monthly income for a budget.",
@@ -119,8 +126,9 @@ export const aiToolDescriptions: Record<AiToolName, string> = {
     "Parse natural language or receipt text and add an expense.",
   update_expense_category: "Recategorize an existing expense.",
   mark_alert_read: "Dismiss/mark an alert as read.",
-  generate_monthly_report: "Generate a monthly spending report snapshot.",
-  send_friend_request: "Send a friend request by email address.",
+  generate_monthly_report:
+    "Get a spending report for a date range (defaults to the current month through today).",
+  send_friend_request: "Send a friend request by username.",
   respond_to_friend_request: "Accept or decline an incoming friend request.",
   create_shared_expense:
     "Create a shared expense split with friends (equal or single payer).",

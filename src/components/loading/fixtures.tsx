@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { CategoryProgressBar } from "@/components/app/CategoryProgressBar";
 import { ForecastCard } from "@/components/app/ForecastCard";
+import { MonthlyReportView } from "@/components/app/MonthlyReportView";
 import { AppButton, AppCard, AppInput, AppPageHeader } from "@/components/app/ui";
 import {
   Table,
@@ -12,7 +15,11 @@ import {
 } from "@/components/ui/table";
 import type { SkeletonName } from "@/components/loading/skeleton-names";
 import { SKELETON_NAMES } from "@/components/loading/skeleton-names";
-import type { CategorySummary, ForecastResult } from "@/types/finance";
+import type {
+  CategorySummary,
+  ForecastResult,
+  MonthlyReportSummary,
+} from "@/types/finance";
 import { formatMoney } from "@/types/finance";
 
 const mockForecast: ForecastResult = {
@@ -51,7 +58,167 @@ const mockSummaries: CategorySummary[] = [
     remainingCents: 1600,
     percentUsed: 80,
   },
+  {
+    categoryId: "4",
+    name: "Shopping",
+    allocatedCents: 10000,
+    spentCents: 5200,
+    remainingCents: 4800,
+    percentUsed: 52,
+  },
+  {
+    categoryId: "5",
+    name: "Other",
+    allocatedCents: 5000,
+    spentCents: 2100,
+    remainingCents: 2900,
+    percentUsed: 42,
+  },
 ];
+
+const mockReportSummary: MonthlyReportSummary = {
+  periodLabel: "Jun 1 – 17, 2026",
+  incomeCents: 250000,
+  totalSpentCents: 128500,
+  remainingCents: 121500,
+  categoryBreakdown: mockSummaries.map((summary) => ({
+    name: summary.name,
+    spentCents: summary.spentCents,
+    allocatedCents: summary.allocatedCents,
+    percentUsed: summary.percentUsed,
+  })),
+  dailySpending: Array.from({ length: 17 }, (_, index) => {
+    const day = index + 1;
+    const spentCents = 1800 + index * 420;
+    return {
+      day,
+      label: `${day} Jun`,
+      spentCents,
+      cumulativeCents: spentCents * day,
+      paceCents: Math.round((250000 / 30) * day),
+    };
+  }),
+  forecast: mockForecast,
+  insights: [
+    "You spent 22% of tracked spending on Food.",
+    "Subscriptions crossed 80% of their category limits.",
+    "At your current pace, you'll finish the month $420 under budget.",
+  ],
+  disclaimer:
+    "This report is for informational purposes only and does not constitute financial advice.",
+};
+
+const expenseRows = [
+  ["2026-06-17", "Campus cafe", 1450, "Food"],
+  ["2026-06-16", "Bus pass top-up", 2000, "Transport"],
+  ["2026-06-15", "Spotify", 1199, "Subscriptions"],
+  ["2026-06-14", "Grocery run", 4820, "Food"],
+  ["2026-06-13", "Textbooks", 3500, "Shopping"],
+  ["2026-06-12", "Coffee shop", 650, "Food"],
+  ["2026-06-11", "Uber home", 1850, "Transport"],
+] as const;
+
+function ChartPlaceholder({ className = "h-64" }: { className?: string }) {
+  return (
+    <div
+      className={`w-full rounded-lg border border-border/60 bg-muted/40 ${className}`}
+      aria-hidden
+    />
+  );
+}
+
+function AlertBannerFixture() {
+  return (
+    <AppCard
+      title="Alerts"
+      description="Guidance only — not financial advice."
+      className="border-amber-200 bg-amber-50/60"
+    >
+      <div className="space-y-3 rounded-lg border border-border bg-background p-4 text-sm">
+        <p>Food is at 71% of its monthly limit.</p>
+        <AppButton variant="secondary">Dismiss</AppButton>
+      </div>
+    </AppCard>
+  );
+}
+
+function FormFieldsFixture({ rows = 4 }: { rows?: number }) {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: rows }, (_, index) => (
+        <AppInput
+          key={index}
+          label={
+            index === 0
+              ? "Amount"
+              : index === 1
+                ? "Description"
+                : `Field ${index + 1}`
+          }
+          defaultValue=""
+          readOnly
+        />
+      ))}
+      <AppButton>Save</AppButton>
+    </div>
+  );
+}
+
+function ExpenseTableFixture() {
+  return (
+    <AppCard title="All expenses">
+      <div className="space-y-3 md:hidden">
+        {expenseRows.slice(0, 4).map(([date, description, amount, category]) => (
+          <div
+            key={description}
+            className="space-y-3 rounded-lg border border-border p-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-medium">{description}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{date}</p>
+              </div>
+              <p className="text-sm font-semibold">{formatMoney(amount)}</p>
+            </div>
+            <AppInput label="Category" defaultValue={category} readOnly />
+            <AppButton variant="secondary" className="w-full">
+              Delete
+            </AppButton>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {expenseRows.map(([date, description, amount, category]) => (
+              <TableRow key={description}>
+                <TableCell className="whitespace-nowrap">{date}</TableCell>
+                <TableCell>{description}</TableCell>
+                <TableCell className="font-medium">
+                  {formatMoney(amount)}
+                </TableCell>
+                <TableCell>{category}</TableCell>
+                <TableCell className="text-right">
+                  <AppButton variant="secondary">Delete</AppButton>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </AppCard>
+  );
+}
 
 export function DashboardFixture() {
   return (
@@ -62,29 +229,42 @@ export function DashboardFixture() {
         action={<AppButton>Add expense</AppButton>}
       />
       <div className="space-y-6">
+        <AlertBannerFixture />
+
         <div className="grid gap-4 sm:grid-cols-3">
-          <AppCard>
-            <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
-              Monthly income
-            </p>
-            <p className="mt-1 text-2xl font-semibold">{formatMoney(250000)}</p>
+          {[
+            ["Monthly income", formatMoney(250000)],
+            ["Remaining this month", formatMoney(84500)],
+            ["Alert threshold", "80%"],
+          ].map(([label, value]) => (
+            <AppCard key={label}>
+              <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
+                {label}
+              </p>
+              <p className="mt-1 text-xl font-semibold sm:text-2xl">{value}</p>
+            </AppCard>
+          ))}
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-5">
+          <AppCard
+            className="lg:col-span-3"
+            title="Spending trend"
+            description="Your cumulative spend this month against an even budget pace."
+          >
+            <ChartPlaceholder />
           </AppCard>
-          <AppCard>
-            <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
-              Remaining this month
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-emerald-700">
-              {formatMoney(84500)}
-            </p>
-          </AppCard>
-          <AppCard>
-            <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
-              Alert threshold
-            </p>
-            <p className="mt-1 text-2xl font-semibold">80%</p>
+          <AppCard
+            className="lg:col-span-2"
+            title="Category spend"
+            description="Quick view of where your budget is going."
+          >
+            <ChartPlaceholder className="h-56" />
           </AppCard>
         </div>
+
         <ForecastCard forecast={mockForecast} />
+
         <AppCard title="Category budgets">
           <div className="space-y-5">
             {mockSummaries.map((summary) => (
@@ -105,53 +285,8 @@ export function ExpensesFixture() {
         description="Review, recategorize, or delete your spending records."
         action={<AppButton>Add expense</AppButton>}
       />
-      <AppCard title="All expenses">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {[
-              ["12 Jun", "Campus cafe", "$14.50", "Food"],
-              ["11 Jun", "Bus pass top-up", "$20.00", "Transport"],
-              ["10 Jun", "Spotify", "$11.99", "Subscriptions"],
-            ].map(([date, description, amount, category]) => (
-              <TableRow key={description}>
-                <TableCell>{date}</TableCell>
-                <TableCell>{description}</TableCell>
-                <TableCell>{amount}</TableCell>
-                <TableCell>{category}</TableCell>
-                <TableCell className="text-right">
-                  <AppButton variant="secondary">Delete</AppButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </AppCard>
+      <ExpenseTableFixture />
     </>
-  );
-}
-
-function FormFieldsFixture({ rows = 4 }: { rows?: number }) {
-  return (
-    <div className="space-y-4">
-      {Array.from({ length: rows }, (_, index) => (
-        <AppInput
-          key={index}
-          label={index === 0 ? "Amount" : index === 1 ? "Description" : "Field"}
-          defaultValue=""
-          readOnly
-        />
-      ))}
-      <AppButton>Save</AppButton>
-    </div>
   );
 }
 
@@ -163,6 +298,16 @@ export function ExpenseFormFixture() {
         description="Log manually, paste receipt text, or use quick text like '12 uber home Friday'."
       />
       <AppCard title="New expense">
+        <div className="mb-4 flex gap-2">
+          {["Manual", "Receipt", "Quick text"].map((tab) => (
+            <div
+              key={tab}
+              className="rounded-md border border-border px-3 py-1.5 text-sm"
+            >
+              {tab}
+            </div>
+          ))}
+        </div>
         <FormFieldsFixture rows={5} />
       </AppCard>
     </>
@@ -174,10 +319,60 @@ export function BudgetFormFixture() {
     <>
       <AppPageHeader
         title="Monthly budget"
-        description="Set your allowance and split it across categories like food, transport, and subscriptions."
+        description="Set your allowance, pick your categories, and we'll split it evenly across them."
       />
-      <AppCard title="Budget setup">
-        <FormFieldsFixture rows={6} />
+      <div className="mb-8 flex flex-wrap gap-4">
+        {["Income", "Categories", "Review"].map((step, index) => (
+          <div key={step} className="flex items-center gap-2">
+            <div
+              className={`flex size-8 items-center justify-center rounded-full text-sm font-medium ${
+                index === 2
+                  ? "bg-accent-green text-white"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {index + 1}
+            </div>
+            <span className="text-sm font-medium">{step}</span>
+          </div>
+        ))}
+      </div>
+      <AppCard
+        title="Split your budget"
+        description="Adjust category limits until your full income is allocated."
+      >
+        <div className="space-y-4">
+          <div className="grid gap-4 rounded-lg border border-border/80 bg-muted/30 p-4 sm:grid-cols-2">
+            <div>
+              <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
+                Monthly income
+              </p>
+              <p className="mt-1 text-lg font-semibold">{formatMoney(250000)}</p>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
+                Alert threshold
+              </p>
+              <p className="mt-1 text-lg font-semibold">80%</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {mockSummaries.map((summary) => (
+              <div key={summary.categoryId} className="grid gap-3 sm:grid-cols-2">
+                <AppInput label="Category" defaultValue={summary.name} readOnly />
+                <AppInput
+                  label="Limit"
+                  defaultValue={String(summary.allocatedCents / 100)}
+                  readOnly
+                />
+              </div>
+            ))}
+          </div>
+          <div className="rounded-lg border border-accent-green/25 bg-accent-green-light/40 px-4 py-3 text-sm">
+            Budget fully allocated · {formatMoney(250000)} assigned
+          </div>
+          <AppButton>Save monthly budget</AppButton>
+        </div>
       </AppCard>
     </>
   );
@@ -187,46 +382,96 @@ export function ReportsFixture() {
   return (
     <>
       <AppPageHeader
-        title="Monthly report"
-        description="Summarize spending patterns and forecast from your actual expense data."
+        title="Spending report"
+        description="Review spending patterns and forecasts for any date range in your current budget."
       />
-      <AppCard title="Spending summary">
-        <div className="space-y-4 text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Total spent</span>
-            <span className="font-medium">{formatMoney(128500)}</span>
+      <div className="space-y-6">
+        <AppCard
+          title="Date range"
+          description="Choose the period to include in your spending report."
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+            <AppInput label="Start date" type="date" defaultValue="2026-06-01" readOnly />
+            <AppInput label="End date" type="date" defaultValue="2026-06-17" readOnly />
+            <AppButton className="sm:mb-0.5">View report</AppButton>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Top category</span>
-            <span className="font-medium">Food</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Daily average</span>
-            <span className="font-medium">{formatMoney(1850)}</span>
-          </div>
-        </div>
-      </AppCard>
+        </AppCard>
+        <MonthlyReportView summary={mockReportSummary} />
+      </div>
     </>
   );
 }
 
-export function SettingsFixture() {
+export function ProfileFixture() {
   return (
     <>
       <AppPageHeader
-        title="Settings"
-        description="Manage your privacy and data. Your budget stays private to your account."
+        title="Profile"
+        description="Your account details, preferences, and privacy settings."
       />
       <div className="space-y-6">
+        <AppCard title="Account">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <AppInput label="Username" defaultValue="jordanlee" readOnly />
+            <AppInput label="Display name" defaultValue="Jordan Lee" readOnly />
+            <AppInput label="Country" defaultValue="United Kingdom" readOnly />
+            <AppInput label="Currency" defaultValue="GBP (£)" readOnly />
+          </div>
+          <div className="mt-4">
+            <AppButton>Save preferences</AppButton>
+          </div>
+        </AppCard>
+
+        <AppCard title="Friends">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">3</span> friends ·{" "}
+              <span className="font-medium text-foreground">1</span> pending request
+            </p>
+            <span className="text-sm font-medium text-accent-green">
+              Manage friends →
+            </span>
+          </div>
+        </AppCard>
+
         <AppCard title="Privacy">
           <p className="text-sm text-muted-foreground">
             Finance Buddy never exposes one user&apos;s budget to another.
+            Forecasts, alerts, and reports are informational only — not financial
+            advice.
           </p>
         </AppCard>
-        <AppCard title="Delete data">
-          <p className="mb-4 text-sm text-muted-foreground">
-            Permanently remove your budget, expenses, and alerts.
-          </p>
+
+        <AppCard
+          title="API keys for MCP"
+          description="Generate personal keys to connect Finance Buddy from Cursor or other MCP clients."
+        >
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+              <AppInput label="Key name" defaultValue="Cursor laptop" readOnly />
+              <AppButton>Create key</AppButton>
+            </div>
+            <ul className="divide-y divide-border text-sm">
+              {["Cursor laptop", "Claude Desktop"].map((name) => (
+                <li
+                  key={name}
+                  className="flex items-center justify-between gap-4 py-3"
+                >
+                  <div>
+                    <p className="font-medium">{name}</p>
+                    <p className="text-muted-foreground">fb_••••••••abcd</p>
+                  </div>
+                  <AppButton variant="secondary">Revoke</AppButton>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </AppCard>
+
+        <AppCard
+          title="Delete all data"
+          description="Remove every budget, expense, alert, and report from your account."
+        >
           <AppButton variant="danger">Delete all my data</AppButton>
         </AppCard>
       </div>
@@ -247,19 +492,38 @@ export function SharedFixture() {
           </div>
         }
       />
-      <AppCard title="Balances" description="Who owes whom across shared bills.">
-        <ul className="divide-y divide-border">
-          {["Alex Chen", "Sam Rivera", "Jordan Lee"].map((name) => (
-            <li
-              key={name}
-              className="flex items-center justify-between gap-4 py-4 text-sm"
-            >
-              <span className="font-medium">{name}</span>
-              <span className="text-accent-green">owes you {formatMoney(2400)}</span>
+      <div className="space-y-6">
+        <AppCard title="Pending requests">
+          <ul className="divide-y divide-border text-sm">
+            <li className="flex items-center justify-between py-3">
+              <span>Sam Rivera wants to connect</span>
+              <div className="flex gap-2">
+                <AppButton variant="secondary">Decline</AppButton>
+                <AppButton>Accept</AppButton>
+              </div>
             </li>
-          ))}
-        </ul>
-      </AppCard>
+          </ul>
+        </AppCard>
+        <AppCard title="Balances" description="Who owes whom across shared bills.">
+          <ul className="divide-y divide-border">
+            {[
+              ["Alex Chen", 2400, "owes you"],
+              ["Sam Rivera", -1800, "you owe"],
+              ["Jordan Lee", 900, "owes you"],
+            ].map(([name, amount, direction]) => (
+              <li
+                key={name}
+                className="flex items-center justify-between gap-4 py-4 text-sm"
+              >
+                <span className="font-medium">{name}</span>
+                <span className="text-accent-green">
+                  {direction} {formatMoney(Math.abs(amount as number))}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </AppCard>
+      </div>
     </>
   );
 }
@@ -269,17 +533,50 @@ export function FriendsFixture() {
     <>
       <AppPageHeader
         title="Friends"
-        description="Connect with people you split bills with."
+        description="Find people, manage requests, and view your connections."
       />
       <div className="space-y-6">
-        <AppCard title="Add friend">
-          <FormFieldsFixture rows={2} />
+        <AppCard
+          title="Find people"
+          description="Search by username to send a friend request and split costs together."
+        >
+          <AppInput label="Search username" defaultValue="alex" readOnly />
+        </AppCard>
+        <AppCard title="Pending requests">
+          <ul className="divide-y divide-border text-sm">
+            <li className="flex items-center justify-between py-3">
+              <span>Incoming · Sam Rivera</span>
+              <div className="flex gap-2">
+                <AppButton variant="secondary">Decline</AppButton>
+                <AppButton>Accept</AppButton>
+              </div>
+            </li>
+            <li className="flex items-center justify-between py-3">
+              <span>Outgoing · Jordan Lee</span>
+              <AppButton variant="secondary">Cancel</AppButton>
+            </li>
+          </ul>
         </AppCard>
         <AppCard title="Your friends">
           <ul className="divide-y divide-border">
-            {["Alex Chen", "Sam Rivera"].map((name) => (
-              <li key={name} className="py-3 text-sm font-medium">
-                {name}
+            {[
+              ["Alex Chen", "alexchen"],
+              ["Sam Rivera", "samr"],
+              ["Jordan Lee", "jordanlee"],
+            ].map(([name, username]) => (
+              <li
+                key={username}
+                className="flex flex-col gap-0.5 py-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <span className="text-sm font-medium">
+                  {name}{" "}
+                  <span className="font-normal text-muted-foreground">
+                    @{username}
+                  </span>
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  View activity →
+                </span>
               </li>
             ))}
           </ul>
@@ -294,10 +591,10 @@ export function FriendDetailFixture() {
     <>
       <p className="mb-4">
         <Link
-          href="/shared"
+          href="/friends"
           className="text-sm text-accent-green underline-offset-4 hover:underline"
         >
-          Back to shared expenses
+          Back to friends
         </Link>
       </p>
       <AppPageHeader
@@ -312,10 +609,17 @@ export function FriendDetailFixture() {
         </AppCard>
         <AppCard title="Activity">
           <ul className="divide-y divide-border text-sm">
-            {["Dinner split", "Uber home", "Settlement"].map((item) => (
+            {[
+              ["Dinner split", 4200],
+              ["Uber home", 1800],
+              ["Settlement", -3600],
+              ["Coffee run", 950],
+            ].map(([item, amount]) => (
               <li key={item} className="flex justify-between py-3">
                 <span>{item}</span>
-                <span className="text-muted-foreground">{formatMoney(1200)}</span>
+                <span className="text-muted-foreground">
+                  {formatMoney(amount as number)}
+                </span>
               </li>
             ))}
           </ul>
@@ -341,7 +645,7 @@ export function SharedExpenseFormFixture() {
         description="Split a bill equally or record who paid the full amount."
       />
       <AppCard title="Shared expense">
-        <FormFieldsFixture rows={5} />
+        <FormFieldsFixture rows={6} />
       </AppCard>
     </>
   );
@@ -370,7 +674,7 @@ export function AuthFormFixture() {
 
 export function MarketingHeroFixture() {
   return (
-    <section className="section-padding bg-white">
+    <div className="section-padding bg-white">
       <div className="container-main">
         <div className="mx-auto max-w-3xl text-center">
           <p className="eyebrow mb-5">About</p>
@@ -393,7 +697,7 @@ export function MarketingHeroFixture() {
           ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -403,7 +707,6 @@ export const SKELETON_FIXTURES: Record<
 > = {
   [SKELETON_NAMES.dashboard]: {
     fixture: <DashboardFixture />,
-    snapshotConfig: { leafTags: ["section"] },
   },
   [SKELETON_NAMES.expenses]: {
     fixture: <ExpensesFixture />,
@@ -417,8 +720,8 @@ export const SKELETON_FIXTURES: Record<
   [SKELETON_NAMES.reports]: {
     fixture: <ReportsFixture />,
   },
-  [SKELETON_NAMES.settings]: {
-    fixture: <SettingsFixture />,
+  [SKELETON_NAMES.profile]: {
+    fixture: <ProfileFixture />,
   },
   [SKELETON_NAMES.shared]: {
     fixture: <SharedFixture />,
@@ -437,6 +740,5 @@ export const SKELETON_FIXTURES: Record<
   },
   [SKELETON_NAMES.marketingHero]: {
     fixture: <MarketingHeroFixture />,
-    snapshotConfig: { leafTags: ["section"] },
   },
 };

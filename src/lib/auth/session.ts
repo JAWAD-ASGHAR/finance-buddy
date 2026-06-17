@@ -20,6 +20,7 @@ export async function getAppSession(): Promise<AppSession | null> {
   const profile = await db.query.profiles.findFirst({
     where: eq(profiles.id, user.id),
     columns: {
+      username: true,
       displayName: true,
       currencyCode: true,
       countryCode: true,
@@ -39,6 +40,7 @@ export async function getAppSession(): Promise<AppSession | null> {
   }
 
   const prefs = (await getUserPreferences(user.id)) ?? {
+    username: profile?.username ?? null,
     displayName,
     currencyCode: DEFAULT_CURRENCY,
     countryCode: null,
@@ -48,6 +50,7 @@ export async function getAppSession(): Promise<AppSession | null> {
   return {
     userId: user.id,
     email: user.email,
+    username: prefs.username,
     displayName: prefs.displayName ?? displayName,
     currencyCode: prefs.currencyCode,
     countryCode: prefs.countryCode,

@@ -37,8 +37,11 @@ export const notificationTypeEnum = pgEnum("notification_type", [
   "settlement",
 ]);
 
-export const profiles = pgTable("profiles", {
+export const profiles = pgTable(
+  "profiles",
+  {
   id: uuid("id").primaryKey(),
+  username: text("username"),
   displayName: text("display_name"),
   currencyCode: text("currency_code").notNull().default("GBP"),
   countryCode: text("country_code"),
@@ -48,7 +51,9 @@ export const profiles = pgTable("profiles", {
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-});
+  },
+  (table) => [unique("profiles_username_unique").on(table.username)],
+);
 
 export const budgets = pgTable(
   "budgets",

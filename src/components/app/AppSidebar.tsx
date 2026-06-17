@@ -9,10 +9,11 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", match: "exact" as const },
   { href: "/expenses", label: "Expenses", match: "prefix" as const },
+  { href: "/friends", label: "Friends", match: "prefix" as const },
   { href: "/shared", label: "Shared", match: "prefix" as const },
   { href: "/budget/setup", label: "Budget", match: "prefix" as const },
   { href: "/reports", label: "Reports", match: "prefix" as const },
-  { href: "/settings", label: "Settings", match: "prefix" as const },
+  { href: "/profile", label: "Profile", match: "prefix" as const },
 ];
 
 function isActive(pathname: string, href: string, match: "exact" | "prefix") {
@@ -22,6 +23,10 @@ function isActive(pathname: string, href: string, match: "exact" | "prefix") {
 
   if (href === "/expenses") {
     return pathname === "/expenses" || pathname.startsWith("/expenses/");
+  }
+
+  if (href === "/friends") {
+    return pathname === "/friends" || pathname.startsWith("/friends/");
   }
 
   if (href === "/shared") {
@@ -141,7 +146,7 @@ export function AppSidebar({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-sidebar-border bg-sidebar pt-[env(safe-area-inset-top,0px)] transition-transform duration-200 lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-sidebar-border bg-sidebar pt-[env(safe-area-inset-top,0px)] transition-transform duration-200 lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >

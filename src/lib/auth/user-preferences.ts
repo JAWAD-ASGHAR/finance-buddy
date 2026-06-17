@@ -6,15 +6,18 @@ import {
   type CurrencyCode,
   isCurrencyCode,
 } from "@/lib/finance/currency";
+import { normalizeUsername, parseUsername } from "@/lib/auth/username";
 import type { UserPreferences } from "@/types/finance";
 
 function mapPreferences(row: {
+  username: string | null;
   displayName: string | null;
   currencyCode: string;
   countryCode: string | null;
   onboardingCompletedAt: Date | null;
 }): UserPreferences {
   return {
+    username: row.username,
     displayName: row.displayName,
     currencyCode: isCurrencyCode(row.currencyCode)
       ? row.currencyCode
@@ -31,6 +34,7 @@ export async function getUserPreferences(
   const row = await db.query.profiles.findFirst({
     where: eq(profiles.id, userId),
     columns: {
+      username: true,
       displayName: true,
       currencyCode: true,
       countryCode: true,
@@ -47,9 +51,26 @@ export async function getUserCurrency(userId: string): Promise<CurrencyCode> {
   return prefs?.currencyCode ?? DEFAULT_CURRENCY;
 }
 
+export async function isUsernameTaken(
+  username: string,
+  excludeUserId?: string,
+): Promise<boolean> {
+  const db = getDb();
+  const normalized = normalizeUsername(username);
+  const row = await db.query.profiles.findFirst({
+    where: eq(profiles.username, normalized),
+    columns: { id: true },
+  });
+
+  if (!row) return false;
+  if (excludeUserId && row.id === excludeUserId) return false;
+  return true;
+}
+
 export async function updateUserPreferences(
   userId: string,
   input: {
+    username?: string;
     displayName?: string;
     currencyCode?: CurrencyCode;
     countryCode?: string | null;
@@ -58,6 +79,19 @@ export async function updateUserPreferences(
 ): Promise<UserPreferences> {
   const db = getDb();
   const updates: Partial<typeof profiles.$inferInsert> = {};
+
+  if (input.username !== undefined) {
+    const parsed = parseUsername(input.username);
+    if (!parsed.ok) {
+      throw new Error(parsed.error);
+    }
+
+    if (await isUsernameTaken(parsed.username, userId)) {
+      throw new Error("That username is already taken");
+    }
+
+    updates.username = parsed.username;
+  }
 
   if (input.displayName !== undefined) {
     updates.displayName = input.displayName.trim() || null;
@@ -77,6 +111,7 @@ export async function updateUserPreferences(
     .set(updates)
     .where(eq(profiles.id, userId))
     .returning({
+      username: profiles.username,
       displayName: profiles.displayName,
       currencyCode: profiles.currencyCode,
       countryCode: profiles.countryCode,

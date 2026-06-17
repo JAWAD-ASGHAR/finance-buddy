@@ -5,19 +5,27 @@ import {
   listFriendsForUser,
   listPendingRequestsForUser,
   respondToFriendRequestForUser,
-  searchUserByEmailForUser,
-  sendFriendRequestByEmailForUser,
+  searchUserByUsernameForUser,
+  searchUsersByUsernameForUser,
+  sendFriendRequestByUsernameForUser,
   sendFriendRequestForUser,
 } from "@/lib/services/friends";
 import { revalidateSharedPaths } from "@/lib/services/revalidate";
 import type { ActionResult } from "@/types/finance";
 import type { Friend, FriendRequest } from "@/types/shared";
 
-export async function searchUserByEmail(
-  rawEmail: string,
+export async function searchUsersByUsername(
+  rawQuery: string,
+): Promise<ActionResult<Friend[]>> {
+  const user = await requireAuthUser();
+  return searchUsersByUsernameForUser(user.id, rawQuery);
+}
+
+export async function searchUserByUsername(
+  rawUsername: string,
 ): Promise<ActionResult<Friend>> {
   const user = await requireAuthUser();
-  return searchUserByEmailForUser(user.id, rawEmail);
+  return searchUserByUsernameForUser(user.id, rawUsername);
 }
 
 export async function sendFriendRequest(
@@ -55,11 +63,11 @@ export async function listPendingRequests(): Promise<
   return listPendingRequestsForUser(user.id);
 }
 
-export async function sendFriendRequestByEmail(
-  rawEmail: string,
+export async function sendFriendRequestByUsername(
+  rawUsername: string,
 ): Promise<ActionResult<FriendRequest>> {
   const user = await requireAuthUser();
-  const result = await sendFriendRequestByEmailForUser(user.id, rawEmail);
+  const result = await sendFriendRequestByUsernameForUser(user.id, rawUsername);
   if (result.success) {
     revalidateSharedPaths();
   }

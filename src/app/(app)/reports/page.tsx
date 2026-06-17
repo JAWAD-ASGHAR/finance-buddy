@@ -1,20 +1,25 @@
 import { ReportPanel } from "@/components/app/ReportPanel";
 import { AppButton, AppCard, AppPageHeader } from "@/components/app/ui";
-import { getLatestReport } from "@/actions/reports";
+import { getSpendingReport } from "@/actions/reports";
+import { getDefaultReportDateRange } from "@/lib/finance/report-date-range";
 import { getCurrentBudget } from "@/lib/supabase/queries";
 import Link from "next/link";
 
 export default async function ReportsPage() {
   const { budget } = await getCurrentBudget();
-  const report = budget ? await getLatestReport() : null;
+  const { startDate, endDate } = getDefaultReportDateRange();
+  const reportResult = budget
+    ? await getSpendingReport({ startDate, endDate })
+    : null;
+  const report = reportResult?.success ? reportResult.data : null;
 
   if (!budget) {
     return (
       <>
-        <AppPageHeader title="Monthly report" />
+        <AppPageHeader title="Spending report" />
         <AppCard title="Budget required">
           <p className="mb-4 text-sm text-muted-foreground">
-            Create a budget and log expenses to generate a monthly summary.
+            Create a budget and log expenses to view a spending report.
           </p>
           <Link href="/budget/setup">
             <AppButton>Set up budget</AppButton>
@@ -27,10 +32,14 @@ export default async function ReportsPage() {
   return (
     <>
       <AppPageHeader
-        title="Monthly report"
-        description="Summarize spending patterns and forecast from your actual expense data."
+        title="Spending report"
+        description="Review spending patterns and forecasts for any date range in your current budget."
       />
-      <ReportPanel initialReport={report?.summary_json ?? null} />
+      <ReportPanel
+        initialReport={report}
+        initialStartDate={startDate}
+        initialEndDate={endDate}
+      />
     </>
   );
 }

@@ -91,13 +91,17 @@ export function computeFriendBalance(
 
 export function buildFriendBalances(
   userId: string,
-  friends: Array<{ id: string; display_name: string | null }>,
+  friends: Array<{ id: string; display_name: string | null; username?: string | null }>,
   expenses: ExpenseWithSplits[],
   settlements: Settlement[],
 ): FriendBalance[] {
   return friends
     .map((friend) => ({
-      friend,
+      friend: {
+        id: friend.id,
+        display_name: friend.display_name,
+        username: friend.username ?? null,
+      },
       net_cents: computeFriendBalance(userId, friend.id, expenses, settlements),
     }))
     .sort((a, b) => Math.abs(b.net_cents) - Math.abs(a.net_cents));

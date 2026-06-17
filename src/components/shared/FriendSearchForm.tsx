@@ -1,58 +1,127 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   respondToFriendRequest,
-  sendFriendRequestByEmail,
+  searchUsersByUsername,
+  sendFriendRequest,
 } from "@/actions/friends";
 import {
   AppButton,
   AppCard,
   AppInput,
 } from "@/components/app/ui";
-import type { FriendRequest } from "@/types/shared";
+import { normalizeUsername } from "@/lib/auth/username";
+import type { Friend, FriendRequest } from "@/types/shared";
+
+function friendLabel(friend: Friend) {
+  if (friend.display_name && friend.username) {
+    return `${friend.display_name} (@${friend.username})`;
+  }
+  return friend.display_name ?? (friend.username ? `@${friend.username}` : "User");
+}
 
 export function FriendSearchForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [pending, setPending] = useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Friend[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setPending(true);
-
-    const result = await sendFriendRequestByEmail(email);
-    if (!result.success) {
-      toast.error(result.error);
-      setPending(false);
+  useEffect(() => {
+    const normalized = normalizeUsername(query);
+    if (normalized.length < 2) {
+      setResults([]);
+      setSearching(false);
       return;
     }
 
-    toast.success(
-      `Request sent to ${result.data.recipient?.display_name ?? "your friend"}`,
-    );
-    setEmail("");
-    setPending(false);
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      const result = await searchUsersByUsername(normalized);
+      if (result.success) {
+        setResults(result.data);
+      } else {
+        setResults([]);
+      }
+      setSearching(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  async function handleSendRequest(friend: Friend) {
+    setPendingId(friend.id);
+
+    const result = await sendFriendRequest(friend.id);
+    if (!result.success) {
+      toast.error(result.error);
+      setPendingId(null);
+      return;
+    }
+
+    toast.success(`Request sent to ${friendLabel(friend)}`);
+    setResults((current) => current.filter((item) => item.id !== friend.id));
+    setPendingId(null);
     router.refresh();
   }
 
   return (
-    <AppCard title="Add a friend" description="Search by the email they use to sign in.">
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <AppCard
+      title="Find people"
+      description="Search by username to send a friend request and split costs together."
+    >
+      <div className="space-y-4">
         <AppInput
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="friend@university.ac.uk"
-          required
+          label="Search username"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="alex_chen"
+          autoComplete="off"
         />
-        <AppButton type="submit" loading={pending}>
-          Send request
-        </AppButton>
-      </form>
+
+        {searching ? (
+          <p className="text-sm text-muted-foreground">Searching…</p>
+        ) : null}
+
+        {!searching && normalizeUsername(query).length >= 2 && results.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No people found matching that username.
+          </p>
+        ) : null}
+
+        {results.length > 0 ? (
+          <ul className="divide-y divide-border rounded-lg border border-border">
+            {results.map((friend) => (
+              <li
+                key={friend.id}
+                className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p className="text-sm font-medium">
+                    {friend.display_name ?? "User"}
+                  </p>
+                  {friend.username ? (
+                    <p className="text-xs text-muted-foreground">
+                      @{friend.username}
+                    </p>
+                  ) : null}
+                </div>
+                <AppButton
+                  type="button"
+                  loading={pendingId === friend.id}
+                  disabled={pendingId !== null && pendingId !== friend.id}
+                  onClick={() => handleSendRequest(friend)}
+                >
+                  Add friend
+                </AppButton>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
     </AppCard>
   );
 }
@@ -104,7 +173,11 @@ export function PendingRequestsPanel({
                 className="flex flex-col gap-3 rounded-lg border border-border p-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <span className="text-sm font-medium">
-                  {request.requester?.display_name ?? "Someone"} wants to connect
+                  {request.requester?.display_name ?? "Someone"}
+                  {request.requester?.username
+                    ? ` (@${request.requester.username})`
+                    : ""}{" "}
+                  wants to connect
                 </span>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <AppButton
@@ -138,7 +211,12 @@ export function PendingRequestsPanel({
           <ul className="space-y-2">
             {outgoing.map((request) => (
               <li key={request.id} className="text-sm text-muted-foreground">
-                Waiting for {request.recipient?.display_name ?? "friend"} to accept
+                Waiting for{" "}
+                {request.recipient?.display_name ??
+                  (request.recipient?.username
+                    ? `@${request.recipient.username}`
+                    : "friend")}{" "}
+                to accept
               </li>
             ))}
           </ul>
@@ -160,7 +238,7 @@ export function PendingRequestsBanner({
       <p className="text-sm">
         You have {incoming.length} pending friend request
         {incoming.length === 1 ? "" : "s"}.{" "}
-        <a href="/shared/friends" className="font-medium text-accent-green underline-offset-4 hover:underline">
+        <a href="/friends#requests" className="font-medium text-accent-green underline-offset-4 hover:underline">
           Review requests
         </a>
       </p>
