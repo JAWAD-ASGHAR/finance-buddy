@@ -7,8 +7,10 @@ import {
   sharedExpenseSplits,
   sharedExpenses,
 } from "@/db/schema";
+import { getUserCurrency } from "@/lib/auth/user-preferences";
 import {
   areFriends,
+  getProfile,
   getSharedExpenseDetailForUser,
   getSharedExpensesForUser,
 } from "@/lib/db/shared-queries";
@@ -18,6 +20,7 @@ import {
   computeEqualSplits,
   validateSplits,
 } from "@/lib/finance/shared-splits";
+import { notifySharedExpenseCreated } from "@/lib/notifications/dispatch";
 import type { ActionResult } from "@/types/finance";
 import { parseMoneyToCents } from "@/types/finance";
 import type { SharedExpenseDetail, SplitMode } from "@/types/shared";
@@ -112,6 +115,7 @@ export async function createSharedExpenseForUser(
   }
 
   const db = getDb();
+  const creatorCurrency = await getUserCurrency(userId);
 
   try {
     const result = await db.transaction(async (tx) => {
@@ -120,6 +124,7 @@ export async function createSharedExpenseForUser(
         .values({
           description: parsed.data.description,
           totalCents,
+          currencyCode: creatorCurrency,
           expenseDate: parsed.data.expenseDate,
           createdByUserId: userId,
         })
@@ -177,6 +182,23 @@ export async function createSharedExpenseForUser(
       if (budget) {
         await refreshAlertsForBudget(userId, budget.id);
       }
+    }
+
+    const creator = (await getProfile(userId)) ?? undefined;
+    const creatorName = creator?.display_name ?? "Someone";
+
+    for (const split of splits) {
+      if (split.userId === userId) continue;
+
+      void notifySharedExpenseCreated({
+        participantId: split.userId,
+        sharedExpenseId: result.expenseRow.id,
+        creatorName,
+        description: parsed.data.description,
+        totalCents,
+        shareCents: split.shareCents,
+        currencyCode: creatorCurrency,
+      });
     }
 
     const detail = await getSharedExpenseDetailForUser(

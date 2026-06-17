@@ -4,6 +4,7 @@ import {
   getLatestReportForUser,
   getUnreadAlertsForUser,
 } from "@/lib/db/queries";
+import { getUserCurrency } from "@/lib/auth/user-preferences";
 import { computeCategorySummaries, computeMonthlyRemaining } from "@/lib/finance/compute";
 import { computeForecast } from "@/lib/finance/forecast";
 import { formatMoney } from "@/types/finance";
@@ -13,6 +14,7 @@ import { listSharedExpensesForUser } from "@/lib/services/shared-expenses";
 
 export async function getDashboardSnapshotForUser(userId: string) {
   const { budget, categories, expenses } = await getCurrentBudgetForUser(userId);
+  const currency = await getUserCurrency(userId);
 
   if (!budget) {
     return {
@@ -30,8 +32,8 @@ export async function getDashboardSnapshotForUser(userId: string) {
     hasBudget: true as const,
     budget: {
       id: budget.id,
-      income: formatMoney(budget.income_cents),
-      remaining: formatMoney(monthlyRemaining),
+      income: formatMoney(budget.income_cents, currency),
+      remaining: formatMoney(monthlyRemaining, currency),
       alertThresholdPct: budget.alert_threshold_pct,
       year: budget.year,
       month: budget.month,
@@ -39,21 +41,21 @@ export async function getDashboardSnapshotForUser(userId: string) {
     categorySummaries: summaries.map((s) => ({
       categoryId: s.categoryId,
       name: s.name,
-      allocated: formatMoney(s.allocatedCents),
-      spent: formatMoney(s.spentCents),
-      remaining: formatMoney(s.remainingCents),
+      allocated: formatMoney(s.allocatedCents, currency),
+      spent: formatMoney(s.spentCents, currency),
+      remaining: formatMoney(s.remainingCents, currency),
       percentUsed: s.percentUsed,
     })),
     forecast: {
-      projectedEndBalance: formatMoney(forecast.projectedEndBalanceCents),
-      dailyBurnRate: formatMoney(forecast.dailyBurnRateCents),
+      projectedEndBalance: formatMoney(forecast.projectedEndBalanceCents, currency),
+      dailyBurnRate: formatMoney(forecast.dailyBurnRateCents, currency),
       daysRemaining: forecast.daysRemaining,
     },
     unreadAlertCount: unreadAlerts.length,
     recentExpenses: expenses.slice(0, 10).map((e) => ({
       id: e.id,
       description: e.description,
-      amount: formatMoney(e.amount_cents),
+      amount: formatMoney(e.amount_cents, currency),
       date: e.expense_date,
       categoryId: e.category_id,
     })),
@@ -62,6 +64,7 @@ export async function getDashboardSnapshotForUser(userId: string) {
 
 export async function getCurrentBudgetSnapshotForUser(userId: string) {
   const { budget, categories, expenses } = await getCurrentBudgetForUser(userId);
+  const currency = await getUserCurrency(userId);
 
   if (!budget) {
     return { budget: null, categories: [], expenseCount: 0 };
@@ -70,7 +73,7 @@ export async function getCurrentBudgetSnapshotForUser(userId: string) {
   return {
     budget: {
       id: budget.id,
-      income: formatMoney(budget.income_cents),
+      income: formatMoney(budget.income_cents, currency),
       alertThresholdPct: budget.alert_threshold_pct,
       year: budget.year,
       month: budget.month,
@@ -78,7 +81,7 @@ export async function getCurrentBudgetSnapshotForUser(userId: string) {
     categories: categories.map((c) => ({
       id: c.id,
       name: c.name,
-      allocated: formatMoney(c.allocated_cents),
+      allocated: formatMoney(c.allocated_cents, currency),
     })),
     expenseCount: expenses.length,
   };
@@ -86,11 +89,12 @@ export async function getCurrentBudgetSnapshotForUser(userId: string) {
 
 export async function listExpensesForUser(userId: string, limit = 50) {
   const { expenses } = await getCurrentBudgetForUser(userId);
+  const currency = await getUserCurrency(userId);
 
   return expenses.slice(0, limit).map((e) => ({
     id: e.id,
     description: e.description,
-    amount: formatMoney(e.amount_cents),
+    amount: formatMoney(e.amount_cents, currency),
     amountCents: e.amount_cents,
     date: e.expense_date,
     categoryId: e.category_id,
@@ -100,10 +104,11 @@ export async function listExpensesForUser(userId: string, limit = 50) {
 
 export async function listCategoriesForUser(userId: string) {
   const { categories } = await getCurrentBudgetForUser(userId);
+  const currency = await getUserCurrency(userId);
   return categories.map((c) => ({
     id: c.id,
     name: c.name,
-    allocated: formatMoney(c.allocated_cents),
+    allocated: formatMoney(c.allocated_cents, currency),
   }));
 }
 

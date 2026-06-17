@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Source_Serif_4, Geist } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import { JsonLd } from "@/components/seo/JsonLd";
 import {
   organizationJsonLd,
@@ -66,6 +67,7 @@ export default function RootLayout({
       >
         <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
         {children}
+        <Toaster />
       </body>
     </html>
   );

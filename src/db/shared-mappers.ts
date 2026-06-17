@@ -12,6 +12,12 @@ import type {
   SharedExpenseRow,
   SharedExpenseSplitRow,
 } from "@/db/schema";
+import type { CurrencyCode } from "@/lib/finance/currency";
+import { isCurrencyCode } from "@/lib/finance/currency";
+
+function toCurrencyCode(value: string): CurrencyCode {
+  return isCurrencyCode(value) ? value : "GBP";
+}
 
 export function mapFriend(id: string, displayName: string | null): Friend {
   return { id, display_name: displayName };
@@ -36,6 +42,7 @@ export function mapSharedExpense(row: SharedExpenseRow): SharedExpense {
     id: row.id,
     description: row.description,
     total_cents: row.totalCents,
+    currency_code: toCurrencyCode(row.currencyCode),
     expense_date: row.expenseDate,
     created_by_user_id: row.createdByUserId,
     created_at: row.createdAt.toISOString(),
@@ -73,6 +80,7 @@ export function mapSettlement(row: SettlementRow): Settlement {
     from_user_id: row.fromUserId,
     to_user_id: row.toUserId,
     amount_cents: row.amountCents,
+    currency_code: toCurrencyCode(row.currencyCode),
     note: row.note,
     created_by_user_id: row.createdByUserId,
     created_at: row.createdAt.toISOString(),

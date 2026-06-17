@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ParallaxLayer } from "@/components/motion/ParallaxLayer";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { PageHeroSection } from "@/components/sections/PageHeroSection";
 import type { LegalSection } from "@/lib/content";
 import { legalFooterLinks, site } from "@/lib/content";
 
@@ -42,30 +42,12 @@ export function LegalDocument({
 }: LegalDocumentProps) {
   return (
     <>
-      <section className="page-hero relative -mt-[4.5rem] overflow-hidden bg-dark text-white">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_0%,rgba(74,127,212,0.18),transparent_55%)]"
-          aria-hidden
-        />
-        <div className="container-main relative z-10 pb-16 pt-[calc(4.5rem+7rem)] sm:pb-20 sm:pt-[calc(4.5rem+8rem)]">
-          <ParallaxLayer speed={0.03}>
-            <ScrollReveal>
-              <p className="mb-4 text-[0.6875rem] font-semibold uppercase tracking-[0.14em] text-white/55">
-                {eyebrow}
-              </p>
-              <h1 className="heading-display max-w-3xl text-4xl font-semibold sm:text-5xl lg:text-[3.25rem]">
-                {title}
-              </h1>
-              <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/65 sm:text-lg">
-                {intro}
-              </p>
-              <p className="mt-8 text-xs font-medium uppercase tracking-[0.12em] text-white/40">
-                Last updated {updated}
-              </p>
-            </ScrollReveal>
-          </ParallaxLayer>
-        </div>
-      </section>
+      <PageHeroSection
+        eyebrow={eyebrow}
+        title={title}
+        description={intro}
+        meta={`Last updated ${updated}`}
+      />
 
       <section className="section-padding bg-white">
         <div className="container-main">
@@ -150,7 +132,7 @@ export function LegalDocument({
               <Link
                 key={link.href}
                 href={link.href}
-                className="nav-link inline-flex h-11 items-center text-muted-foreground transition-colors hover:text-foreground"
+                className="nav-link inline-flex h-11 items-center text-muted-foreground transition-colors hover:text-accent-green"
               >
                 {link.label}
               </Link>

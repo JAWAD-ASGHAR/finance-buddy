@@ -373,7 +373,7 @@ function StackedServiceCardBody({ service }: { service: Service }) {
                 className="flex gap-2.5 text-sm leading-snug text-white/70"
               >
                 <span
-                  className="mt-2 h-1 w-1 shrink-0 rounded-full bg-white/45"
+                  className="mt-2 h-1 w-1 shrink-0 rounded-full bg-accent-green"
                   aria-hidden
                 />
                 {item}
@@ -383,7 +383,7 @@ function StackedServiceCardBody({ service }: { service: Service }) {
 
           <Link
             href={`/what-we-do#${service.id}`}
-            className="inline-flex w-fit items-center gap-2.5 rounded-full bg-white px-4 py-2 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#111111] transition-colors hover:bg-white/90 sm:px-5 sm:py-2.5 sm:text-xs"
+            className="inline-flex w-fit items-center gap-2.5 rounded-full bg-white px-4 py-2 text-[0.6875rem] font-semibold uppercase tracking-[0.12em] text-[#111111] transition-colors hover:bg-accent-green-light hover:text-accent-green sm:px-5 sm:py-2.5 sm:text-xs"
           >
             Learn More
             <ArrowRight size={14} strokeWidth={2.5} />

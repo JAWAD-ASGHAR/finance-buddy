@@ -141,12 +141,12 @@ export function AppSidebar({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-200 lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-60 flex-col border-r border-sidebar-border bg-sidebar pt-[env(safe-area-inset-top,0px)] transition-transform duration-200 lg:static lg:translate-x-0",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
-        <div className="flex h-14 shrink-0 items-center border-b border-sidebar-border px-5">
-          <BrandLogo href="/dashboard" imageClassName="h-6" />
+        <div className="flex h-14 shrink-0 items-center border-b border-sidebar-border px-4">
+          <BrandLogo href="/dashboard" variant="compact" />
         </div>
         <div className="flex-1 overflow-y-auto py-4">
           <SidebarNav

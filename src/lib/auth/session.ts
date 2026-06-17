@@ -3,6 +3,8 @@ import { getDb } from "@/db/index";
 import { profiles } from "@/db/schema";
 import { displayNameFromEmail } from "@/lib/auth/email";
 import { ensureUserProfile } from "@/lib/auth/profile";
+import { getUserPreferences } from "@/lib/auth/user-preferences";
+import { DEFAULT_CURRENCY } from "@/lib/finance/currency";
 import { getAuthUser } from "@/lib/supabase/server";
 import type { AppSession } from "@/types/app-session";
 
@@ -17,7 +19,12 @@ export async function getAppSession(): Promise<AppSession | null> {
   const db = getDb();
   const profile = await db.query.profiles.findFirst({
     where: eq(profiles.id, user.id),
-    columns: { displayName: true },
+    columns: {
+      displayName: true,
+      currencyCode: true,
+      countryCode: true,
+      onboardingCompletedAt: true,
+    },
   });
 
   const metaDisplayName = user.user_metadata?.display_name;
@@ -31,8 +38,19 @@ export async function getAppSession(): Promise<AppSession | null> {
     await ensureUserProfile(user.id, displayName);
   }
 
-  return {
-    email: user.email,
+  const prefs = (await getUserPreferences(user.id)) ?? {
     displayName,
+    currencyCode: DEFAULT_CURRENCY,
+    countryCode: null,
+    onboardingCompleted: false,
+  };
+
+  return {
+    userId: user.id,
+    email: user.email,
+    displayName: prefs.displayName ?? displayName,
+    currencyCode: prefs.currencyCode,
+    countryCode: prefs.countryCode,
+    onboardingCompleted: prefs.onboardingCompleted,
   };
 }

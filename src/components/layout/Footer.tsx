@@ -31,17 +31,11 @@ function FooterUtility({ compact }: { compact?: boolean }) {
             <Link
               key={link.href}
               href={link.href}
-              className="nav-link text-muted-foreground transition-colors hover:text-foreground"
+              className="nav-link text-muted-foreground transition-colors hover:text-accent-green"
             >
               {link.label}
             </Link>
           ))}
-          <Link
-            href="/contact"
-            className="nav-link text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Contact
-          </Link>
         </nav>
       </div>
 
@@ -51,7 +45,7 @@ function FooterUtility({ compact }: { compact?: boolean }) {
         </p>
         <div className="flex flex-wrap gap-x-6 gap-y-2">
           {legalFooterLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="hover:text-foreground">
+            <Link key={link.href} href={link.href} className="transition-colors hover:text-accent-green">
               {link.label}
             </Link>
           ))}
@@ -64,12 +58,13 @@ function FooterUtility({ compact }: { compact?: boolean }) {
 function FooterDisplay({ parallax }: { parallax?: boolean }) {
   const display = (
     <p className="footer-display-text" aria-hidden>
-      Finance
+      {site.logoMark}
+      {site.logoSuffix}
     </p>
   );
 
   return (
-    <div className="footer-display-clip">
+    <div className="footer-display-clip container-main">
       {parallax ? (
         <ParallaxLayer className="h-full" speed={0.1}>
           {display}
@@ -88,7 +83,7 @@ export function Footer() {
 
   if (useReveal) {
     return (
-      <footer className="home-footer-fixed bg-white text-foreground">
+      <footer className="home-footer-fixed overflow-hidden bg-white text-foreground">
         <FooterUtility compact />
         <FooterDisplay />
       </footer>
@@ -97,9 +92,7 @@ export function Footer() {
 
   return (
     <footer className="overflow-hidden bg-white text-foreground">
-      <ParallaxLayer speed={0.04}>
-        <FooterUtility />
-      </ParallaxLayer>
+      <FooterUtility />
       <FooterDisplay parallax />
     </footer>
   );

@@ -2,7 +2,8 @@
 
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import type { CategoryChartPoint } from "@/lib/finance/chart-data";
-import { formatMoney } from "@/types/finance";
+import { useCurrency } from "@/components/app/CurrencyProvider";
+import { compactCurrencyFormatter } from "@/lib/finance/currency";
 import {
   ChartContainer,
   ChartLegend,
@@ -18,10 +19,13 @@ type CategorySpendChartProps = {
 };
 
 export function CategorySpendChart({ data, className }: CategorySpendChartProps) {
+  const { formatMoney, currency } = useCurrency();
+  const compactFormat = compactCurrencyFormatter(currency);
+
   return (
     <ChartContainer
       config={categorySpendChartConfig}
-      className={className ?? "aspect-[4/3] min-h-[260px] w-full"}
+      className={className ?? "aspect-square min-h-[220px] w-full sm:aspect-[4/3] sm:min-h-[260px]"}
     >
       <BarChart
         data={data}
@@ -43,14 +47,7 @@ export function CategorySpendChart({ data, className }: CategorySpendChartProps)
           axisLine={false}
           tickMargin={8}
           width={56}
-          tickFormatter={(value) =>
-            new Intl.NumberFormat("en-GB", {
-              style: "currency",
-              currency: "GBP",
-              notation: "compact",
-              maximumFractionDigits: 1,
-            }).format(Number(value))
-          }
+          tickFormatter={(value) => compactFormat(Number(value))}
         />
         <ChartTooltip
           content={

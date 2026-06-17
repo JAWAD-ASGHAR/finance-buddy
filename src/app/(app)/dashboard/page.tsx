@@ -13,14 +13,16 @@ import {
   buildDailySpendingSeries,
 } from "@/lib/finance/chart-data";
 import { computeForecast } from "@/lib/finance/forecast";
+import { getUserCurrency } from "@/lib/auth/user-preferences";
 import { getCurrentBudget } from "@/lib/supabase/queries";
 import { formatMoney } from "@/types/finance";
 
 export default async function DashboardPage() {
+  const user = await requireAuthUser();
+  const currency = await getUserCurrency(user.id);
   const { budget, categories, expenses } = await getCurrentBudget();
 
   if (budget) {
-    const user = await requireAuthUser();
     await syncAlertsForBudget(budget.id, user.id);
   }
 
@@ -74,8 +76,8 @@ export default async function DashboardPage() {
             <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
               Monthly income
             </p>
-            <p className="mt-1 text-2xl font-semibold">
-              {formatMoney(budget.income_cents)}
+            <p className="mt-1 text-xl font-semibold sm:text-2xl">
+              {formatMoney(budget.income_cents, currency)}
             </p>
           </AppCard>
           <AppCard>
@@ -83,16 +85,16 @@ export default async function DashboardPage() {
               Remaining this month
             </p>
             <p
-              className={`mt-1 text-2xl font-semibold ${monthlyRemaining >= 0 ? "text-emerald-700" : "text-red-600"}`}
+              className={`mt-1 text-xl font-semibold sm:text-2xl ${monthlyRemaining >= 0 ? "text-emerald-700" : "text-red-600"}`}
             >
-              {formatMoney(monthlyRemaining)}
+              {formatMoney(monthlyRemaining, currency)}
             </p>
           </AppCard>
           <AppCard>
             <p className="text-xs uppercase tracking-[0.08em] text-muted-foreground">
               Alert threshold
             </p>
-            <p className="mt-1 text-2xl font-semibold">
+            <p className="mt-1 text-xl font-semibold sm:text-2xl">
               {budget.alert_threshold_pct}%
             </p>
           </AppCard>

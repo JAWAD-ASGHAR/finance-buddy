@@ -3,7 +3,9 @@ import { z } from "zod";
 import { mapSettlement } from "@/db/shared-mappers";
 import { getDb } from "@/db/index";
 import { settlements } from "@/db/schema";
-import { areFriends } from "@/lib/db/shared-queries";
+import { areFriends, getProfile } from "@/lib/db/shared-queries";
+import { getUserCurrency } from "@/lib/auth/user-preferences";
+import { notifySettlementRecorded } from "@/lib/notifications/dispatch";
 import type { ActionResult } from "@/types/finance";
 import { parseMoneyToCents } from "@/types/finance";
 import type { Settlement } from "@/types/shared";
@@ -42,12 +44,14 @@ export async function recordSettlementForUser(
   }
 
   const db = getDb();
+  const payerCurrency = await getUserCurrency(userId);
   const [row] = await db
     .insert(settlements)
     .values({
       fromUserId: userId,
       toUserId: parsed.data.friendId,
       amountCents: parsed.data.amountCents,
+      currencyCode: payerCurrency,
       note: parsed.data.note,
       createdByUserId: userId,
     })
@@ -56,6 +60,17 @@ export async function recordSettlementForUser(
   if (!row) {
     return { success: false, error: "Failed to record settlement" };
   }
+
+  const payer = (await getProfile(userId)) ?? undefined;
+  void notifySettlementRecorded({
+    recipientId: parsed.data.friendId,
+    settlementId: row.id,
+    payerName: payer?.display_name ?? "Someone",
+    amountCents: parsed.data.amountCents,
+    currencyCode: payerCurrency,
+    note: parsed.data.note,
+    friendId: parsed.data.friendId,
+  });
 
   return { success: true, data: mapSettlement(row) };
 }

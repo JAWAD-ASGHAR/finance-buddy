@@ -242,6 +242,11 @@ export const sitemapRoutes = [
     priority: link.href === "/" ? 1 : 0.8,
   })),
   {
+    path: "/docs",
+    changeFrequency: "monthly" as const,
+    priority: 0.5,
+  },
+  {
     path: "/privacy",
     changeFrequency: "yearly" as const,
     priority: 0.3,

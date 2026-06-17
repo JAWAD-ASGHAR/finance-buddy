@@ -33,7 +33,7 @@ export function ChairCTASection() {
                 </Link>
                 <Link
                   href="/what-we-do"
-                  className="inline-flex items-center justify-center gap-2.5 rounded-full bg-white px-7 py-4 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-foreground transition-colors hover:bg-white/90"
+                  className="inline-flex items-center justify-center gap-2.5 rounded-full bg-white px-7 py-4 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-foreground transition-colors hover:bg-accent-green-light hover:text-accent-green"
                 >
                   {chairCta.secondaryLabel}
                   <CalendarDays size={15} strokeWidth={2.25} aria-hidden />

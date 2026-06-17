@@ -14,6 +14,7 @@ type PageHeroSectionProps = {
   titleAccent?: string;
   description: string;
   highlights?: readonly Highlight[];
+  meta?: string;
   tall?: boolean;
 };
 
@@ -23,6 +24,7 @@ export function PageHeroSection({
   titleAccent,
   description,
   highlights,
+  meta,
   tall = false,
 }: PageHeroSectionProps) {
   return (
@@ -30,7 +32,7 @@ export function PageHeroSection({
       className={`page-hero relative -mt-[4.5rem] overflow-hidden bg-dark text-white ${tall ? "min-h-[min(88vh,46rem)]" : ""}`}
     >
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_70%_0%,rgba(74,127,212,0.18),transparent_55%)]"
+        className="marketing-hero-glow pointer-events-none absolute inset-0"
         aria-hidden
       />
 
@@ -53,6 +55,11 @@ export function PageHeroSection({
             <p className="mt-6 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">
               {description}
             </p>
+            {meta ? (
+              <p className="mt-8 text-xs font-medium uppercase tracking-[0.12em] text-white/45">
+                {meta}
+              </p>
+            ) : null}
           </ScrollReveal>
         </ParallaxLayer>
 

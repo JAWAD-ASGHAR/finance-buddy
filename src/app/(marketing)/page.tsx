@@ -1,5 +1,5 @@
-import { redirectIfAuthenticated } from "@/lib/auth/redirects";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { SiteLoader } from "@/components/motion/SiteLoader";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { DarkFeaturesSection } from "@/components/sections/DarkFeaturesSection";
 import { FAQAccordion } from "@/components/sections/FAQAccordion";
@@ -14,10 +14,8 @@ import { HomeChairReveal } from "@/components/sections/HomeChairReveal";
 import { faqPageJsonLd, homeFaqs } from "@/lib/seo";
 
 export default async function HomePage() {
-  await redirectIfAuthenticated();
-
   return (
-    <>
+    <SiteLoader>
       <JsonLd data={faqPageJsonLd(homeFaqs)} />
       <HeroSection />
 
@@ -52,6 +50,6 @@ export default async function HomePage() {
       <HomeChairReveal>
         <ChairCTASection />
       </HomeChairReveal>
-    </>
+    </SiteLoader>
   );
 }

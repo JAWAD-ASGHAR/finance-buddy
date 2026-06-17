@@ -31,6 +31,7 @@ export const navLinks = [
   { label: "Home", href: "/" },
   { label: "Features", href: "/what-we-do" },
   { label: "About", href: "/about" },
+  { label: "MCP Docs", href: "/docs" },
   { label: "Contact", href: "/contact" },
 ] as const;
 
@@ -381,7 +382,7 @@ export const aboutValues: AboutValue[] = [
     id: "private-first",
     label: "Private",
     text: "Financial data private by default",
-    color: "#4a7fd4",
+    color: "#1a9d54",
   },
   {
     id: "student-built",
@@ -614,6 +615,7 @@ export const termsOfService = {
 } as const;
 
 export const legalFooterLinks = [
+  { label: "Documentation", href: "/docs" },
   { label: "Privacy Policy", href: "/privacy" },
   { label: "Terms of Service", href: "/terms" },
 ] as const;

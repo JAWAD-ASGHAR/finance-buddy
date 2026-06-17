@@ -1,29 +1,47 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useActionState } from "react";
+import { toast } from "sonner";
+import { submitContactForm } from "@/actions/contact";
 import { ScrollReveal } from "@/components/motion/ScrollReveal";
+import { ContactFormSubmitButton } from "@/components/sections/ContactFormSubmitButton";
+import { PendingFieldset } from "@/components/app/PendingFieldset";
 import { services } from "@/lib/content";
 
-export function ContactForm() {
-  const [submitted, setSubmitted] = useState(false);
+type ContactFormState = {
+  submitted: boolean;
+};
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setSubmitted(true);
+async function contactAction(
+  _prev: ContactFormState,
+  formData: FormData,
+): Promise<ContactFormState> {
+  const result = await submitContactForm(formData);
+  if (!result.success) {
+    toast.error(result.error);
+    return { submitted: false };
   }
+  toast.success(result.data.message);
+  return { submitted: true };
+}
 
-  if (submitted) {
+export function ContactForm() {
+  const [state, formAction] = useActionState(contactAction, {
+    submitted: false,
+  });
+
+  if (state.submitted) {
     return (
       <ScrollReveal>
         <div className="rounded-3xl bg-white p-8 text-center shadow-[0_24px_60px_rgba(0,0,0,0.08)] sm:p-10">
-          <p className="eyebrow mb-4">Request received</p>
+          <p className="eyebrow mb-4">Message sent</p>
           <p className="heading-display text-2xl font-semibold text-foreground sm:text-3xl">
-            You&apos;re on the list
+            Thanks for reaching out
           </p>
           <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
-            We&apos;ll email you when early access opens. In the meantime, explore
-            our features to see what Finance Buddy can do for your budget.
+            We received your message and will reply within a couple of business
+            days. In the meantime, explore our features to see what Finance
+            Buddy can do for your budget.
           </p>
         </div>
       </ScrollReveal>
@@ -36,9 +54,10 @@ export function ContactForm() {
   return (
     <ScrollReveal>
       <form
-        onSubmit={handleSubmit}
+        action={formAction}
         className="rounded-3xl bg-white p-8 shadow-[0_24px_60px_rgba(0,0,0,0.08)] sm:p-9"
       >
+        <PendingFieldset>
         <div className="grid gap-6 sm:grid-cols-2">
           <label className="block">
             <span className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
@@ -95,7 +114,11 @@ export function ContactForm() {
           <span className="mb-2 block text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
             What interests you most?
           </span>
-          <select name="feature" className={fieldClassName}>
+          <select
+            name="feature"
+            className={fieldClassName}
+            defaultValue="General early access"
+          >
             <option>General early access</option>
             {services.map((service) => (
               <option key={service.id}>{service.title}</option>
@@ -114,15 +137,10 @@ export function ContactForm() {
             placeholder="Tell us what you struggle with most — food, transport, subscriptions, or saving for something big."
           />
         </label>
+        </PendingFieldset>
 
         <div className="mt-9">
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center gap-2.5 rounded-full bg-dark px-7 py-4 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-white transition-colors hover:bg-dark-muted"
-          >
-            Request early access
-            <ArrowRight size={15} strokeWidth={2.25} aria-hidden />
-          </button>
+          <ContactFormSubmitButton />
         </div>
       </form>
     </ScrollReveal>

@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { createSharedExpense } from "@/actions/shared-expenses";
+import { useCurrency } from "@/components/app/CurrencyProvider";
 import {
   AppButton,
   AppCard,
-  AppError,
   AppInput,
   AppSelect,
 } from "@/components/app/ui";
@@ -25,6 +26,7 @@ export function SharedExpenseForm({
   hasBudget: boolean;
 }) {
   const router = useRouter();
+  const { amountLabel } = useCurrency();
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [expenseDate, setExpenseDate] = useState(
@@ -35,7 +37,6 @@ export function SharedExpenseForm({
   const [payerId, setPayerId] = useState(currentUserId);
   const [addToBudget, setAddToBudget] = useState(false);
   const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
-  const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   const participants = [
@@ -57,7 +58,6 @@ export function SharedExpenseForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
-    setError(null);
 
     const result = await createSharedExpense({
       amount,
@@ -71,7 +71,7 @@ export function SharedExpenseForm({
     });
 
     if (!result.success) {
-      setError(result.error);
+      toast.error(result.error);
       setPending(false);
       return;
     }
@@ -101,7 +101,7 @@ export function SharedExpenseForm({
           required
         />
         <AppInput
-          label="Amount (£)"
+          label={amountLabel}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           placeholder="24.50"
@@ -192,10 +192,12 @@ export function SharedExpenseForm({
           </div>
         ) : null}
 
-        {error ? <AppError message={error} /> : null}
-
-        <AppButton type="submit" disabled={pending || selectedFriendIds.length === 0}>
-          {pending ? "Saving..." : "Add shared expense"}
+        <AppButton
+          type="submit"
+          loading={pending}
+          disabled={selectedFriendIds.length === 0}
+        >
+          Add shared expense
         </AppButton>
       </form>
     </AppCard>

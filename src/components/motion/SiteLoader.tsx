@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { site } from "@/lib/content";
 import { preloadHeroContent } from "@/lib/hero-videos";
+import { waitForDocumentReady, waitForNextPaint } from "@/lib/wait-for-paint";
 import { LoaderMark } from "@/components/motion/LoaderMark";
 
 type Phase = "loading" | "exit" | "done";
@@ -17,9 +18,17 @@ export function SiteLoader({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let cancelled = false;
 
-    preloadHeroContent().then(() => {
-      if (!cancelled) setPhase("exit");
-    });
+    async function boot() {
+      await Promise.all([preloadHeroContent(), waitForDocumentReady()]);
+      if (cancelled) return;
+
+      await waitForNextPaint();
+      if (cancelled) return;
+
+      setPhase("exit");
+    }
+
+    void boot();
 
     return () => {
       cancelled = true;

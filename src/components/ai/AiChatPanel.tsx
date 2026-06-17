@@ -1,86 +1,314 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
-import { Loader2, Send, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import { Loader2, Send, Sparkles, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import {
+  AiMessageBubble,
+  getConfirmationFromMessages,
+} from "@/components/ai/AiMessageBubble";
 import { useAiAssistant } from "@/components/ai/AiAssistantProvider";
+import { AiChatHistoryMenu } from "@/components/ai/AiChatHistoryMenu";
+import { AiChatInput } from "@/components/ai/AiChatInput";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import {
+  buildConversationContext,
+  createChatSession,
+  getOrCreateActiveSession,
+  loadChatSessions,
+  MESSAGES_PAGE_SIZE,
+  saveChatSessions,
+  setActiveSessionId,
+  upsertChatSession,
+  type StoredAiChatSession,
+} from "@/lib/ai/chat-history";
 
-type PendingConfirmation = {
-  toolName: string;
-  payload: Record<string, unknown>;
-  description: string;
-};
+const SCROLL_LOAD_THRESHOLD_PX = 80;
+const STICK_TO_BOTTOM_THRESHOLD_PX = 48;
 
-function extractTextParts(message: {
-  parts?: Array<{ type: string; text?: string }>;
-}): string {
-  if (!message.parts) return "";
-  return message.parts
-    .filter((part) => part.type === "text")
-    .map((part) => part.text ?? "")
-    .join("");
+function AiChatEmptyState() {
+  return (
+    <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+      <p className="font-medium text-foreground">How can I help?</p>
+      <p className="mt-1 text-xs">
+        I can only help with Finance Buddy — budgets, expenses, friends, and
+        shared bills.
+      </p>
+      <ul className="mt-2 list-inside list-disc space-y-1">
+        <li>&quot;What&apos;s left in my Food budget?&quot;</li>
+        <li>&quot;Log $12.50 lunch at the campus cafe&quot;</li>
+        <li>&quot;Split a $60 dinner with Alex&quot;</li>
+        <li>&quot;Generate my monthly report&quot;</li>
+      </ul>
+    </div>
+  );
 }
 
-export function AiChatPanel() {
+function AiChatPanelShell({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+}) {
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 sm:gap-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-2">
+          <Sparkles className="size-4 shrink-0 text-primary" />
+          <p className="truncate text-sm font-semibold">Finance Buddy AI</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={onClose}
+            aria-label="Close assistant"
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">{children}</div>
+      <div className="shrink-0 border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6">
+        <div className="flex items-end gap-2">
+          <AiChatInput
+            value=""
+            onChange={() => {}}
+            onSubmit={() => {}}
+            disabled
+            placeholder="Ask me to log an expense, check balances…"
+            className="flex-1"
+          />
+          <Button
+            type="submit"
+            size="icon"
+            disabled
+            aria-label="Send message"
+            className="size-8 shrink-0"
+          >
+            <Send className="size-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function AiChatPanel({ userId }: { userId: string }) {
+  const { setOpen } = useAiAssistant();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <AiChatPanelShell onClose={() => setOpen(false)}>
+        <AiChatEmptyState />
+      </AiChatPanelShell>
+    );
+  }
+
+  return <AiChatPanelInner userId={userId} />;
+}
+
+function scrollToBottom(
+  element: HTMLDivElement | null,
+  behavior: ScrollBehavior = "auto",
+) {
+  element?.scrollTo({
+    top: element.scrollHeight,
+    behavior,
+  });
+}
+
+function AiChatPanelInner({ userId }: { userId: string }) {
   const { setOpen } = useAiAssistant();
   const [input, setInput] = useState("");
-  const [pendingConfirmation, setPendingConfirmation] =
-    useState<PendingConfirmation | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [dismissedConfirmationAt, setDismissedConfirmationAt] = useState<
+    number | null
+  >(null);
+  const [sessions, setSessions] = useState<StoredAiChatSession[]>(() =>
+    loadChatSessions(userId),
+  );
+  const [activeSessionId, setActiveSessionIdState] = useState<string>(() =>
+    getOrCreateActiveSession(userId).id,
+  );
+  const [visibleMessageCount, setVisibleMessageCount] =
+    useState(MESSAGES_PAGE_SIZE);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const stickToBottomRef = useRef(true);
+  const loadingOlderMessagesRef = useRef(false);
+
+  const initialSession = useMemo(
+    () =>
+      loadChatSessions(userId).find(
+        (session) => session.id === activeSessionId,
+      ) ?? getOrCreateActiveSession(userId),
+    [activeSessionId, userId],
+  );
+
+  const refreshSessions = useCallback(() => {
+    setSessions(loadChatSessions(userId));
+  }, [userId]);
+
+  const handleChatFinish = useCallback(
+    ({ messages: finishedMessages }: { messages: UIMessage[] }) => {
+      upsertChatSession(userId, activeSessionId, finishedMessages);
+      refreshSessions();
+    },
+    [activeSessionId, refreshSessions, userId],
+  );
+
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: "/api/ai/chat",
+        prepareSendMessagesRequest: ({ messages, body }) => ({
+          body: {
+            ...body,
+            messages,
+            conversationContext: buildConversationContext(messages),
+          },
+        }),
+      }),
+    [],
+  );
 
   const { messages, sendMessage, status, error } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/ai/chat" }),
+    id: activeSessionId,
+    messages: initialSession.messages,
+    transport,
+    onFinish: handleChatFinish,
   });
 
-  useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
-    });
-  }, [messages, status]);
-
-  useEffect(() => {
-    const lastAssistant = [...messages]
-      .reverse()
-      .find((message) => message.role === "assistant");
-
-    if (!lastAssistant) return;
-
-    const text = extractTextParts(lastAssistant);
-    if (!text.includes("confirmation_required")) return;
-
-    try {
-      const parsed = JSON.parse(text) as {
-        status?: string;
-        tool?: string;
-        description?: string;
-      };
-      if (parsed.status === "confirmation_required" && parsed.tool) {
-        setPendingConfirmation({
-          toolName: parsed.tool,
-          payload: {},
-          description: parsed.description ?? "Confirm this action",
-        });
-      }
-    } catch {
-      // not JSON — ignore
+  const visibleMessages = useMemo(() => {
+    if (messages.length <= visibleMessageCount) {
+      return messages;
     }
-  }, [messages]);
+
+    return messages.slice(messages.length - visibleMessageCount);
+  }, [messages, visibleMessageCount]);
+
+  const hasOlderMessages = messages.length > visibleMessages.length;
+
+  const pendingConfirmation = useMemo(() => {
+    if (dismissedConfirmationAt === messages.length) return null;
+    return getConfirmationFromMessages(messages);
+  }, [dismissedConfirmationAt, messages]);
+
+  const resetMessageWindow = useCallback(() => {
+    setVisibleMessageCount(MESSAGES_PAGE_SIZE);
+    stickToBottomRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    setSessions(loadChatSessions(userId));
+    setActiveSessionIdState(getOrCreateActiveSession(userId).id);
+    resetMessageWindow();
+  }, [userId, resetMessageWindow]);
+
+  useEffect(() => {
+    resetMessageWindow();
+    requestAnimationFrame(() => {
+      scrollToBottom(scrollRef.current, "auto");
+    });
+  }, [activeSessionId, resetMessageWindow]);
+
+  useEffect(() => {
+    if (!stickToBottomRef.current) return;
+
+    scrollToBottom(scrollRef.current, "auto");
+  }, [messages, status, visibleMessages.length]);
+
+  useEffect(() => {
+    requestAnimationFrame(() => {
+      scrollToBottom(scrollRef.current, "auto");
+    });
+  }, []);
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message);
+    }
+  }, [error]);
+
+  const loadOlderMessages = useCallback(() => {
+    if (!hasOlderMessages || loadingOlderMessagesRef.current) return;
+
+    const element = scrollRef.current;
+    if (!element) return;
+
+    loadingOlderMessagesRef.current = true;
+    const previousScrollHeight = element.scrollHeight;
+    const previousScrollTop = element.scrollTop;
+
+    setVisibleMessageCount((current) =>
+      Math.min(messages.length, current + MESSAGES_PAGE_SIZE),
+    );
+
+    requestAnimationFrame(() => {
+      const nextElement = scrollRef.current;
+      if (nextElement) {
+        nextElement.scrollTop =
+          nextElement.scrollHeight - previousScrollHeight + previousScrollTop;
+      }
+      loadingOlderMessagesRef.current = false;
+    });
+  }, [hasOlderMessages, messages.length]);
+
+  const handleScroll = useCallback(() => {
+    const element = scrollRef.current;
+    if (!element) return;
+
+    const distanceFromBottom =
+      element.scrollHeight - element.scrollTop - element.clientHeight;
+    stickToBottomRef.current =
+      distanceFromBottom <= STICK_TO_BOTTOM_THRESHOLD_PX;
+
+    if (element.scrollTop <= SCROLL_LOAD_THRESHOLD_PX) {
+      loadOlderMessages();
+    }
+  }, [loadOlderMessages]);
 
   const isLoading = status === "streaming" || status === "submitted";
+
+  const switchSession = useCallback(
+    (sessionId: string) => {
+      if (sessionId === activeSessionId) return;
+
+      upsertChatSession(userId, activeSessionId, messages);
+      setActiveSessionId(userId, sessionId);
+      setActiveSessionIdState(sessionId);
+      refreshSessions();
+      setInput("");
+    },
+    [activeSessionId, messages, refreshSessions, userId],
+  );
+
+  const startNewChat = useCallback(() => {
+    upsertChatSession(userId, activeSessionId, messages);
+    const created = createChatSession();
+    saveChatSessions(userId, [created, ...loadChatSessions(userId)]);
+    setActiveSessionId(userId, created.id);
+    setActiveSessionIdState(created.id);
+    refreshSessions();
+    setInput("");
+  }, [activeSessionId, messages, refreshSessions, userId]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
 
+    stickToBottomRef.current = true;
     setInput("");
-    setPendingConfirmation(null);
     await sendMessage({ text });
   }
 
@@ -107,7 +335,7 @@ export function AiChatPanel() {
         throw new Error(data.error ?? "Failed to confirm action");
       }
 
-      setPendingConfirmation(null);
+      stickToBottomRef.current = true;
       await sendMessage({
         text: `I confirm. Use confirmationToken "${data.confirmationToken}" for ${pendingConfirmation.toolName}.`,
       });
@@ -119,66 +347,54 @@ export function AiChatPanel() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
-        <div>
-          <p className="text-sm font-semibold">Finance Buddy AI</p>
-          <p className="text-xs text-muted-foreground">
-            Budgets, expenses, friends & more
-          </p>
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background px-4 sm:gap-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-2">
+          <Sparkles className="size-4 shrink-0 text-primary" />
+          <p className="truncate text-sm font-semibold">Finance Buddy AI</p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => setOpen(false)}
-          aria-label="Close assistant"
-        >
-          <X className="size-4" />
-        </Button>
+        <div className="flex shrink-0 items-center gap-1">
+          <AiChatHistoryMenu
+            sessions={sessions}
+            activeSessionId={activeSessionId}
+            onSelectSession={switchSession}
+            onNewChat={startNewChat}
+            onOpen={refreshSessions}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setOpen(false)}
+            aria-label="Close assistant"
+          >
+            <X className="size-4" />
+          </Button>
+        </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
-        {messages.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">How can I help?</p>
-            <ul className="mt-2 list-inside list-disc space-y-1">
-              <li>Add an expense from plain language</li>
-              <li>Check your remaining budget</li>
-              <li>Split a bill with a friend</li>
-              <li>Generate your monthly report</li>
-            </ul>
-          </div>
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4"
+      >
+        {hasOlderMessages ? (
+          <p className="py-1 text-center text-xs text-muted-foreground">
+            Scroll up for earlier messages
+          </p>
         ) : null}
 
-        {messages.map((message) => {
-          const text = extractTextParts(message);
-          if (!text) return null;
+        {messages.length === 0 ? <AiChatEmptyState /> : null}
 
-          return (
-            <div
-              key={message.id}
-              className={cn(
-                "max-w-[95%] rounded-2xl px-3 py-2 text-sm whitespace-pre-wrap",
-                message.role === "user"
-                  ? "ml-auto bg-primary text-primary-foreground"
-                  : "mr-auto bg-muted text-foreground",
-              )}
-            >
-              {text}
-            </div>
-          );
-        })}
+        {visibleMessages.map((message) => (
+          <AiMessageBubble key={message.id} message={message} />
+        ))}
 
         {isLoading ? (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Loader2 className="size-3 animate-spin" />
             Thinking…
           </div>
-        ) : null}
-
-        {error ? (
-          <p className="text-sm text-red-600">{error.message}</p>
         ) : null}
       </div>
 
@@ -190,7 +406,7 @@ export function AiChatPanel() {
           <p className="mt-1 text-xs text-amber-800 dark:text-amber-200">
             {pendingConfirmation.description}
           </p>
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
             <Button
               type="button"
               size="sm"
@@ -204,7 +420,8 @@ export function AiChatPanel() {
               type="button"
               size="sm"
               variant="outline"
-              onClick={() => setPendingConfirmation(null)}
+              disabled={confirmLoading}
+              onClick={() => setDismissedConfirmationAt(messages.length)}
             >
               Cancel
             </Button>
@@ -214,30 +431,30 @@ export function AiChatPanel() {
 
       <form
         onSubmit={handleSubmit}
-        className="border-t border-border p-4"
+        className="shrink-0 border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6"
       >
-        <div className="flex gap-2">
-          <Textarea
+        <div className="flex items-end gap-2">
+          <AiChatInput
             value={input}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={setInput}
+            onSubmit={handleSubmit}
+            disabled={isLoading}
             placeholder="Ask me to log an expense, check balances…"
-            rows={2}
-            className="min-h-[3rem] resize-none"
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                void handleSubmit(event);
-              }
-            }}
+            className="flex-1"
           />
           <Button
             type="submit"
             size="icon"
             disabled={!input.trim() || isLoading}
+            aria-busy={isLoading || undefined}
             aria-label="Send message"
-            className="shrink-0 self-end"
+            className="size-8 shrink-0"
           >
-            <Send className="size-4" />
+            {isLoading ? (
+              <Loader2 className="size-4 animate-spin" aria-hidden />
+            ) : (
+              <Send className="size-4" />
+            )}
           </Button>
         </div>
       </form>

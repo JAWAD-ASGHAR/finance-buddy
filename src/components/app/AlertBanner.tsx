@@ -8,6 +8,7 @@ import {
   AlertTitle,
 } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -43,16 +44,20 @@ export function AlertBanner({ alerts }: { alerts: FinanceAlert[] }) {
         {alerts.map((item) => (
           <AlertUI key={item.id} className="bg-background">
             <AlertTitle className="sr-only">Budget alert</AlertTitle>
-            <AlertDescription className="flex items-start justify-between gap-3">
-              <span>{item.message}</span>
+            <AlertDescription className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <span className="min-w-0">{item.message}</span>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
                 disabled={dismissing === item.id}
+                aria-busy={dismissing === item.id || undefined}
                 onClick={() => dismiss(item.id)}
-                className="shrink-0 text-amber-700"
+                className="h-8 shrink-0 self-start text-amber-700 sm:self-auto"
               >
+                {dismissing === item.id ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : null}
                 Dismiss
               </Button>
             </AlertDescription>

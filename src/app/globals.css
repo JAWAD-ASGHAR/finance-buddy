@@ -214,6 +214,14 @@ body {
   color: var(--accent-green);
 }
 
+.marketing-hero-glow {
+  background: radial-gradient(
+    ellipse at 70% 0%,
+    color-mix(in srgb, var(--accent-green) 18%, transparent),
+    transparent 55%
+  );
+}
+
 .nav-link {
   font-size: 0.6875rem;
   font-weight: 500;
@@ -266,6 +274,15 @@ body {
   white-space: nowrap;
 }
 
+.site-logo--compact {
+  font-size: 1rem;
+  gap: 0.4375rem;
+}
+
+.site-logo--compact .site-logo-image {
+  height: 1.75rem;
+}
+
 @media (max-width: 380px) {
   .site-logo {
     font-size: clamp(0.75rem, 3.2vw, 0.875rem);
@@ -301,12 +318,25 @@ body {
   font-style: italic;
 }
 
+.footer-utility {
+  position: relative;
+  z-index: 1;
+}
+
 .footer-display-clip {
   --footer-display-size: clamp(5rem, 19vw, 15rem);
-  height: calc(var(--footer-display-size) * 0.68);
+  /* ~em-width of "FinanceBuddy" at weight 700 / letter-spacing -0.045em */
+  --footer-display-em-width: 7.2;
+  --footer-display-fit: min(
+    var(--footer-display-size),
+    calc(100cqw / var(--footer-display-em-width))
+  );
+  container-type: inline-size;
+  height: calc(var(--footer-display-fit) * 0.68);
   overflow: hidden;
   position: relative;
   width: 100%;
+  pointer-events: none;
 }
 
 .footer-display-text {
@@ -317,7 +347,7 @@ body {
   max-width: none;
   transform: translateX(-50%);
   font-family: var(--font-inter), system-ui, sans-serif;
-  font-size: var(--footer-display-size);
+  font-size: var(--footer-display-fit);
   font-weight: 700;
   line-height: 0.9;
   letter-spacing: -0.045em;
@@ -332,10 +362,16 @@ body {
   position: relative;
   z-index: 10;
   isolation: isolate;
+  /* Let clicks reach the fixed footer in the bottom reveal runway */
+  pointer-events: none;
   /* Must match footer height so the chair can scroll off and reveal it */
   padding-bottom: calc(
     var(--footer-reveal-height) + env(safe-area-inset-bottom, 0px)
   );
+}
+
+.home-main-reveal > * {
+  pointer-events: auto;
 }
 
 .home-chair-reveal {
@@ -353,6 +389,9 @@ body {
   inset-inline: 0;
   bottom: 0;
   z-index: 0;
+  pointer-events: auto;
+  overflow: hidden;
+  max-width: 100vw;
   display: flex;
   height: calc(
     var(--footer-reveal-height) + env(safe-area-inset-bottom, 0px)
@@ -364,7 +403,7 @@ body {
 .home-footer-fixed .footer-display-clip {
   flex-shrink: 0;
   height: calc(
-    var(--footer-display-size) * 0.68 + env(safe-area-inset-bottom, 0px)
+    var(--footer-display-fit) * 0.68 + env(safe-area-inset-bottom, 0px)
   );
   background: var(--background);
 }

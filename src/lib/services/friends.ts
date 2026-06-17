@@ -11,6 +11,13 @@ import {
   getPendingFriendRequests,
   getProfile,
 } from "@/lib/db/shared-queries";
+import {
+  notifyFriendRequestAccepted,
+  notifyFriendRequestReceived,
+} from "@/lib/notifications/dispatch";
+import {
+  markFriendRequestNotificationsRead,
+} from "@/lib/services/notifications";
 import type { ActionResult } from "@/types/finance";
 import type { Friend, FriendRequest } from "@/types/shared";
 
@@ -94,10 +101,20 @@ export async function sendFriendRequestForUser(
   }
 
   const recipient = await getProfile(recipientId);
+  const requester = (await getProfile(userId)) ?? undefined;
+
+  if (recipient && requester) {
+    void notifyFriendRequestReceived({
+      recipientId,
+      requestId: row.id,
+      requesterName: requester.display_name ?? "Someone",
+    });
+  }
+
   return {
     success: true,
     data: mapFriendRequest(row, {
-      requester: (await getProfile(userId)) ?? undefined,
+      requester,
       recipient: recipient ?? undefined,
     }),
   };
@@ -130,6 +147,19 @@ export async function respondToFriendRequestForUser(
 
   if (!updated) {
     return { success: false, error: "Failed to update request" };
+  }
+
+  void markFriendRequestNotificationsRead(userId, requestId);
+
+  if (accept) {
+    const accepter = (await getProfile(userId)) ?? undefined;
+    if (accepter) {
+      void notifyFriendRequestAccepted({
+        requesterId: updated.requesterId,
+        requestId,
+        friendName: accepter.display_name ?? "Your friend",
+      });
+    }
   }
 
   return {

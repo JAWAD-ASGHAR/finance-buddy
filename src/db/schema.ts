@@ -30,9 +30,21 @@ export const friendRequestStatusEnum = pgEnum("friend_request_status", [
   "declined",
 ]);
 
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "friend_request",
+  "friend_request_accepted",
+  "shared_expense",
+  "settlement",
+]);
+
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
   displayName: text("display_name"),
+  currencyCode: text("currency_code").notNull().default("GBP"),
+  countryCode: text("country_code"),
+  onboardingCompletedAt: timestamp("onboarding_completed_at", {
+    withTimezone: true,
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -176,6 +188,7 @@ export const sharedExpenses = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     description: text("description").notNull().default(""),
     totalCents: integer("total_cents").notNull(),
+    currencyCode: text("currency_code").notNull().default("GBP"),
     expenseDate: date("expense_date").notNull().default(sql`CURRENT_DATE`),
     createdByUserId: uuid("created_by_user_id").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -220,6 +233,7 @@ export const settlements = pgTable(
     fromUserId: uuid("from_user_id").notNull(),
     toUserId: uuid("to_user_id").notNull(),
     amountCents: integer("amount_cents").notNull(),
+    currencyCode: text("currency_code").notNull().default("GBP"),
     note: text("note").notNull().default(""),
     createdByUserId: uuid("created_by_user_id").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -251,6 +265,29 @@ export const mcpApiKeys = pgTable(
   (table) => [
     index("mcp_api_keys_user_id_idx").on(table.userId),
     index("mcp_api_keys_key_hash_idx").on(table.keyHash),
+  ],
+);
+
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    type: notificationTypeEnum("type").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    href: text("href").notNull().default("/shared"),
+    metadata: jsonb("metadata").notNull().default({}),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("notifications_user_id_idx").on(table.userId),
+    index("notifications_user_unread_idx").on(table.userId, table.readAt),
   ],
 );
 
@@ -307,3 +344,5 @@ export type SharedExpenseRow = typeof sharedExpenses.$inferSelect;
 export type SharedExpenseSplitRow = typeof sharedExpenseSplits.$inferSelect;
 export type SettlementRow = typeof settlements.$inferSelect;
 export type McpApiKeyRow = typeof mcpApiKeys.$inferSelect;
+export type NotificationRow = typeof notifications.$inferSelect;
+export type ProfileRow = typeof profiles.$inferSelect;

@@ -2,10 +2,27 @@ export type ExpenseSource = "manual" | "receipt_text" | "nl_text";
 
 export type AlertType = "category_threshold" | "monthly_pace";
 
+import type { CurrencyCode } from "@/lib/finance/currency";
+import {
+  DEFAULT_CURRENCY,
+  formatMoneyWithCurrency,
+  stripCurrencySymbols,
+} from "@/lib/finance/currency";
+
 export type Profile = {
   id: string;
   display_name: string | null;
+  currency_code: CurrencyCode;
+  country_code: string | null;
+  onboarding_completed_at: string | null;
   created_at: string;
+};
+
+export type UserPreferences = {
+  displayName: string | null;
+  currencyCode: CurrencyCode;
+  countryCode: string | null;
+  onboardingCompleted: boolean;
 };
 
 export type Budget = {
@@ -138,15 +155,15 @@ export const DEFAULT_CATEGORIES = [
   { name: "Other", allocatedCents: 5000 },
 ] as const;
 
-export function formatMoney(cents: number, currency = "GBP"): string {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency,
-  }).format(cents / 100);
+export function formatMoney(
+  cents: number,
+  currency: CurrencyCode = DEFAULT_CURRENCY,
+): string {
+  return formatMoneyWithCurrency(cents, currency);
 }
 
 export function parseMoneyToCents(value: string): number | null {
-  const cleaned = value.replace(/[£,\s]/g, "");
+  const cleaned = stripCurrencySymbols(value);
   const parsed = Number.parseFloat(cleaned);
   if (Number.isNaN(parsed) || parsed < 0) return null;
   return Math.round(parsed * 100);

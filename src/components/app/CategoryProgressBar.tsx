@@ -1,7 +1,9 @@
+"use client";
+
+import { useCurrency } from "@/components/app/CurrencyProvider";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import type { CategorySummary } from "@/types/finance";
-import { formatMoney } from "@/types/finance";
-import { Progress } from "@/components/ui/progress";
 
 export function CategoryProgressBar({
   summary,
@@ -10,6 +12,7 @@ export function CategoryProgressBar({
   summary: CategorySummary;
   thresholdPct?: number;
 }) {
+  const { formatMoney } = useCurrency();
   const tone =
     summary.percentUsed >= 100
       ? "[&_[data-slot=progress-indicator]]:bg-red-500"
@@ -19,9 +22,9 @@ export function CategoryProgressBar({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between gap-3 text-sm">
+      <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <span className="font-medium">{summary.name}</span>
-        <span className="text-muted-foreground">
+        <span className="text-muted-foreground sm:text-right">
           {formatMoney(summary.spentCents)} / {formatMoney(summary.allocatedCents)}
         </span>
       </div>
