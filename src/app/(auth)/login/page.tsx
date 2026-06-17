@@ -1,5 +1,6 @@
 import { AuthForm } from "@/components/app/AuthForm";
 import { BrandLogo } from "@/components/ui/BrandLogo";
+import { redirectIfAuthenticated } from "@/lib/auth/redirects";
 
 export default async function LoginPage({
   searchParams,
@@ -7,6 +8,7 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
+  await redirectIfAuthenticated(next ?? "/dashboard");
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-muted/40 px-4 py-12">

@@ -6,6 +6,8 @@ import {
   displayNameFromEmail,
   parseEmail,
 } from "@/lib/auth/email";
+import { isEmailVerificationRequired } from "@/lib/email/env";
+import { sendVerificationEmail } from "@/lib/email/send-verification";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/types/finance";
@@ -40,12 +42,14 @@ export async function signUp(
   const { email } = emailResult;
   const password = passwordResult.data;
   const displayName = displayNameFromEmail(email);
+  const nextPath = getSafeNextPath(formData);
+  const requireVerification = isEmailVerificationRequired();
 
   const admin = createAdminClient();
   const { error: createError } = await admin.auth.admin.createUser({
     email,
     password,
-    email_confirm: true,
+    email_confirm: !requireVerification,
     user_metadata: {
       display_name: displayName,
     },
@@ -58,6 +62,21 @@ export async function signUp(
     return { success: false, error: createError.message };
   }
 
+  if (requireVerification) {
+    const sent = await sendVerificationEmail({
+      email,
+      password,
+      nextPath,
+    });
+
+    if (!sent.ok) {
+      return {
+        success: false,
+        error: sent.error,
+      };
+    }
+  }
+
   const supabase = await createClient();
   const { error: signInError } = await supabase.auth.signInWithPassword({
     email,
@@ -68,7 +87,11 @@ export async function signUp(
     return { success: false, error: signInError.message };
   }
 
-  redirect(getSafeNextPath(formData));
+  if (requireVerification) {
+    redirect("/verify-email");
+  }
+
+  redirect(nextPath);
 }
 
 export async function signIn(

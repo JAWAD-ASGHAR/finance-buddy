@@ -1,6 +1,5 @@
-import { RouteSkeleton } from "@/components/loading/RouteSkeleton";
-import { SKELETON_NAMES } from "@/components/loading/skeleton-names";
+import { PageSpinner } from "@/components/loading/PageSpinner";
 
-export default function NewExpenseLoading() {
-  return <RouteSkeleton name={SKELETON_NAMES.expenseForm} />;
+export default function Loading() {
+  return <PageSpinner />;
 }

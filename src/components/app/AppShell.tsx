@@ -6,6 +6,7 @@ import {
   AppSidebarMobileTrigger,
 } from "@/components/app/AppSidebar";
 import { AppAccountMenu } from "@/components/app/AppAccountMenu";
+import { NotificationBell } from "@/components/app/NotificationBell";
 import { AiAssistantProvider, useAiAssistant } from "@/components/ai/AiAssistantProvider";
 import { AiDrawer } from "@/components/ai/AiDrawer";
 import { AiHeaderButton } from "@/components/ai/AiHeaderButton";
@@ -42,6 +43,7 @@ function AppShellInner({
             onToggle={() => setMobileNavOpen((current) => !current)}
           />
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <NotificationBell />
             <AiHeaderButton />
             <ThemeToggle />
             <AppAccountMenu session={session} />

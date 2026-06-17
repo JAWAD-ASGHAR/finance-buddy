@@ -145,8 +145,8 @@ export function AppSidebar({
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
-        <div className="flex h-14 shrink-0 items-center border-b border-sidebar-border px-5">
-          <BrandLogo href="/dashboard" imageClassName="h-6" />
+        <div className="flex h-14 shrink-0 items-center border-b border-sidebar-border px-4">
+          <BrandLogo href="/dashboard" variant="compact" />
         </div>
         <div className="flex-1 overflow-y-auto py-4">
           <SidebarNav

@@ -32,6 +32,15 @@ export async function findUserIdByEmail(email: string): Promise<string | null> {
   return rows[0]?.id ?? null;
 }
 
+export async function findEmailByUserId(userId: string): Promise<string | null> {
+  const db = getDb();
+  const rows = await db.execute<{ email: string }>(
+    sql`select email from auth.users where id = ${userId} limit 1`,
+  );
+
+  return rows[0]?.email ?? null;
+}
+
 export async function getProfile(userId: string): Promise<Friend | null> {
   const db = getDb();
   const row = await db.query.profiles.findFirst({

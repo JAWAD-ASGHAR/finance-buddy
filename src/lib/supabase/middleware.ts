@@ -1,5 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isEmailVerified } from "@/lib/auth/verification";
+import { isEmailVerificationRequired } from "@/lib/email/env";
 import {
   getSupabasePublishableKey,
   getSupabaseUrl,
@@ -61,11 +63,22 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/reports") ||
     pathname.startsWith("/settings");
   const isAuthRoute =
-    pathname === "/login" || pathname === "/signup";
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/verify-email";
   const isGuestOnlyRoute = pathname === "/" || isAuthRoute;
 
-  if (isGuestOnlyRoute && user) {
+  if (isGuestOnlyRoute && user && pathname !== "/verify-email") {
     return redirectWithSession(request, supabaseResponse, "/dashboard");
+  }
+
+  if (
+    isEmailVerificationRequired() &&
+    user &&
+    !isEmailVerified(user) &&
+    isAppRoute
+  ) {
+    return redirectWithSession(request, supabaseResponse, "/verify-email");
   }
 
   if (isAppRoute && !user) {

@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     });
   }
 
-  let body: { messages?: UIMessage[] };
+  let body: { messages?: UIMessage[]; conversationContext?: string | null };
   try {
     body = await req.json();
   } catch {
@@ -51,6 +51,10 @@ export async function POST(req: Request) {
   }
 
   const messages = body.messages ?? [];
+  const conversationContext =
+    typeof body.conversationContext === "string"
+      ? body.conversationContext
+      : null;
   const displayName =
     (user.user_metadata?.display_name as string | undefined) ??
     user.email?.split("@")[0] ??
@@ -60,7 +64,7 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: google(getGeminiModel()),
-    system: buildSystemPrompt(displayName),
+    system: buildSystemPrompt(displayName, conversationContext),
     messages: await convertToModelMessages(messages),
     tools: createAiToolsForUser(user.id),
     stopWhen: stepCountIs(8),

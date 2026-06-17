@@ -1,21 +1,27 @@
+import { redirect } from "next/navigation";
 import { SiteShell } from "@/components/layout/SiteShell";
 import { CustomCursor } from "@/components/motion/CustomCursor";
-import { SiteLoader } from "@/components/motion/SiteLoader";
 import { SmoothScroll } from "@/components/motion/SmoothScroll";
+import { getAuthUser } from "@/lib/supabase/server";
 
-export default function MarketingLayout({
+export const dynamic = "force-dynamic";
+
+export default async function MarketingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = await getAuthUser();
+  if (user) {
+    redirect("/dashboard");
+  }
+
   return (
     <>
       <CustomCursor />
-      <SiteLoader>
-        <SmoothScroll>
-          <SiteShell>{children}</SiteShell>
-        </SmoothScroll>
-      </SiteLoader>
+      <SmoothScroll>
+        <SiteShell>{children}</SiteShell>
+      </SmoothScroll>
     </>
   );
 }

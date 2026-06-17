@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 type BrandLogoProps = {
   href?: string;
   light?: boolean;
+  variant?: "default" | "compact";
   className?: string;
   imageClassName?: string;
 };
@@ -13,13 +14,19 @@ type BrandLogoProps = {
 export function BrandLogo({
   href = "/",
   light = false,
+  variant = "default",
   className,
   imageClassName,
 }: BrandLogoProps) {
   return (
     <Link
       href={href}
-      className={cn("site-logo shrink-0", light && "site-logo--light", className)}
+      className={cn(
+        "site-logo shrink-0",
+        variant === "compact" && "site-logo--compact max-w-full pr-1",
+        light && "site-logo--light",
+        className,
+      )}
       aria-label={site.name}
     >
       <Image

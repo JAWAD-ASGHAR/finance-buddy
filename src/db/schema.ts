@@ -30,6 +30,13 @@ export const friendRequestStatusEnum = pgEnum("friend_request_status", [
   "declined",
 ]);
 
+export const notificationTypeEnum = pgEnum("notification_type", [
+  "friend_request",
+  "friend_request_accepted",
+  "shared_expense",
+  "settlement",
+]);
+
 export const profiles = pgTable("profiles", {
   id: uuid("id").primaryKey(),
   displayName: text("display_name"),
@@ -254,6 +261,29 @@ export const mcpApiKeys = pgTable(
   ],
 );
 
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    type: notificationTypeEnum("type").notNull(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    href: text("href").notNull().default("/shared"),
+    metadata: jsonb("metadata").notNull().default({}),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("notifications_user_id_idx").on(table.userId),
+    index("notifications_user_unread_idx").on(table.userId, table.readAt),
+  ],
+);
+
 export const budgetsRelations = relations(budgets, ({ many }) => ({
   categories: many(categories),
   expenses: many(expenses),
@@ -307,3 +337,4 @@ export type SharedExpenseRow = typeof sharedExpenses.$inferSelect;
 export type SharedExpenseSplitRow = typeof sharedExpenseSplits.$inferSelect;
 export type SettlementRow = typeof settlements.$inferSelect;
 export type McpApiKeyRow = typeof mcpApiKeys.$inferSelect;
+export type NotificationRow = typeof notifications.$inferSelect;
