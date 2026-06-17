@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { getCurrentUserPreferences } from "@/actions/profile";
 import { UserPreferencesForm } from "@/components/app/UserPreferencesForm";
 import { AppCard, AppPageHeader } from "@/components/app/ui";
@@ -8,11 +7,7 @@ import { DEFAULT_CURRENCY } from "@/lib/finance/currency";
 export default async function OnboardingPage() {
   const session = await getAppSession();
   if (!session) {
-    redirect("/login");
-  }
-
-  if (session.onboardingCompleted) {
-    redirect("/dashboard");
+    return null;
   }
 
   const prefs = await getCurrentUserPreferences();

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { ensureUserProfile } from "@/lib/auth/profile";
 import { parseEmailOtpType } from "@/lib/auth/otp-type";
 import { safeNextPath } from "@/lib/auth/safe-next-path";
 import { createClient } from "@/lib/supabase/server";
@@ -7,16 +8,24 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const tokenHash = requestUrl.searchParams.get("token_hash");
   const type = parseEmailOtpType(requestUrl.searchParams.get("type"));
-  const next = safeNextPath(requestUrl.searchParams.get("next"));
+  const next = safeNextPath(
+    requestUrl.searchParams.get("next"),
+    "/onboarding",
+  );
 
   if (tokenHash && type) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       token_hash: tokenHash,
       type,
     });
 
-    if (!error) {
+    if (!error && data.user) {
+      const metaName = data.user.user_metadata?.display_name;
+      await ensureUserProfile(
+        data.user.id,
+        typeof metaName === "string" ? metaName : null,
+      );
       return NextResponse.redirect(new URL(next, requestUrl.origin));
     }
   }

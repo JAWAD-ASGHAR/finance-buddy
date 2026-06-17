@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 const steps = [
   "Open the email from Finance Buddy in your inbox.",
   "Click the confirmation link in that message.",
-  "Return here and sign in to finish setting up your account.",
+  "Sign in and complete the short onboarding to set up your profile.",
 ];
 
 export function CheckEmailPanel({ email }: { email: string }) {

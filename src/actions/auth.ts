@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth/email";
 import { isEmailVerificationRequired } from "@/lib/email/env";
 import { sendVerificationEmail } from "@/lib/email/send-verification";
+import { getUserPreferences } from "@/lib/auth/user-preferences";
 import { isEmailNotConfirmedError } from "@/lib/auth/verification";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
@@ -15,13 +16,18 @@ import type { ActionResult } from "@/types/finance";
 
 const passwordSchema = z.string().min(6, "Password must be at least 6 characters");
 
-function getSafeNextPath(formData: FormData): string {
+function getSafeNextPath(formData: FormData, fallback = "/dashboard"): string {
   const nextPath = formData.get("next");
-  return typeof nextPath === "string" &&
+  if (
+    typeof nextPath === "string" &&
     nextPath.startsWith("/") &&
-    !nextPath.startsWith("//")
-    ? nextPath
-    : "/dashboard";
+    !nextPath.startsWith("//") &&
+    nextPath !== "/onboarding" &&
+    nextPath !== "/verify-email"
+  ) {
+    return nextPath;
+  }
+  return fallback;
 }
 
 export async function signUp(
@@ -43,8 +49,8 @@ export async function signUp(
   const { email } = emailResult;
   const password = passwordResult.data;
   const displayName = displayNameFromEmail(email);
-  const nextPath = getSafeNextPath(formData);
   const requireVerification = isEmailVerificationRequired();
+  const nextPath = getSafeNextPath(formData, "/onboarding");
 
   const admin = createAdminClient();
   const { error: createError } = await admin.auth.admin.createUser({
@@ -104,7 +110,7 @@ export async function signUp(
     return { success: false, error: signInError.message };
   }
 
-  redirect(nextPath);
+  redirect("/onboarding");
 }
 
 export async function signIn(
@@ -138,7 +144,18 @@ export async function signIn(
     return { success: false, error: "Invalid email or password" };
   }
 
-  redirect(getSafeNextPath(formData));
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    const prefs = await getUserPreferences(user.id);
+    if (!prefs?.onboardingCompleted) {
+      redirect("/onboarding");
+    }
+  }
+
+  redirect(getSafeNextPath(formData, "/dashboard"));
 }
 
 export async function signOut() {

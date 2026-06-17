@@ -14,5 +14,9 @@ export default async function AppLayout({
     redirect("/login");
   }
 
+  if (!session.onboardingCompleted) {
+    redirect("/onboarding");
+  }
+
   return <AppShell session={session}>{children}</AppShell>;
 }

@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { userNeedsOnboarding } from "@/lib/auth/onboarding";
 import { isEmailVerified } from "@/lib/auth/verification";
 import { isEmailVerificationRequired } from "@/lib/email/env";
 import {
@@ -23,6 +24,26 @@ function redirectWithSession(
   });
 
   return redirectResponse;
+}
+
+function isAuthFlowPath(pathname: string): boolean {
+  return pathname.startsWith("/auth/");
+}
+
+function isAppPath(pathname: string): boolean {
+  return (
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname.startsWith("/budget") ||
+    pathname.startsWith("/expenses") ||
+    pathname.startsWith("/shared") ||
+    pathname.startsWith("/reports") ||
+    pathname.startsWith("/settings")
+  );
+}
+
+function isProtectedPath(pathname: string): boolean {
+  return isAppPath(pathname) || pathname === "/onboarding";
 }
 
 export async function updateSession(request: NextRequest) {
@@ -54,78 +75,69 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
-  const isOnboardingRoute = pathname === "/onboarding";
-  const isAppRoute =
-    pathname === "/dashboard" ||
-    pathname.startsWith("/dashboard/") ||
-    pathname.startsWith("/budget") ||
-    pathname.startsWith("/expenses") ||
-    pathname.startsWith("/shared") ||
-    pathname.startsWith("/reports") ||
-    pathname.startsWith("/settings") ||
-    isOnboardingRoute;
-  const isAuthRoute =
-    pathname === "/login" ||
-    pathname === "/signup" ||
-    pathname === "/verify-email" ||
-    pathname === "/check-email";
-  const isGuestOnlyRoute = pathname === "/" || isAuthRoute;
 
-  if (
-    pathname === "/check-email" &&
-    user &&
-    isEmailVerificationRequired() &&
-    !isEmailVerified(user)
-  ) {
-    return redirectWithSession(request, supabaseResponse, "/verify-email");
+  if (isAuthFlowPath(pathname)) {
+    return supabaseResponse;
   }
 
-  if (isGuestOnlyRoute && user && pathname !== "/verify-email") {
+  if (!user) {
+    if (isProtectedPath(pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      url.searchParams.set("next", pathname);
+      return redirectWithSession(
+        request,
+        supabaseResponse,
+        `${url.pathname}?${url.searchParams.toString()}`,
+      );
+    }
+    return supabaseResponse;
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("onboarding_completed_at")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const needsOnboarding = userNeedsOnboarding(profile);
+  const needsEmailVerify =
+    isEmailVerificationRequired() && !isEmailVerified(user);
+
+  if (needsEmailVerify) {
+    if (pathname !== "/verify-email") {
+      return redirectWithSession(request, supabaseResponse, "/verify-email");
+    }
+    return supabaseResponse;
+  }
+
+  if (needsOnboarding) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json(
+        { error: "Complete onboarding before using this feature." },
+        { status: 403 },
+      );
+    }
+
+    if (pathname !== "/onboarding") {
+      return redirectWithSession(request, supabaseResponse, "/onboarding");
+    }
+
+    return supabaseResponse;
+  }
+
+  if (pathname === "/onboarding" || pathname === "/verify-email") {
     return redirectWithSession(request, supabaseResponse, "/dashboard");
   }
 
-  if (
-    isEmailVerificationRequired() &&
-    user &&
-    !isEmailVerified(user) &&
-    isAppRoute
-  ) {
-    return redirectWithSession(request, supabaseResponse, "/verify-email");
-  }
+  const isGuestAuthPath =
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/check-email";
 
-  if (isAppRoute && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    url.searchParams.set("next", pathname);
-    return redirectWithSession(
-      request,
-      supabaseResponse,
-      `${url.pathname}?${url.searchParams.toString()}`,
-    );
-  }
-
-  if (user && isAppRoute && !isOnboardingRoute && pathname !== "/verify-email") {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed_at")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (profile && !profile.onboarding_completed_at) {
-      return redirectWithSession(request, supabaseResponse, "/onboarding");
-    }
-  }
-
-  if (user && isOnboardingRoute) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed_at")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (profile?.onboarding_completed_at) {
-      return redirectWithSession(request, supabaseResponse, "/dashboard");
-    }
+  if (isGuestAuthPath) {
+    return redirectWithSession(request, supabaseResponse, "/dashboard");
   }
 
   return supabaseResponse;

@@ -1,25 +1,20 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { resendVerificationEmail } from "@/actions/email";
 import { AppButton, AppCard } from "@/components/app/ui";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 const steps = [
   "Open the email from Finance Buddy in your inbox.",
   "Click the confirmation link in that message.",
-  "Come back here — we'll take you to onboarding once you're verified.",
+  "Complete the short onboarding to set up your profile.",
 ];
 
 export function VerifyEmailPanel({
   email,
-  verified,
 }: {
   email: string;
-  verified: boolean;
 }) {
   const [pending, setPending] = useState(false);
 
@@ -34,23 +29,6 @@ export function VerifyEmailPanel({
     }
 
     setPending(false);
-  }
-
-  if (verified) {
-    return (
-      <AppCard
-        className="shadow-sm [--card-spacing:--spacing(6)]"
-        title="Email confirmed"
-        description="Your email address is verified. You're all set."
-      >
-        <Link
-          href="/dashboard"
-          className={cn(buttonVariants(), "h-11 w-full uppercase tracking-[0.08em]")}
-        >
-          Go to dashboard
-        </Link>
-      </AppCard>
-    );
   }
 
   return (

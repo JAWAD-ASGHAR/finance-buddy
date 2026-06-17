@@ -64,7 +64,7 @@ function FooterDisplay({ parallax }: { parallax?: boolean }) {
   );
 
   return (
-    <div className="footer-display-clip">
+    <div className="footer-display-clip container-main">
       {parallax ? (
         <ParallaxLayer className="h-full" speed={0.1}>
           {display}

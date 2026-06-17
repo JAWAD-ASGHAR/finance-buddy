@@ -7,7 +7,7 @@ import { isEmailConfigured } from "@/lib/email/env";
 export async function sendVerificationEmail({
   email,
   password,
-  nextPath = "/dashboard",
+  nextPath = "/onboarding",
 }: {
   email: string;
   password: string;
@@ -41,7 +41,7 @@ export async function sendVerificationEmail({
 
 export async function sendVerificationReminderEmail({
   email,
-  nextPath = "/dashboard",
+  nextPath = "/onboarding",
 }: {
   email: string;
   nextPath?: string;

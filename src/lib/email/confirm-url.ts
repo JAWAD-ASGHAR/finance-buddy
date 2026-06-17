@@ -7,7 +7,7 @@ export function buildEmailConfirmUrl(
     GenerateLinkProperties,
     "hashed_token" | "verification_type" | "action_link"
   >,
-  nextPath = "/dashboard",
+  nextPath = "/onboarding",
 ): string | null {
   const {
     hashed_token: tokenHash,
